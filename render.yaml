@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: whatsapp-sheets-gateway
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: API_SECRET
+        generateValue: true
+      - key: PORT
+        value: 3000

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Web Bridge Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+          </svg>
+        </div>
+        <div>
+          <h1>WhatsApp Gateway</h1>
+          <p class="subtitle">Google Sheets Automation Bridge</p>
+        </div>
+      </div>
+      <div class="status-pill" id="statusBadge">
+        <span class="status-dot"></span>
+        <span id="statusText">Checking...</span>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="grid-layout">
+      <!-- Left Column: Connection & QR Card -->
+      <section class="card connection-card">
+        <div class="card-header">
+          <h2>Device Connection</h2>
+          <span class="badge" id="deviceBadge">Linked Devices</span>
+        </div>
+
+        <!-- State 1: QR Ready -->
+        <div id="qrSection" class="qr-container">
+          <div class="qr-box">
+            <img id="qrImage" src="" alt="WhatsApp QR Code">
+            <div id="qrLoading" class="qr-loader">
+              <div class="spinner"></div>
+              <p>Generating QR code...</p>
+            </div>
+          </div>
+          <div class="qr-instructions">
+            <h3>How to connect:</h3>
+            <ol>
+              <li>Open <strong>WhatsApp</strong> on your phone</li>
+              <li>Tap <strong>Settings</strong> or <strong>Menu (⋮)</strong></li>
+              <li>Select <strong>Linked Devices</strong> > <strong>Link a device</strong></li>
+              <li>Point your phone camera to this screen</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- State 2: Connected -->
+        <div id="connectedSection" class="connected-view hidden">
+          <div class="success-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <h3>WhatsApp Connected!</h3>
+          <p class="connected-phone" id="connectedPhone">+91 0000000000</p>
+          <p class="connected-desc">Ready to send automated messages directly from your Google Sheet.</p>
+          
+          <button id="logoutBtn" class="btn btn-danger">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Disconnect Device
+          </button>
+        </div>
+      </section>
+
+      <!-- Right Column: Test Message & Credentials -->
+      <div class="side-column">
+        <!-- Test Sender Card -->
+        <section class="card">
+          <div class="card-header">
+            <h2>Send Test Message</h2>
+          </div>
+          <form id="testMessageForm" class="test-form">
+            <div class="form-group">
+              <label for="testPhone">Recipient Phone Number</label>
+              <input type="text" id="testPhone" placeholder="e.g. 919876543210 (with country code)" required>
+              <small>No '+' sign or spaces, include country code</small>
+            </div>
+            <div class="form-group">
+              <label for="testMessage">Message Text</label>
+              <textarea id="testMessage" rows="3" placeholder="Hello from Google Sheets Automation!" required></textarea>
+            </div>
+            <button type="submit" id="sendBtn" class="btn btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+              Send Message
+            </button>
+            <div id="testAlert" class="alert hidden"></div>
+          </form>
+        </section>
+
+        <!-- API Config Card -->
+        <section class="card api-card">
+          <div class="card-header">
+            <h2>Google Sheet Endpoint</h2>
+          </div>
+          <div class="api-info">
+            <div class="api-field">
+              <label>API Endpoint URL:</label>
+              <div class="copy-box">
+                <code id="apiEndpointUrl">https://.../api/send</code>
+                <button class="btn-copy" onclick="copyText('apiEndpointUrl')">Copy</button>
+              </div>
+            </div>
+            <div class="api-field">
+              <label>API Secret Key:</label>
+              <div class="copy-box">
+                <code id="apiSecretDisplay">secret123</code>
+                <button class="btn-copy" onclick="copyText('apiSecretDisplay')">Copy</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Activity Logs -->
+    <section class="card logs-card">
+      <div class="card-header">
+        <h2>Live Activity Logs</h2>
+        <span class="refresh-indicator">Auto-updating</span>
+      </div>
+      <div class="logs-console" id="logsContainer">
+        <div class="log-line info">[System] Dashboard initialized. Waiting for status...</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

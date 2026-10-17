@@ -1,0 +1,21 @@
+{
+  "name": "whatsapp-sheets-gateway",
+  "version": "1.0.0",
+  "description": "WhatsApp Web Gateway for Google Sheets Automation (No Account Deletion, Linked Devices)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pino": "^9.2.0",
+    "qrcode": "^1.5.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
