@@ -218,6 +218,25 @@ app.post('/api/logout', verifyApiKey, async (req, res) => {
   }
 });
 
+// 5. Manual QR Refresh endpoint
+app.post('/api/refresh-qr', async (req, res) => {
+  try {
+    if (connectionStatus === 'CONNECTED') {
+      return res.json({ success: false, error: 'Device is already connected!' });
+    }
+    addLog('info', 'Manual QR Refresh requested by user.');
+    connectionStatus = 'INITIALIZING';
+    currentQR = null;
+    if (sock) {
+      try { sock.end(undefined); } catch (e) {}
+    }
+    setTimeout(connectToWhatsApp, 1000);
+    res.json({ success: true, message: 'Generating fresh QR code...' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Start Server & WhatsApp Socket
 app.listen(PORT, () => {
   console.log(`====================================================`);

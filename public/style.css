@@ -381,6 +381,18 @@ body {
   background: rgba(234, 67, 53, 0.25);
 }
 
+.btn-secondary {
+  background: #202c33;
+  color: var(--text-main);
+  border: 1px solid var(--card-border);
+  width: 100%;
+}
+
+.btn-secondary:hover {
+  background: #2a3942;
+  border-color: var(--primary);
+}
+
 /* Copy Box */
 .api-info {
   display: flex;

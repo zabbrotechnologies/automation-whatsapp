@@ -1,5 +1,4 @@
-// WhatsApp Gateway Dashboard Client
-let currentStatus = '';
+let currentDisplayedQR = null;
 
 // Elements
 const statusBadge = document.getElementById('statusBadge');
@@ -7,6 +6,7 @@ const statusText = document.getElementById('statusText');
 const qrSection = document.getElementById('qrSection');
 const qrImage = document.getElementById('qrImage');
 const qrLoading = document.getElementById('qrLoading');
+const refreshQrBtn = document.getElementById('refreshQrBtn');
 const connectedSection = document.getElementById('connectedSection');
 const connectedPhone = document.getElementById('connectedPhone');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -41,21 +41,29 @@ function renderState(data) {
     qrSection.classList.add('hidden');
     connectedSection.classList.remove('hidden');
     connectedPhone.textContent = user?.phone ? `+${user.phone}` : 'Connected';
+    currentDisplayedQR = null;
   } else if (status === 'QR_READY' && qr) {
     statusBadge.className = 'status-pill qr';
     statusText.textContent = 'Scan QR Code';
     connectedSection.classList.add('hidden');
     qrSection.classList.remove('hidden');
-    qrImage.src = qr;
-    qrImage.classList.add('visible');
-    qrLoading.style.display = 'none';
+    
+    // Only update image src if the QR data actually changed (prevents flickering/reloading)
+    if (currentDisplayedQR !== qr) {
+      currentDisplayedQR = qr;
+      qrImage.src = qr;
+      qrImage.classList.add('visible');
+      qrLoading.style.display = 'none';
+    }
   } else {
     statusBadge.className = 'status-pill qr';
     statusText.textContent = 'Initializing...';
     connectedSection.classList.add('hidden');
     qrSection.classList.remove('hidden');
-    qrImage.classList.remove('visible');
-    qrLoading.style.display = 'flex';
+    if (!currentDisplayedQR) {
+      qrImage.classList.remove('visible');
+      qrLoading.style.display = 'flex';
+    }
   }
 
   // Render logs
@@ -148,6 +156,38 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
+
+// Manual QR Refresh
+refreshQrBtn.addEventListener('click', async () => {
+  refreshQrBtn.disabled = true;
+  refreshQrBtn.innerHTML = `
+    <div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>
+    Generating Fresh QR...`;
+  qrImage.classList.remove('visible');
+  qrLoading.style.display = 'flex';
+  currentDisplayedQR = null;
+
+  try {
+    const res = await fetch('/api/refresh-qr', { method: 'POST' });
+    const data = await res.json();
+    if (!data.success && data.error) {
+      alert(data.error);
+    }
+    setTimeout(checkStatus, 1500);
+  } catch (err) {
+    alert('Failed to refresh QR: ' + err.message);
+  } finally {
+    setTimeout(() => {
+      refreshQrBtn.disabled = false;
+      refreshQrBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 4v6h-6"/>
+          <path d="M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg> Refresh QR Code`;
+    }, 2000);
+  }
+});
 
 // Initial Call & Polling interval
 checkStatus();
