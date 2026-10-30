@@ -281,7 +281,16 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
+        
+        let data;
+        const text = await res.text();
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          showError(`Server error (${res.status}): Please check backend connection.`);
+          return;
+        }
+
         if (data.success) {
           if (data.user.role === 'ADMIN') {
             window.location.href = '/admin.html';
@@ -317,7 +326,16 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, password })
         });
-        const data = await res.json();
+        
+        let data;
+        const text = await res.text();
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          showError(`Server error (${res.status}): Please check backend connection.`);
+          return;
+        }
+
         if (data.success) {
           if (data.user.role === 'ADMIN') {
             window.location.href = '/admin.html';

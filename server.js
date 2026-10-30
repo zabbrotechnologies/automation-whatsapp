@@ -191,7 +191,7 @@ function verifyApiKey(req, res, next) {
 // ---------------- AUTHENTICATION ROUTES ---------------- //
 
 // 1. Sign Up
-app.post('/api/auth/register', async (req, res) => {
+app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
@@ -242,7 +242,7 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 // 2. Sign In
-app.post('/api/auth/login', async (req, res) => {
+app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -288,7 +288,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // 3. Current User Profile Session
-app.get('/api/auth/me', authenticateToken, async (req, res) => {
+app.get(['/api/auth/me', '/auth/me'], authenticateToken, async (req, res) => {
   try {
     const user = await findUserById(req.user.id);
     if (!user) {
@@ -301,7 +301,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 });
 
 // 4. Logout
-app.post('/api/auth/logout', (req, res) => {
+app.post(['/api/auth/logout', '/auth/logout'], (req, res) => {
   res.clearCookie('flow_auth_token');
   res.json({ success: true, message: 'Logged out successfully' });
 });
@@ -309,7 +309,7 @@ app.post('/api/auth/logout', (req, res) => {
 // ---------------- ADMIN MONITORING API ---------------- //
 
 // Get all users and system metrics (Admin only)
-app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+app.get(['/api/admin/users', '/admin/users'], authenticateToken, requireAdmin, async (req, res) => {
   try {
     const users = await getAllUsers();
     res.json({
@@ -326,7 +326,7 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
 });
 
 // Toggle user status (Activate / Suspend)
-app.post('/api/admin/user-status', authenticateToken, requireAdmin, async (req, res) => {
+app.post(['/api/admin/user-status', '/admin/user-status'], authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { userId, status } = req.body;
     if (!userId || !status) {
@@ -363,7 +363,7 @@ app.get(['/health', '/api/health'], (req, res) => {
 });
 
 // 2. Status & QR endpoint for Web UI
-app.get('/api/status', (req, res) => {
+app.get(['/api/status', '/status'], (req, res) => {
   res.json({
     status: process.env.VERCEL ? 'SERVERLESS_ACTIVE' : connectionStatus,
     qr: currentQR,
@@ -374,7 +374,7 @@ app.get('/api/status', (req, res) => {
 });
 
 // 3. Send Message endpoint (Called by Google Apps Script)
-app.post('/api/send', verifyApiKey, async (req, res) => {
+app.post(['/api/send', '/send'], verifyApiKey, async (req, res) => {
   try {
     if (process.env.VERCEL) {
       return res.status(503).json({
@@ -448,7 +448,7 @@ app.post('/api/logout', verifyApiKey, async (req, res) => {
 });
 
 // 5. Manual QR Refresh endpoint
-app.post('/api/refresh-qr', async (req, res) => {
+app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
   try {
     if (process.env.VERCEL) {
       return res.status(503).json({
