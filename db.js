@@ -30,7 +30,7 @@ const memoryStore = {
       name: 'System Admin',
       email: 'admin@flow.local',
       // bcrypt hash for 'admin123'
-      password: '$2a$10$wIu0mQn7hH3c5U0sK7v9sOdV5i0I0bY3S2N6aR9bU1qW2eR3tY4uI',
+      password: '$2b$10$GO/Sgyk8EDziT3JDMIv6quU7uL9AWHVONSaH6kqkNRHUVQPbNaEmS',
       role: 'ADMIN',
       status: 'ACTIVE',
       linked_phone: null,
