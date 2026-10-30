@@ -1,21 +1,28 @@
-const { neon } = require('@neondatabase/serverless');
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-const DATABASE_URL = process.env.DATABASE_URL;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
 
-let sql = null;
-if (DATABASE_URL) {
+let supabase = null;
+
+if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
   try {
-    sql = neon(DATABASE_URL);
-    console.log('✅ Neon PostgreSQL Client initialized.');
+    supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+    console.log('✅ Supabase Client initialized successfully.');
   } catch (err) {
-    console.error('❌ Failed to initialize Neon PostgreSQL:', err.message);
+    console.error('❌ Failed to initialize Supabase client:', err.message);
   }
 } else {
-  console.warn('⚠️ DATABASE_URL is not set in .env. Neon Database features will use in-memory fallback until configured.');
+  console.warn('⚠️ SUPABASE_URL or SUPABASE_SERVICE_KEY not provided in .env. Using in-memory fallback until credentials are set.');
 }
 
-// In-Memory Fallback Store if Neon DATABASE_URL is not yet provided
+// In-Memory Fallback Store if Supabase credentials are not provided
 const memoryStore = {
   users: [
     {
@@ -34,40 +41,22 @@ const memoryStore = {
 };
 
 /**
- * Auto-initialize database tables in Neon
+ * Verify Supabase connectivity & auto-initialize tables
  */
 async function initDb() {
-  if (!sql) return;
+  if (!supabase) return;
   try {
-    // 1. Users Table
-    await sql`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        role VARCHAR(50) DEFAULT 'USER', -- 'USER', 'ADMIN'
-        status VARCHAR(50) DEFAULT 'ACTIVE', -- 'ACTIVE', 'SUSPENDED'
-        linked_phone VARCHAR(50),
-        last_login TIMESTAMP,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
-
-    // 2. Activity / Broadcast Logs Table
-    await sql`
-      CREATE TABLE IF NOT EXISTS activity_logs (
-        id SERIAL PRIMARY KEY,
-        user_id INT REFERENCES users(id) ON DELETE CASCADE,
-        type VARCHAR(50) NOT NULL,
-        message TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
-
-    console.log('✅ Neon PostgreSQL schema verified & tables ready.');
+    // Check if table exists by reading 1 row
+    const { error } = await supabase.from('users').select('id').limit(1);
+    if (error && error.code === '42P01') {
+      console.warn('⚠️ "users" table does not exist in Supabase yet. Run the SQL schema provided in SUPABASE_SCHEMA.sql.');
+    } else if (error) {
+      console.warn('Supabase check note:', error.message);
+    } else {
+      console.log('✅ Supabase "users" table verified and ready.');
+    }
   } catch (err) {
-    console.error('❌ Error creating Neon tables:', err.message);
+    console.error('Error verifying Supabase database:', err.message);
   }
 }
 
@@ -76,24 +65,34 @@ async function initDb() {
  */
 async function findUserByEmail(email) {
   const normalizedEmail = email.toLowerCase().trim();
-  if (sql) {
+  if (supabase) {
     try {
-      const rows = await sql`SELECT * FROM users WHERE LOWER(email) = ${normalizedEmail} LIMIT 1`;
-      return rows[0] || null;
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+      
+      if (!error && data) return data;
     } catch (e) {
-      console.error('Neon findUserByEmail error:', e.message);
+      console.error('Supabase findUserByEmail error:', e.message);
     }
   }
   return memoryStore.users.find(u => u.email.toLowerCase() === normalizedEmail) || null;
 }
 
 async function findUserById(id) {
-  if (sql) {
+  if (supabase) {
     try {
-      const rows = await sql`SELECT id, name, email, role, status, linked_phone, last_login, created_at FROM users WHERE id = ${id} LIMIT 1`;
-      return rows[0] || null;
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, name, email, role, status, linked_phone, last_login, created_at')
+        .eq('id', id)
+        .maybeSingle();
+      
+      if (!error && data) return data;
     } catch (e) {
-      console.error('Neon findUserById error:', e.message);
+      console.error('Supabase findUserById error:', e.message);
     }
   }
   const u = memoryStore.users.find(u => u.id === parseInt(id, 10));
@@ -104,14 +103,27 @@ async function findUserById(id) {
 
 async function createUser({ name, email, password, role = 'USER' }) {
   const normalizedEmail = email.toLowerCase().trim();
-  if (sql) {
-    const rows = await sql`
-      INSERT INTO users (name, email, password, role)
-      VALUES (${name}, ${normalizedEmail}, ${password}, ${role})
-      RETURNING id, name, email, role, status, created_at;
-    `;
-    return rows[0];
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('users')
+      .insert([
+        {
+          name,
+          email: normalizedEmail,
+          password,
+          role,
+          status: 'ACTIVE'
+        }
+      ])
+      .select('id, name, email, role, status, created_at')
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data;
   }
+
   const newUser = {
     id: memoryStore.users.length + 1,
     name,
@@ -128,27 +140,32 @@ async function createUser({ name, email, password, role = 'USER' }) {
 }
 
 async function getAllUsers() {
-  if (sql) {
+  if (supabase) {
     try {
-      return await sql`
-        SELECT id, name, email, role, status, linked_phone, last_login, created_at 
-        FROM users 
-        ORDER BY created_at DESC;
-      `;
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, name, email, role, status, linked_phone, last_login, created_at')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) return data;
     } catch (e) {
-      console.error('Neon getAllUsers error:', e.message);
+      console.error('Supabase getAllUsers error:', e.message);
     }
   }
   return memoryStore.users.map(({ password, ...u }) => u);
 }
 
 async function updateUserStatus(userId, status) {
-  if (sql) {
+  if (supabase) {
     try {
-      await sql`UPDATE users SET status = ${status} WHERE id = ${userId}`;
-      return true;
+      const { error } = await supabase
+        .from('users')
+        .update({ status })
+        .eq('id', userId);
+
+      if (!error) return true;
     } catch (e) {
-      console.error('Neon updateUserStatus error:', e.message);
+      console.error('Supabase updateUserStatus error:', e.message);
     }
   }
   const u = memoryStore.users.find(u => u.id === parseInt(userId, 10));
@@ -157,12 +174,16 @@ async function updateUserStatus(userId, status) {
 }
 
 async function updateUserLinkedPhone(userId, phone) {
-  if (sql) {
+  if (supabase) {
     try {
-      await sql`UPDATE users SET linked_phone = ${phone} WHERE id = ${userId}`;
-      return true;
+      const { error } = await supabase
+        .from('users')
+        .update({ linked_phone: phone })
+        .eq('id', userId);
+
+      if (!error) return true;
     } catch (e) {
-      console.error('Neon updateUserLinkedPhone error:', e.message);
+      console.error('Supabase updateUserLinkedPhone error:', e.message);
     }
   }
   const u = memoryStore.users.find(u => u.id === parseInt(userId, 10));
