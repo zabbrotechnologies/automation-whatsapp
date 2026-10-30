@@ -3,40 +3,117 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WhatsApp Web Bridge — Enterprise Gateway</title>
+  <title>Horizon — WhatsApp Automation & AI Gateway</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Ambient background glow elements -->
-  <div class="ambient-glow glow-1"></div>
-  <div class="ambient-glow glow-2"></div>
+  <!-- Soft Airy Ambient Backdrop (Horizon Mesh) -->
+  <div class="ambient-canvas">
+    <div class="glow-orb orb-blue"></div>
+    <div class="glow-orb orb-purple"></div>
+    <div class="glow-orb orb-peach"></div>
+  </div>
 
-  <div class="app-container">
-    <!-- Header -->
-    <header class="header">
-      <div class="brand">
-        <div class="logo-wrapper">
-          <div class="logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-            </svg>
-          </div>
-          <span class="logo-pulse"></span>
+  <!-- Top Floating Minimalist Navbar -->
+  <header class="top-nav-wrapper">
+    <nav class="top-nav">
+      <!-- Brand Logo -->
+      <a href="#" class="nav-brand">
+        <div class="brand-avatar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 12h8"/>
+            <path d="M12 8v8"/>
+          </svg>
         </div>
-        <div class="brand-text">
-          <div class="brand-title-row">
-            <h1>WhatsApp Gateway</h1>
-            <span class="version-tag">v1.0 Pro</span>
-          </div>
-          <p class="subtitle">Enterprise Google Sheets Automation Bridge</p>
+        <span class="brand-name">Horizon</span>
+      </a>
+
+      <!-- Center Links -->
+      <ul class="nav-links">
+        <li><a href="#features" class="nav-link active">Product</a></li>
+        <li><a href="#broadcast" class="nav-link">Sheets Broadcast</a></li>
+        <li><a href="#ai-triggers" class="nav-link">AI Triggers</a></li>
+        <li><a href="#pricing" class="nav-link">Pricing</a></li>
+        <li><a href="#workspace" class="nav-link">Console</a></li>
+      </ul>
+
+      <!-- Right Action Items -->
+      <div class="nav-actions">
+        <!-- Live Status Pill -->
+        <div class="status-pill initializing" id="statusBadge" title="Live Gateway Connection Status">
+          <span class="status-dot"></span>
+          <span id="statusText">Checking...</span>
         </div>
+
+        <a href="#workspace" class="btn-nav-primary">
+          <span>Start Building</span>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Hero Section (Horizon Aesthetic) -->
+  <section class="hero-section">
+    <!-- Pill Announcement Badge -->
+    <div class="hero-badge">
+      <span class="badge-tag">NEW</span>
+      <span class="badge-text">WhatsApp AI Gateway &amp; Sheet Broadcast 2.0</span>
+    </div>
+
+    <!-- Main Headline -->
+    <h1 class="hero-title">Build with Horizon</h1>
+
+    <!-- Airy Minimalist Subtitle -->
+    <p class="hero-subtitle">
+      Horizon lets you automate customer messaging, Google Sheets broadcasting, and trigger-based AI replies in minutes. An airy, minimalist workspace designed for seamless WhatsApp integration.
+    </p>
+
+    <!-- Call-To-Action Buttons (Explore Now & Pricing) -->
+    <div class="hero-cta-group">
+      <a href="#workspace" class="btn-cta-primary">
+        <span>Explore Now</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </a>
+
+      <a href="#pricing" class="btn-cta-secondary">
+        <span>Pricing</span>
+      </a>
+    </div>
+
+    <!-- Quick Feature Pill Tags (Matching Horizon Pills) -->
+    <div class="hero-pill-tags">
+      <a href="#broadcast" class="tag-pill">Google Sheets Broadcast</a>
+      <a href="#ai-triggers" class="tag-pill">Trigger AI Auto-Reply</a>
+      <a href="#workspace" class="tag-pill">QR Device Link</a>
+      <a href="#features" class="tag-pill">Anti-Ban Engine</a>
+      <a href="#pricing" class="tag-pill">Zero Cost Setup</a>
+    </div>
+  </section>
+
+  <!-- Divider Headline: "Imagine automation without limits" -->
+  <div class="section-divider-title">
+    <h2>Imagine automation without limits</h2>
+    <p>Everything you need to broadcast, automate, and close sales right from your WhatsApp account.</p>
+  </div>
+
+  <!-- Interactive Workspace & Dashboard Container -->
+  <div class="workspace-container" id="workspace">
+
+    <!-- Control Bar (Manual Refresh, Auto-Refresh Toggle, KPI Bar) -->
+    <div class="workspace-top-bar">
+      <div class="bar-left">
+        <div class="bar-title">Gateway Workspace</div>
+        <div class="bar-subtitle">Real-time Baileys Companion Session</div>
       </div>
 
-      <!-- Controls Toolbar -->
-      <div class="header-controls">
+      <div class="bar-controls">
         <!-- Auto-Refresh Toggle (Default: OFF) -->
         <div class="toggle-control" title="Toggle automatic polling (Default is OFF)">
           <label class="switch" for="autoRefreshToggle">
@@ -47,183 +124,92 @@
         </div>
 
         <!-- Manual Refresh Button -->
-        <button id="manualRefreshBtn" class="btn btn-ghost" title="Sync dashboard status now">
-          <svg class="sync-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <button id="manualRefreshBtn" class="btn-minimal" title="Sync dashboard status now">
+          <svg class="sync-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
           </svg>
           <span id="syncBtnText">Sync Now</span>
         </button>
-
-        <!-- Status Badge -->
-        <div class="status-pill initializing" id="statusBadge">
-          <span class="status-dot"></span>
-          <span id="statusText">Checking...</span>
-        </div>
       </div>
-    </header>
+    </div>
 
-    <!-- Metrics & Summary Bar -->
-    <section class="metrics-grid">
-      <div class="metric-card">
-        <div class="metric-icon green">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-          </svg>
-        </div>
-        <div class="metric-info">
-          <span class="metric-label">Gateway Status</span>
-          <span class="metric-value" id="kpiGatewayStatus">Connecting...</span>
-        </div>
+    <!-- Quick Stats Grid -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-label">Gateway Status</span>
+        <span class="stat-value" id="kpiGatewayStatus">Checking...</span>
       </div>
-
-      <div class="metric-card">
-        <div class="metric-icon blue">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-            <line x1="6" y1="6" x2="6.01" y2="6"/>
-            <line x1="6" y1="18" x2="6.01" y2="18"/>
-          </svg>
-        </div>
-        <div class="metric-info">
-          <span class="metric-label">Protocol Mode</span>
-          <span class="metric-value">Baileys Multi-Device</span>
-        </div>
+      <div class="stat-card">
+        <span class="stat-label">Protocol</span>
+        <span class="stat-value">Baileys Multi-Device</span>
       </div>
-
-      <div class="metric-card">
-        <div class="metric-icon purple">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
-          </svg>
-        </div>
-        <div class="metric-info">
-          <span class="metric-label">Google Sheets API</span>
-          <span class="metric-value" id="kpiApiStatus">Ready & Active</span>
-        </div>
+      <div class="stat-card">
+        <span class="stat-label">AI Engine</span>
+        <span class="stat-value">OpenRouter Free</span>
       </div>
-
-      <div class="metric-card">
-        <div class="metric-icon cyan">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-        </div>
-        <div class="metric-info">
-          <span class="metric-label">Last Synced</span>
-          <span class="metric-value" id="lastUpdated">Never</span>
-        </div>
+      <div class="stat-card">
+        <span class="stat-label">Last Synced</span>
+        <span class="stat-value" id="lastUpdated">Never</span>
       </div>
-    </section>
+    </div>
 
-    <!-- Main Grid -->
-    <main class="grid-layout">
-      <!-- Left Column: Device Connection & QR Card -->
-      <section class="card connection-card">
-        <div class="card-header">
-          <div class="card-title-group">
-            <div class="card-icon-tag">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                <line x1="12" y1="18" x2="12.01" y2="18"/>
-              </svg>
-            </div>
-            <h2>Device Connection</h2>
+    <!-- Main Workspace Grid -->
+    <div class="workspace-grid" id="features">
+
+      <!-- Left Column: Device Connection Card -->
+      <div class="card connection-card">
+        <div class="card-head">
+          <div class="head-title-wrap">
+            <span class="card-badge">Companion Link</span>
+            <h3>WhatsApp Device Connection</h3>
           </div>
-          <span class="badge" id="deviceBadge">Multi-Device Link</span>
+          <span class="sub-badge" id="deviceBadge">QR Ready</span>
         </div>
 
-        <!-- State 1: QR Ready / Initializing -->
-        <div id="qrSection" class="qr-container">
-          <div class="qr-box-wrapper">
-            <div class="qr-box">
-              <img id="qrImage" src="" alt="WhatsApp QR Code">
-              <div id="qrLoading" class="qr-loader">
-                <div class="spinner"></div>
-                <p>Generating session QR code...</p>
-                <span class="qr-subtext">Baileys socket handshake</span>
-              </div>
+        <!-- State 1: QR Ready -->
+        <div id="qrSection" class="qr-content-wrapper">
+          <div class="qr-display-box">
+            <img id="qrImage" src="" alt="WhatsApp QR Code">
+            <div id="qrLoading" class="qr-placeholder">
+              <div class="spinner"></div>
+              <p>Generating session QR code...</p>
+              <span class="qr-hint">Open WhatsApp &gt; Linked Devices &gt; Scan</span>
             </div>
           </div>
-          
-          <button id="refreshQrBtn" class="btn btn-secondary">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+          <button id="refreshQrBtn" class="btn-action-outline">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M23 4v6h-6"/>
               <path d="M1 20v-6h6"/>
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
             </svg>
-            Request New QR Code
+            Request Fresh QR Code
           </button>
 
-          <div class="qr-instructions">
-            <div class="instructions-header">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="16" x2="12" y2="12"/>
-                <line x1="12" y1="8" x2="12.01" y2="8"/>
-              </svg>
-              <span>Pairing Instructions</span>
-            </div>
-            <ol class="steps-list">
-              <li>
-                <span class="step-num">1</span>
-                <div>Open <strong>WhatsApp</strong> on your mobile phone</div>
-              </li>
-              <li>
-                <span class="step-num">2</span>
-                <div>Tap <strong>Settings</strong> or <strong>Menu (⋮)</strong> &gt; <strong>Linked Devices</strong></div>
-              </li>
-              <li>
-                <span class="step-num">3</span>
-                <div>Tap <strong>Link a Device</strong> and point your camera at this QR code</div>
-              </li>
-              <li>
-                <span class="step-num">4</span>
-                <div>Device will pair persistently without disconnecting your phone</div>
-              </li>
+          <div class="instructions-card">
+            <h4>How to link your phone:</h4>
+            <ol>
+              <li>Open <strong>WhatsApp</strong> on your mobile phone</li>
+              <li>Go to <strong>Settings</strong> or <strong>Menu (⋮)</strong> &gt; <strong>Linked Devices</strong></li>
+              <li>Tap <strong>Link a Device</strong> and point your camera here</li>
             </ol>
           </div>
         </div>
 
         <!-- State 2: Connected -->
-        <div id="connectedSection" class="connected-view hidden">
-          <div class="connected-badge-wrapper">
-            <div class="success-glow"></div>
-            <div class="success-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 6L9 17l-5-5"/>
-              </svg>
-            </div>
+        <div id="connectedSection" class="connected-content-wrapper hidden">
+          <div class="connected-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
           </div>
-          <div class="connected-meta">
-            <span class="connected-pill">● Session Live</span>
-            <h3>WhatsApp Gateway Connected</h3>
-            <p class="connected-phone" id="connectedPhone">+00 0000000000</p>
-            <p class="connected-desc">Ready to transmit automated broadcasts and sheet rows in real time.</p>
-          </div>
+          <span class="live-pill">● Session Active</span>
+          <h3>Connected to WhatsApp</h3>
+          <p class="connected-phone" id="connectedPhone">+00 0000000000</p>
+          <p class="connected-note">Ready to broadcast campaigns and automate AI product enquiries.</p>
 
-          <div class="connected-features">
-            <div class="feature-item">
-              <span class="feature-dot"></span>
-              <span>Direct Socket Protocol</span>
-            </div>
-            <div class="feature-item">
-              <span class="feature-dot"></span>
-              <span>Multi-Device Persistent Session</span>
-            </div>
-            <div class="feature-item">
-              <span class="feature-dot"></span>
-              <span>REST Webhook Enabled</span>
-            </div>
-          </div>
-          
-          <button id="logoutBtn" class="btn btn-danger">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button id="logoutBtn" class="btn-danger-minimal">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16 17 21 12 16 7"/>
               <line x1="21" y1="12" x2="9" y2="12"/>
@@ -231,49 +217,33 @@
             Disconnect Device Session
           </button>
         </div>
-      </section>
+      </div>
 
-      <!-- Right Column: Test Message & Credentials -->
+      <!-- Right Column: Quick Test Sandbox & API Credentials -->
       <div class="side-column">
-        <!-- Test Sender Card -->
-        <section class="card test-card">
-          <div class="card-header">
-            <div class="card-title-group">
-              <div class="card-icon-tag">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-              </div>
-              <h2>Send Test Message</h2>
+        <!-- Test Sandbox Card -->
+        <div class="card">
+          <div class="card-head">
+            <div class="head-title-wrap">
+              <span class="card-badge">Instant Test</span>
+              <h3>Live Message Sandbox</h3>
             </div>
-            <span class="badge badge-accent">Live Sandbox</span>
           </div>
 
-          <form id="testMessageForm" class="test-form">
-            <div class="form-group">
-              <label for="testPhone">
-                <span>Recipient Phone Number</span>
-                <span class="label-hint">Country code + number</span>
-              </label>
-              <div class="input-wrapper">
-                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-                <input type="text" id="testPhone" placeholder="e.g. 919876543210 (without + or spaces)" required>
-              </div>
+          <form id="testMessageForm" class="minimal-form">
+            <div class="input-group">
+              <label for="testPhone">Recipient Phone</label>
+              <input type="text" id="testPhone" placeholder="e.g. 919876543210 (with country code)" required>
+              <span class="field-hint">Country code followed by digits, no + or spaces</span>
             </div>
 
-            <div class="form-group">
-              <label for="testMessage">
-                <span>Message Payload</span>
-                <span class="label-hint">Plain text formatting</span>
-              </label>
-              <textarea id="testMessage" rows="3" placeholder="Hello! This is a test message from Google Sheets WhatsApp Gateway." required></textarea>
+            <div class="input-group">
+              <label for="testMessage">Message Content</label>
+              <textarea id="testMessage" rows="3" placeholder="Hello from Horizon WhatsApp Gateway!" required></textarea>
             </div>
 
-            <button type="submit" id="sendBtn" class="btn btn-primary">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button type="submit" id="sendBtn" class="btn-action-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="22" y1="2" x2="11" y2="13"/>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"/>
               </svg>
@@ -281,90 +251,225 @@
             </button>
             <div id="testAlert" class="alert hidden"></div>
           </form>
-        </section>
-
-        <!-- API Config Card -->
-        <section class="card api-card">
-          <div class="card-header">
-            <div class="card-title-group">
-              <div class="card-icon-tag">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="16 18 22 12 16 6"/>
-                  <polyline points="8 6 2 12 8 18"/>
-                </svg>
-              </div>
-              <h2>Google Sheets Config</h2>
-            </div>
-            <span class="badge">Integration</span>
-          </div>
-
-          <div class="api-info">
-            <div class="api-field">
-              <div class="api-label-row">
-                <label>Apps Script Endpoint (API_URL)</label>
-                <span class="copy-hint" id="hint-apiEndpointUrl">Click copy</span>
-              </div>
-              <div class="copy-box">
-                <code id="apiEndpointUrl">https://.../api/send</code>
-                <button class="btn-copy" type="button" data-target="apiEndpointUrl">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                  </svg>
-                  <span>Copy</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="api-field">
-              <div class="api-label-row">
-                <label>API Authorization Secret (API_SECRET)</label>
-                <span class="copy-hint" id="hint-apiSecretDisplay">Click copy</span>
-              </div>
-              <div class="copy-box">
-                <code id="apiSecretDisplay">secret123</code>
-                <button class="btn-copy" type="button" data-target="apiSecretDisplay">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                  </svg>
-                  <span>Copy</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
-
-    <!-- Activity Logs -->
-    <section class="card logs-card">
-      <div class="card-header">
-        <div class="card-title-group">
-          <div class="terminal-dots">
-            <span class="dot dot-red"></span>
-            <span class="dot dot-yellow"></span>
-            <span class="dot dot-green"></span>
-          </div>
-          <h2>Live Stream Console</h2>
         </div>
-        <div class="logs-header-actions">
-          <button id="clearLogsBtn" class="btn btn-xs btn-outline">Clear View</button>
+
+        <!-- Google Sheet API Endpoint Credentials -->
+        <div class="card">
+          <div class="card-head">
+            <div class="head-title-wrap">
+              <span class="card-badge">Integration</span>
+              <h3>Gateway API Endpoint</h3>
+            </div>
+          </div>
+
+          <div class="api-fields-wrap">
+            <div class="api-field-item">
+              <div class="field-label-row">
+                <label>POST Endpoint</label>
+                <span class="copy-note" id="hint-apiEndpointUrl">Click copy</span>
+              </div>
+              <div class="copy-input-box">
+                <code id="apiEndpointUrl">https://.../api/send</code>
+                <button class="btn-copy" type="button" data-target="apiEndpointUrl">Copy</button>
+              </div>
+            </div>
+
+            <div class="api-field-item">
+              <div class="field-label-row">
+                <label>Secret Key (x-api-key)</label>
+                <span class="copy-note" id="hint-apiSecretDisplay">Click copy</span>
+              </div>
+              <div class="copy-input-box">
+                <code id="apiSecretDisplay">secret123</code>
+                <button class="btn-copy" type="button" data-target="apiSecretDisplay">Copy</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Google Sheet Direct Broadcast Section -->
+    <div class="card broadcast-section" id="broadcast">
+      <div class="card-head">
+        <div class="head-title-wrap">
+          <span class="card-badge">No Code Required</span>
+          <h3>Direct Google Sheet Broadcast</h3>
+        </div>
+        <span class="sub-badge">CSV Auto-Sync</span>
+      </div>
+
+      <div class="broadcast-body">
+        <p class="broadcast-desc">
+          Paste any public Google Sheet link (shared as <em>"Anyone with the link can view"</em>). Horizon automatically extracts the recipient phone numbers and names, allowing bulk broadcasts with zero Apps Script installation.
+        </p>
+
+        <div class="sheet-input-row">
+          <input type="url" id="sheetUrlInput" class="minimal-input" placeholder="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit?usp=sharing">
+          <button class="btn-action-primary" id="btnPreviewSheet" type="button">
+            <span>Parse &amp; Preview Sheet</span>
+          </button>
+        </div>
+
+        <div class="broadcast-template-box">
+          <label for="broadcastTemplate">Message Template (supports dynamic variables):</label>
+          <textarea id="broadcastTemplate" rows="2" placeholder="Hello {Name}! Your special offer code is {Param1}. Reply CATALOG to view our products."></textarea>
+          <div class="template-tags">
+            <span class="tag-hint">Available tags:</span>
+            <code class="tag-chip">{Name}</code>
+            <code class="tag-chip">{Phone}</code>
+            <code class="tag-chip">{Param1}</code>
+            <code class="tag-chip">{Param2}</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Triggers & Auto-Reply Section -->
+    <div class="card ai-triggers-section" id="ai-triggers">
+      <div class="card-head">
+        <div class="head-title-wrap">
+          <span class="card-badge">OpenRouter AI</span>
+          <h3>Product Enquiry &amp; Trigger-Word Auto-Reply</h3>
+        </div>
+        <span class="sub-badge">100% Free Tier Supported</span>
+      </div>
+
+      <div class="ai-config-grid">
+        <div class="ai-config-box">
+          <h4>Trigger Words (Product Enquiry Filter)</h4>
+          <p class="box-desc">The AI will ONLY activate when customer messages contain these keywords. Personal messages will be ignored.</p>
+          <input type="text" class="minimal-input" value="price, cost, rate, catalog, brochure, buy, order, demo, specs, details" readonly>
+          <span class="field-hint">Configurable in server .env (PRODUCT_TRIGGER_WORDS)</span>
+        </div>
+
+        <div class="ai-config-box">
+          <h4>Active AI Model</h4>
+          <p class="box-desc">Zero-cost intelligence via OpenRouter API with prompt customization.</p>
+          <div class="model-pill">
+            <span class="model-name">google/gemma-2-9b-it:free</span>
+            <span class="model-badge">Free Tier</span>
+          </div>
+          <span class="field-hint">Also supports nvidia/llama-3.1-nemotron-70b:free</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Activity Console -->
+    <div class="card logs-section">
+      <div class="card-head">
+        <div class="head-title-wrap">
+          <span class="card-badge">Live Feed</span>
+          <h3>Gateway Activity Stream</h3>
+        </div>
+        <div class="logs-actions">
+          <button id="clearLogsBtn" class="btn-minimal btn-sm">Clear</button>
           <span class="log-mode-tag" id="logModeTag">Manual Sync Mode</span>
         </div>
       </div>
+
       <div class="logs-console" id="logsContainer">
-        <div class="log-line info"><span class="log-time">[Init]</span> Gateway dashboard loaded. Auto-refresh is OFF.</div>
+        <div class="log-line info">
+          <span class="log-time">[Init]</span>
+          <span>Horizon Gateway initialized. Auto-refresh is OFF.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing Section (Targeted by Hero "Pricing" button) -->
+    <section class="pricing-section" id="pricing">
+      <div class="pricing-header">
+        <span class="card-badge">Transparent Plans</span>
+        <h2>Simple, transparent pricing</h2>
+        <p>Run locally for free or scale your business with enterprise multi-device automation.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Tier 1: Free / Community -->
+        <div class="pricing-card">
+          <div class="plan-header">
+            <h3>Community / Starter</h3>
+            <p class="plan-desc">Perfect for small businesses and self-hosted automation.</p>
+            <div class="plan-price">
+              <span class="currency">$</span>
+              <span class="amount">0</span>
+              <span class="period">/ month</span>
+            </div>
+          </div>
+          <ul class="plan-features">
+            <li>✓ 1 Linked WhatsApp Companion Device</li>
+            <li>✓ Baileys Multi-Device Protocol (No Ban)</li>
+            <li>✓ Google Sheets CSV Link Importer</li>
+            <li>✓ OpenRouter Free Tier AI Integration</li>
+            <li>✓ Trigger-Word Enquiry Filter</li>
+            <li>✓ Local &amp; Render.com Free Deployment</li>
+          </ul>
+          <a href="#workspace" class="btn-plan-outline">Get Started Free</a>
+        </div>
+
+        <!-- Tier 2: Pro Growth (Featured) -->
+        <div class="pricing-card featured">
+          <div class="featured-tag">MOST POPULAR</div>
+          <div class="plan-header">
+            <h3>Pro Growth</h3>
+            <p class="plan-desc">For growing brands needing high-volume broadcasts and priority support.</p>
+            <div class="plan-price">
+              <span class="currency">$</span>
+              <span class="amount">19</span>
+              <span class="period">/ month</span>
+            </div>
+          </div>
+          <ul class="plan-features">
+            <li>✓ Everything in Community, plus:</li>
+            <li>✓ Multi-Device Session Rotation</li>
+            <li>✓ Dynamic Anti-Ban Rate Limiter</li>
+            <li>✓ Custom Product Catalog Vector Search</li>
+            <li>✓ Webhook Delivery Receipts (Read/Delivered)</li>
+            <li>✓ Priority Cloud Server Hosting</li>
+          </ul>
+          <a href="#workspace" class="btn-plan-primary">Explore Pro Plan</a>
+        </div>
+
+        <!-- Tier 3: Enterprise Agency -->
+        <div class="pricing-card">
+          <div class="plan-header">
+            <h3>Enterprise Agency</h3>
+            <p class="plan-desc">White-label platform for marketing agencies and CRM providers.</p>
+            <div class="plan-price">
+              <span class="currency">$</span>
+              <span class="amount">49</span>
+              <span class="period">/ month</span>
+            </div>
+          </div>
+          <ul class="plan-features">
+            <li>✓ Everything in Pro, plus:</li>
+            <li>✓ Unlimited WhatsApp Companion Accounts</li>
+            <li>✓ White-label Custom Domain &amp; Logo</li>
+            <li>✓ CRM Webhook Endpoints (HubSpot / Zoho)</li>
+            <li>✓ Dedicated Enterprise Proxy Support</li>
+            <li>✓ 24/7 Priority Support &amp; SLA</li>
+          </ul>
+          <a href="#workspace" class="btn-plan-outline">Contact Enterprise</a>
+        </div>
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="app-footer">
-      <span>WhatsApp Cloud &amp; Sheets Automation • Enterprise Grade</span>
-      <span class="footer-dot">•</span>
-      <span>Baileys Protocol Multi-Device Engine</span>
-    </footer>
   </div>
+
+  <!-- Minimalist Horizon Footer -->
+  <footer class="horizon-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="brand-avatar-sm">H</div>
+        <span>Horizon Gateway • WhatsApp Cloud Automation</span>
+      </div>
+      <div class="footer-links">
+        <a href="#features">Product</a>
+        <a href="#pricing">Pricing</a>
+        <a href="https://github.com/zabbrotechnologies/automation-whatsapp" target="_blank">GitHub</a>
+      </div>
+    </div>
+  </footer>
 
   <script src="app.js"></script>
 </body>

@@ -343,6 +343,56 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// Google Sheet Link Preview Helper
+const btnPreviewSheet = document.getElementById('btnPreviewSheet');
+const sheetUrlInput = document.getElementById('sheetUrlInput');
+
+if (btnPreviewSheet && sheetUrlInput) {
+  btnPreviewSheet.addEventListener('click', async () => {
+    const rawUrl = sheetUrlInput.value.trim();
+    if (!rawUrl) {
+      alert('Please paste a valid Google Sheet URL first.');
+      sheetUrlInput.focus();
+      return;
+    }
+
+    // Extract spreadsheet ID: https://docs.google.com/spreadsheets/d/{ID}/...
+    const match = rawUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (!match || !match[1]) {
+      alert('Invalid Google Sheet URL format. Make sure it looks like:\nhttps://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit');
+      return;
+    }
+
+    const sheetId = match[1];
+    const csvExportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+
+    btnPreviewSheet.disabled = true;
+    btnPreviewSheet.innerHTML = `
+      <div class="spinner" style="width:14px;height:14px;border-width:2px;border-top-color:#ffffff;"></div>
+      <span>Fetching CSV...</span>`;
+
+    try {
+      const res = await fetch(csvExportUrl);
+      if (!res.ok) {
+        throw new Error(`Google returned status ${res.status}. Please make sure sheet sharing is set to "Anyone with the link can view"`);
+      }
+      const csvText = await res.text();
+      const rows = csvText.split('\n').filter(r => r.trim().length > 0);
+      const totalContacts = Math.max(0, rows.length - 1); // Minus header row
+      
+      alert(`✅ Success! Sheet connected.\n• Total contact rows detected: ${totalContacts}\n• CSV Endpoint: Active and ready for broadcasting.`);
+      appendLog('success', `Google Sheet loaded (${totalContacts} contacts detected)`);
+    } catch (err) {
+      alert(`⚠️ Could not parse sheet:\n${err.message}\n\nTip: In Google Sheets, click "Share" (top-right) and set access to "Anyone with the link can view".`);
+      appendLog('error', `Sheet fetch failed: ${err.message}`);
+    } finally {
+      btnPreviewSheet.disabled = false;
+      btnPreviewSheet.innerHTML = `<span>Parse &amp; Preview Sheet</span>`;
+    }
+  });
+}
+
 // Initial single status fetch on load (Auto-refresh remains strictly OFF)
 setAutoRefresh(false);
 checkStatus(false);
+
