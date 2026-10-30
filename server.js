@@ -342,8 +342,18 @@ app.post('/api/admin/user-status', authenticateToken, requireAdmin, async (req, 
 
 // ---------------- REST API ENDPOINTS ---------------- //
 
+// 0. API Base Info
+app.get('/api', (req, res) => {
+  res.json({
+    status: 'OK',
+    gateway: 'Flow WhatsApp Gateway & Supabase Auth API',
+    serverless: !!process.env.VERCEL,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // 1. Health check & keep-alive
-app.get('/health', (req, res) => {
+app.get(['/health', '/api/health'], (req, res) => {
   res.json({
     status: 'OK',
     serverless: !!process.env.VERCEL,
