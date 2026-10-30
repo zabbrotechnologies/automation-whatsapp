@@ -3,568 +3,399 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZABBRO AUTOMATE (ZA) — Web Development, AI & WhatsApp Automation</title>
+  <title>WhatsApp Web Bridge — Enterprise Gateway</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- Ambient background glow elements (light airy ethereal atmosphere) -->
+  <div class="ambient-glow glow-top"></div>
+  <div class="ambient-glow glow-center"></div>
 
-  <!-- ==========================================================
-       ZABBRO SIGNATURE NAVBAR (EXACT IMAGE REPLICATION)
-       ========================================================== -->
-  <header class="zabbro-navbar-wrapper">
-    <div class="zabbro-navbar">
-      <!-- Brand Logo: ZABBRO (ZA) -->
-      <a href="#" class="zabbro-brand">
-        <span class="brand-text-zabbro">ZΛ33RO</span>
-        <span class="brand-sub-tag">AUTOMATE</span>
-      </a>
+  <!-- Top Minimal Floating Nav -->
+  <header class="top-nav">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <div class="nav-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v12M6 12h12"/>
+          </svg>
+        </div>
+        <span class="nav-title">WhatsApp Gateway</span>
+      </div>
 
-      <!-- Center Links with Active Underline Indicator -->
-      <nav class="zabbro-nav-links">
-        <a href="#services" class="zabbro-nav-link active">HOME</a>
-        <a href="#workspace" class="zabbro-nav-link">GATEWAY</a>
-        <a href="#sheet-broadcast" class="zabbro-nav-link">SHEET BROADCAST</a>
-        <a href="#ai-services" class="zabbro-nav-link">AI &amp; CHATBOT</a>
-        <a href="#pricing" class="zabbro-nav-link">PRICING</a>
-        <a href="#contact" class="zabbro-nav-link">CONTACT US</a>
+      <nav class="nav-links">
+        <a href="#overview" class="nav-link active">Product</a>
+        <a href="#connection" class="nav-link">Linked Device</a>
+        <a href="#integration" class="nav-link">Integration</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="#console" class="nav-link">Activity</a>
       </nav>
 
-      <!-- Right Action Icons & Button -->
-      <div class="zabbro-nav-actions">
-        <!-- Search Icon -->
-        <button class="nav-icon-btn" title="Search platform" type="button">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </button>
-
-        <!-- Notification Bell -->
-        <button class="nav-icon-btn" title="Notifications" type="button">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-        </button>
-
-        <!-- Live Connection Status Pill -->
-        <div class="status-pill initializing" id="statusBadge" title="Live Companion Device Status">
+      <div class="nav-actions">
+        <!-- Status Pill -->
+        <div class="status-pill initializing" id="statusBadge">
           <span class="status-dot"></span>
           <span id="statusText">Checking...</span>
         </div>
 
-        <!-- Solid Black Pill Button -->
-        <a href="#workspace" class="btn-create-account">
-          <span>Create Account</span>
+        <!-- Sync Button -->
+        <button id="manualRefreshBtn" class="btn-icon-subtle" title="Sync Status">
+          <svg class="sync-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </button>
+
+        <a href="#connection" class="btn-nav-primary">
+          <span>Start Connecting</span>
         </a>
-
-        <!-- User Profile Icon -->
-        <button class="nav-icon-btn" title="User Profile" type="button">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </button>
-
-        <!-- Shopping Bag Icon -->
-        <button class="nav-icon-btn" title="Shopping Bag" type="button">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <path d="M16 10a4 4 0 0 1-8 0"></path>
-          </svg>
-        </button>
       </div>
     </div>
   </header>
 
-  <!-- ==========================================================
-       HERO & SERVICES SHOWCASE (EXACT MATCH TO USER'S IMAGE)
-       ========================================================== -->
-  <section class="zabbro-services-hero" id="services">
-    <div class="zabbro-container">
-      
-      <!-- Eyebrow Overline (Uppercase wide tracking) -->
-      <span class="zabbro-overline">DIGITAL SOLUTIONS &amp; INNOVATION</span>
+  <!-- Hero Section (Light, Airy, Minimalist) -->
+  <section class="hero-section" id="overview">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-tag">NEW</span>
+        <span class="badge-text">Baileys Multi-Device Engine • Sheets Automation</span>
+      </div>
 
-      <!-- Luxury Serif Editorial Headline (Playfair Display) -->
-      <h1 class="zabbro-hero-heading">
-        Our Services: Web Development, AI &amp; Automation
-      </h1>
-
-      <!-- Clean Airy Subtitle -->
-      <p class="zabbro-hero-subtitle">
-        Empowering modern businesses and individuals with intelligent technology and bespoke digital systems.
+      <h1 class="hero-title">Build with WhatsApp Gateway</h1>
+      <p class="hero-subtitle">
+        An airy, minimalist bridge designed for effortless Google Sheets marketing, instant linked-device pairing, and high-performance automation.
       </p>
 
-      <!-- 4-Card Luxury Morphism Row (Exact replica of image cards) -->
-      <div class="zabbro-cards-grid">
-        
-        <!-- Card 1: Website Services -->
-        <div class="zabbro-service-card">
-          <div class="card-icon-squircle">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="2" y1="12" x2="22" y2="12"></line>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-            </svg>
+      <!-- Minimalist Central Action Box (Replaces chat input with Explore & Pricing action panel) -->
+      <div class="hero-action-card">
+        <div class="action-card-header">
+          <div class="action-status-indicator">
+            <span class="indicator-dot"></span>
+            <span id="gatewayStatusText">Gateway ready for companion link</span>
           </div>
-          <span class="card-category-tag">WEB &amp; E-COMMERCE</span>
-          <h3 class="card-title">Website Services</h3>
-          <p class="card-description">
-            Custom web application development, ultra-fast responsive design, and high-conversion e-commerce platforms engineered for growth.
-          </p>
-          <a href="#workspace" class="card-cta-link">
-            <span>Explore Web Services</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          </a>
-        </div>
-
-        <!-- Card 2: Data Analysis & Reporting (Sheets Broadcast) -->
-        <div class="zabbro-service-card" id="sheet-broadcast">
-          <div class="card-icon-squircle">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
-          </div>
-          <span class="card-category-tag">ANALYTICS &amp; INSIGHTS</span>
-          <h3 class="card-title">Data Analysis &amp; Reporting</h3>
-          <p class="card-description">
-            Transform raw data into actionable business intelligence with automated KPI dashboards, sheet broadcast pipelines, and forecasting models.
-          </p>
-          <a href="#sheetSection" class="card-cta-link">
-            <span>Learn More</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          </a>
-        </div>
-
-        <!-- Card 3: AI Services & Models -->
-        <div class="zabbro-service-card" id="ai-services">
-          <div class="card-icon-squircle">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"></path>
-            </svg>
-          </div>
-          <span class="card-category-tag">ARTIFICIAL INTELLIGENCE</span>
-          <h3 class="card-title">AI Services &amp; Models</h3>
-          <p class="card-description">
-            Cutting-edge machine learning solutions, predictive models, and custom AI automation workflows built to elevate enterprise efficiency.
-          </p>
-          <a href="#aiSection" class="card-cta-link">
-            <span>Get AI Solutions</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          </a>
-        </div>
-
-        <!-- Card 4: Intelligent Chatbot Systems -->
-        <div class="zabbro-service-card">
-          <div class="card-icon-squircle">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="10" rx="2"></rect>
-              <circle cx="12" cy="5" r="2"></circle>
-              <path d="M12 7v4"></path>
-              <line x1="8" y1="16" x2="8.01" y2="16"></line>
-              <line x1="16" y1="16" x2="16.01" y2="16"></line>
-            </svg>
-          </div>
-          <span class="card-category-tag">CONVERSATIONAL AI</span>
-          <h3 class="card-title">Intelligent Chatbot Systems</h3>
-          <p class="card-description">
-            Custom AI chatbots for 24/7 customer support automation, lead generation, WhatsApp CRM integration, and instant conversion.
-          </p>
-          <a href="#workspace" class="card-cta-link">
-            <span>Deploy Chatbot</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-          </a>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- ==========================================================
-       INTERACTIVE AUTOMATION WORKSPACE (ZABBRO AESTHETIC)
-       ========================================================== -->
-  <section class="zabbro-workspace-section" id="workspace">
-    <div class="zabbro-container">
-
-      <!-- Workspace Header Bar with Auto-Refresh Toggle -->
-      <div class="zabbro-workspace-bar">
-        <div class="bar-left-info">
-          <span class="zabbro-mini-tag">ZA CORE ENGINE</span>
-          <h2>WhatsApp Companion Gateway &amp; Control Desk</h2>
-        </div>
-
-        <div class="bar-right-controls">
-          <!-- Auto-Refresh Toggle (Default: OFF) -->
-          <div class="toggle-control" title="Toggle automatic polling">
+          <div class="toggle-wrap" title="Auto-refresh status">
+            <span class="toggle-caption">Auto-refresh</span>
             <label class="switch" for="autoRefreshToggle">
               <input type="checkbox" id="autoRefreshToggle">
               <span class="slider"></span>
             </label>
-            <span class="toggle-text" id="autoRefreshLabel">Auto-refresh: <span class="badge-off">OFF</span></span>
+            <span class="badge-state" id="autoRefreshLabel"><span class="badge-off">OFF</span></span>
+          </div>
+        </div>
+
+        <div class="action-card-body">
+          <p class="action-card-desc">
+            Directly connect your WhatsApp account, transmit Google Sheets contacts with dynamic parameters, or review integration endpoints.
+          </p>
+
+          <div class="hero-buttons-group">
+            <a href="#connection" class="btn-hero-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              <span>Explore Now</span>
+            </a>
+
+            <a href="#pricing" class="btn-hero-secondary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+              <span>Pricing</span>
+            </a>
+
+            <a href="#integration" class="btn-hero-ghost">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 18 22 12 16 6"/>
+                <polyline points="8 6 2 12 8 18"/>
+              </svg>
+              <span>API Endpoint</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Capability Pills underneath -->
+        <div class="capability-pills">
+          <span class="pill-item">Google Sheets Integration</span>
+          <span class="pill-item">No Meta Template Approvals</span>
+          <span class="pill-item">Zero Account Deletion Risk</span>
+          <span class="pill-item">Auto Welcome &amp; Trigger AI</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Big Bold Typography Break -->
+  <section class="quote-break">
+    <h2>Imagine messaging automation without limits.</h2>
+    <p>Seamlessly pair any existing number and broadcast personalized updates straight from your spreadsheet.</p>
+  </section>
+
+  <!-- Main Functional Workspace -->
+  <main class="app-workspace" id="connection">
+    <div class="workspace-grid">
+      
+      <!-- Device Pairing Card -->
+      <section class="minimal-card connection-card">
+        <div class="card-top">
+          <div class="card-heading">
+            <span class="card-eyebrow">Authentication</span>
+            <h3>Device Connection</h3>
+          </div>
+          <span class="status-chip" id="kpiGatewayStatus">Connecting...</span>
+        </div>
+
+        <!-- QR Code View -->
+        <div id="qrSection" class="qr-wrapper">
+          <div class="qr-canvas-box">
+            <img id="qrImage" src="" alt="WhatsApp QR Code">
+            <div id="qrLoading" class="qr-state-loader">
+              <div class="minimal-spinner"></div>
+              <p>Preparing Baileys QR handshake...</p>
+              <span class="subtext">Scan using WhatsApp Linked Devices</span>
+            </div>
           </div>
 
-          <!-- Manual Refresh Button -->
-          <button id="manualRefreshBtn" class="btn-zabbro-refresh" title="Sync dashboard status now">
-            <svg class="sync-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          <button id="refreshQrBtn" class="btn-minimal-action">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6"/>
+              <path d="M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
             </svg>
-            <span id="syncBtnText">Sync Now</span>
+            <span>Request Fresh QR</span>
+          </button>
+
+          <div class="minimal-instructions">
+            <h4>Quick Pairing:</h4>
+            <div class="steps-row">
+              <div class="step-pill"><span>1</span> Open WhatsApp</div>
+              <div class="step-pill"><span>2</span> Tap Linked Devices</div>
+              <div class="step-pill"><span>3</span> Scan QR</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Connected View -->
+        <div id="connectedSection" class="connected-wrapper hidden">
+          <div class="success-ring">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <div class="connected-info">
+            <span class="live-tag">● Live Session</span>
+            <h4 id="connectedPhone">+00 0000000000</h4>
+            <p>Ready to dispatch automated broadcasts directly from your connected Google Sheet.</p>
+          </div>
+
+          <div class="connected-stats-row">
+            <div class="stat-box">
+              <span class="stat-label">Mode</span>
+              <span class="stat-val">Companion Web</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Protocol</span>
+              <span class="stat-val">Baileys v6.7</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Status</span>
+              <span class="stat-val text-green">Online</span>
+            </div>
+          </div>
+
+          <button id="logoutBtn" class="btn-minimal-danger">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Disconnect Session</span>
           </button>
         </div>
-      </div>
+      </section>
 
-      <!-- 4 KPI Metrics Row -->
-      <div class="zabbro-kpi-row">
-        <div class="zabbro-kpi-card">
-          <span class="kpi-label">Gateway Status</span>
-          <span class="kpi-value" id="kpiGatewayStatus">Connecting...</span>
-        </div>
-        <div class="zabbro-kpi-card">
-          <span class="kpi-label">Socket Engine</span>
-          <span class="kpi-value">Baileys Companion Multi-Device</span>
-        </div>
-        <div class="zabbro-kpi-card">
-          <span class="kpi-label">AI Model</span>
-          <span class="kpi-value">OpenRouter Free (Gemma 2 / Nemotron)</span>
-        </div>
-        <div class="zabbro-kpi-card">
-          <span class="kpi-label">Last Synced</span>
-          <span class="kpi-value" id="lastUpdated">Never</span>
-        </div>
-      </div>
-
-      <!-- Main Two-Column Control Desk -->
-      <div class="zabbro-grid-two">
+      <!-- Right Column: Sheet Integration & Configuration -->
+      <div class="right-stack" id="integration">
         
-        <!-- Left Column: WhatsApp Companion Pairing Card -->
-        <div class="zabbro-glass-card">
-          <div class="glass-card-header">
-            <div class="card-title-wrap">
-              <span class="card-eyebrow">DEVICE LINKING</span>
-              <h3>WhatsApp Companion Connection</h3>
+        <!-- Google Sheets Integration Card -->
+        <section class="minimal-card">
+          <div class="card-top">
+            <div class="card-heading">
+              <span class="card-eyebrow">Google Sheets</span>
+              <h3>REST API Configuration</h3>
             </div>
-            <span class="badge-pill" id="deviceBadge">QR Code Ready</span>
+            <span class="status-chip chip-neutral">Web Service</span>
           </div>
 
-          <!-- State 1: QR Ready -->
-          <div id="qrSection" class="zabbro-qr-container">
-            <div class="qr-box-styled">
-              <img id="qrImage" src="" alt="WhatsApp Pairing QR">
-              <div id="qrLoading" class="qr-loading-wrapper">
-                <div class="zabbro-spinner"></div>
-                <p>Generating companion handshake...</p>
-                <span class="qr-sub-text">WhatsApp &gt; Linked Devices &gt; Link a Device</span>
-              </div>
+          <p class="card-subdesc">
+            Use these credentials inside your Google Apps Script (<code class="inline-code">Code.js</code>) to trigger instant WhatsApp transmissions.
+          </p>
+
+          <div class="endpoint-block">
+            <div class="field-row">
+              <label>API Endpoint (Target URL)</label>
+              <span class="copy-hint" id="hint-apiEndpointUrl">Click copy</span>
             </div>
-
-            <button id="refreshQrBtn" class="btn-zabbro-outline">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M23 4v6h-6"/>
-                <path d="M1 20v-6h6"/>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-              </svg>
-              <span>Refresh Pairing QR</span>
-            </button>
-
-            <div class="qr-instruction-steps">
-              <h4>Three Easy Steps to Link:</h4>
-              <ol>
-                <li>Open <strong>WhatsApp</strong> on your phone</li>
-                <li>Tap <strong>Settings</strong> or <strong>Menu (⋮)</strong> &gt; <strong>Linked Devices</strong></li>
-                <li>Tap <strong>Link a Device</strong> and point your camera here</li>
-              </ol>
-            </div>
-          </div>
-
-          <!-- State 2: Connected -->
-          <div id="connectedSection" class="zabbro-connected-view hidden">
-            <div class="conn-icon-circle">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M20 6L9 17l-5-5"/>
-              </svg>
-            </div>
-            <span class="conn-status-tag">● Companion Active</span>
-            <h4>Connected to WhatsApp</h4>
-            <p class="connected-phone-display" id="connectedPhone">+91 0000000000</p>
-            <p class="conn-desc-text">Ready to dispatch broadcast sheets and respond to product inquiries 24/7.</p>
-
-            <button id="logoutBtn" class="btn-zabbro-danger">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-              <span>Disconnect Companion Session</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Right Column: Sandbox Tester & Sheet URL Integration -->
-        <div class="zabbro-right-column">
-          
-          <!-- Test Message Card -->
-          <div class="zabbro-glass-card">
-            <div class="glass-card-header">
-              <div class="card-title-wrap">
-                <span class="card-eyebrow">SANDBOX DISPATCH</span>
-                <h3>Transmit Single Test Message</h3>
-              </div>
-            </div>
-
-            <form id="testMessageForm" class="zabbro-form">
-              <div class="form-field">
-                <label for="testPhone">Recipient Phone Number</label>
-                <input type="text" id="testPhone" placeholder="e.g. 919876543210 (with country code)" required>
-                <span class="field-hint">Include country code without + or spaces</span>
-              </div>
-
-              <div class="form-field">
-                <label for="testMessage">Message Content</label>
-                <textarea id="testMessage" rows="2" placeholder="Hello from ZABBRO AUTOMATE!" required></textarea>
-              </div>
-
-              <button type="submit" id="sendBtn" class="btn-zabbro-primary">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-                <span>Transmit Test Message</span>
+            <div class="input-copy-box">
+              <code id="apiEndpointUrl">https://.../api/send</code>
+              <button class="btn-copy-chip" type="button" data-target="apiEndpointUrl">
+                <span>Copy</span>
               </button>
-              <div id="testAlert" class="alert hidden"></div>
-            </form>
-          </div>
-
-          <!-- API Gateway Endpoint Card -->
-          <div class="zabbro-glass-card">
-            <div class="glass-card-header">
-              <div class="card-title-wrap">
-                <span class="card-eyebrow">REST INTEGRATION</span>
-                <h3>Gateway Endpoint Credentials</h3>
-              </div>
-            </div>
-
-            <div class="api-credentials-group">
-              <div class="api-cred-field">
-                <div class="cred-label-row">
-                  <label>HTTP POST URL</label>
-                  <span class="copy-feedback-label" id="hint-apiEndpointUrl">Click copy</span>
-                </div>
-                <div class="copy-field-wrap">
-                  <code id="apiEndpointUrl">https://.../api/send</code>
-                  <button class="btn-copy" type="button" data-target="apiEndpointUrl">Copy</button>
-                </div>
-              </div>
-
-              <div class="api-cred-field">
-                <div class="cred-label-row">
-                  <label>API Key Header (x-api-key)</label>
-                  <span class="copy-feedback-label" id="hint-apiSecretDisplay">Click copy</span>
-                </div>
-                <div class="copy-field-wrap">
-                  <code id="apiSecretDisplay">secret123</code>
-                  <button class="btn-copy" type="button" data-target="apiSecretDisplay">Copy</button>
-                </div>
-              </div>
             </div>
           </div>
 
-        </div>
-
-      </div>
-
-      <!-- Google Sheet Direct Broadcast Section -->
-      <div class="zabbro-glass-card broadcast-full-card" id="sheetSection">
-        <div class="glass-card-header">
-          <div class="card-title-wrap">
-            <span class="card-eyebrow">SPREADSHEET BROADCAST</span>
-            <h3>Direct Google Sheet CSV Importer (No Apps Script)</h3>
-          </div>
-          <span class="badge-pill">Zero Coding</span>
-        </div>
-
-        <p class="broadcast-explain-text">
-          Paste any public Google Sheet link (shared as <em>"Anyone with the link can view"</em>). ZABBRO-AUTOMATE automatically extracts contact numbers, validates phone dialing codes, and replaces template variables per row.
-        </p>
-
-        <div class="sheet-link-input-row">
-          <input type="url" id="sheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit?usp=sharing">
-          <button class="btn-zabbro-primary" id="btnPreviewSheet" type="button">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            <span>Parse &amp; Preview Sheet</span>
-          </button>
-        </div>
-
-        <div class="template-composer-wrap">
-          <label for="broadcastTemplate">Broadcast Message Template:</label>
-          <textarea id="broadcastTemplate" rows="2" placeholder="Hello {Name}! Your order {Param1} has been confirmed. Reply CATALOG for more details."></textarea>
-          <div class="token-badges-row">
-            <span class="token-label">Available Tokens:</span>
-            <span class="token-chip">{Name}</span>
-            <span class="token-chip">{Phone}</span>
-            <span class="token-chip">{Param1}</span>
-            <span class="token-chip">{Param2}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- AI Triggers & Auto-Reply Configuration -->
-      <div class="zabbro-glass-card ai-full-card" id="aiSection">
-        <div class="glass-card-header">
-          <div class="card-title-wrap">
-            <span class="card-eyebrow">TRIGGER-BASED AI ENGINE</span>
-            <h3>Product Enquiry Auto-Reply &amp; OpenRouter Settings</h3>
-          </div>
-          <span class="badge-pill green">100% Free AI Tier</span>
-        </div>
-
-        <div class="ai-settings-grid">
-          <div class="ai-setting-box">
-            <h4>Trigger-Word Gatekeeper</h4>
-            <p>The AI will activate <strong>ONLY</strong> when an incoming message includes product-related keywords. Personal family messages are completely ignored.</p>
-            <input type="text" class="zabbro-readonly-input" value="price, cost, rate, catalog, brochure, buy, order, demo, specs, details" readonly>
-            <span class="field-hint">Configured in server .env (PRODUCT_TRIGGER_WORDS)</span>
-          </div>
-
-          <div class="ai-setting-box">
-            <h4>Active LLM Inference Engine</h4>
-            <p>Ultra-fast responses powered by OpenRouter Free Tier endpoints.</p>
-            <div class="model-display-pill">
-              <span class="model-name">google/gemma-2-9b-it:free</span>
-              <span class="free-badge">FREE TIER</span>
+          <div class="endpoint-block">
+            <div class="field-row">
+              <label>API Authorization Key (x-api-key)</label>
+              <span class="copy-hint" id="hint-apiSecretDisplay">Click copy</span>
             </div>
-            <span class="field-hint">Also supports nvidia/llama-3.1-nemotron-70b:free</span>
+            <div class="input-copy-box">
+              <code id="apiSecretDisplay">secret123</code>
+              <button class="btn-copy-chip" type="button" data-target="apiSecretDisplay">
+                <span>Copy</span>
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Real-Time WebSocket Console -->
-      <div class="zabbro-glass-card console-card">
-        <div class="glass-card-header">
-          <div class="card-title-wrap">
-            <span class="card-eyebrow">LIVE STREAM</span>
-            <h3>Gateway Console &amp; Activity Log</h3>
+          <div class="features-checklist">
+            <div class="check-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Zero template approval latency</span>
+            </div>
+            <div class="check-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Personalized variables ({Name}, {Param1})</span>
+            </div>
+            <div class="check-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Automatic keep-alive ping support</span>
+            </div>
           </div>
-          <div class="console-action-buttons">
-            <button id="clearLogsBtn" class="btn-zabbro-clear">Clear</button>
-            <span class="log-mode-tag" id="logModeTag">Manual Sync Mode</span>
-          </div>
-        </div>
+        </section>
 
-        <div class="logs-console" id="logsContainer">
-          <div class="log-line info">
-            <span class="log-time">[Init]</span>
-            <span>ZABBRO-AUTOMATE (ZA) Gateway initialized. Auto-refresh is OFF.</span>
+        <!-- Quick Explorer Box -->
+        <section class="minimal-card feature-highlight-card">
+          <div class="highlight-flex">
+            <div>
+              <span class="card-eyebrow">Capabilities</span>
+              <h4>Explore Automation Features</h4>
+              <p>Experience multi-device pairing, direct Google Sheets broadcast, welcome replies, and OpenRouter trigger AI.</p>
+            </div>
+            <a href="#connection" class="btn-action-small">
+              Explore Now
+            </a>
           </div>
-        </div>
+        </section>
       </div>
 
     </div>
-  </section>
 
-  <!-- ==========================================================
-       TRANSPARENT PRICING SECTION (ZABBRO AESTHETIC)
-       ========================================================== -->
-  <section class="zabbro-pricing-section" id="pricing">
-    <div class="zabbro-container">
-      <div class="section-center-head">
-        <span class="zabbro-overline">PLANS &amp; TIERS</span>
-        <h2 class="zabbro-section-heading">Transparent Pricing for Growing Businesses</h2>
-        <p class="zabbro-section-sub">Deploy self-hosted for free or scale with our enterprise managed infrastructure.</p>
+    <!-- Pricing Section -->
+    <section class="pricing-section" id="pricing">
+      <div class="section-header-center">
+        <span class="card-eyebrow">Transparent Pricing</span>
+        <h3>Zero Subscriptions. 100% Free Tier.</h3>
+        <p>Built on free companion web protocol and free tier cloud infrastructure.</p>
       </div>
 
-      <div class="zabbro-pricing-grid">
-        <!-- Community -->
-        <div class="zabbro-pricing-card">
-          <span class="pricing-tier-name">COMMUNITY</span>
-          <div class="pricing-price-row">
-            <span class="price-val">$0</span>
-            <span class="price-sub">/ month</span>
+      <div class="pricing-grid">
+        <!-- Plan 1 -->
+        <div class="pricing-card">
+          <div class="plan-header">
+            <h4>Free Self-Hosted</h4>
+            <div class="plan-price">
+              <span class="price-amount">$0</span>
+              <span class="price-cycle">/forever</span>
+            </div>
+            <p class="plan-desc">For individual developers and small businesses running on Render / Cloud.</p>
           </div>
-          <p class="pricing-desc">Self-hosted local and Render deployment for founders.</p>
-          <ul class="pricing-features-list">
-            <li>✓ 1 Companion WhatsApp Link</li>
-            <li>✓ Unlimited Google Sheet Imports</li>
-            <li>✓ OpenRouter Free Model AI</li>
-            <li>✓ Trigger-Word Enquiry Filter</li>
-            <li>✓ Zero Risk Anti-Ban Sockets</li>
+          <ul class="plan-features">
+            <li><span>✓</span> Unlimited WhatsApp linked sessions</li>
+            <li><span>✓</span> Google Sheets direct synchronization</li>
+            <li><span>✓</span> Baileys companion web protocol</li>
+            <li><span>✓</span> No Meta per-message conversation fees</li>
+            <li><span>✓</span> Community open-source support</li>
           </ul>
-          <a href="#workspace" class="btn-zabbro-plan-outline">Get Started Free</a>
+          <a href="#connection" class="btn-plan-outline">Get Started Free</a>
         </div>
 
-        <!-- Pro Growth (Featured) -->
-        <div class="zabbro-pricing-card featured">
-          <div class="featured-badge">MOST POPULAR</div>
-          <span class="pricing-tier-name">PRO GROWTH</span>
-          <div class="pricing-price-row">
-            <span class="price-val">$49</span>
-            <span class="price-sub">/ month</span>
+        <!-- Plan 2 (Highlighted) -->
+        <div class="pricing-card featured-plan">
+          <div class="featured-badge">RECOMMENDED</div>
+          <div class="plan-header">
+            <h4>Enterprise Gateway</h4>
+            <div class="plan-price">
+              <span class="price-amount">Free</span>
+              <span class="price-cycle">with OpenRouter</span>
+            </div>
+            <p class="plan-desc">Includes AI Trigger-Word Auto-Reply and automated welcome messaging.</p>
           </div>
-          <p class="pricing-desc">High-volume automated broadcasts and agency pipelines.</p>
-          <ul class="pricing-features-list">
-            <li>✓ Up to 5 Companion Device Links</li>
-            <li>✓ Priority Cloud Cluster Hosting</li>
-            <li>✓ Read &amp; Delivery Webhook Receipts</li>
-            <li>✓ Custom Product Catalog Embedding</li>
-            <li>✓ Priority 24/7 Engineering Support</li>
+          <ul class="plan-features">
+            <li><span>✓</span> All Free Self-Hosted features</li>
+            <li><span>✓</span> OpenRouter Free Models (Gemma 2, Nemotron, Llama)</li>
+            <li><span>✓</span> Product query trigger-word filtering</li>
+            <li><span>✓</span> Automated first-touch customer welcome</li>
+            <li><span>✓</span> Anti-ban interval jitter (2.5–5.0s)</li>
           </ul>
-          <a href="#workspace" class="btn-zabbro-plan-solid">Explore Pro</a>
+          <a href="#connection" class="btn-plan-solid">Explore Gateway</a>
         </div>
 
-        <!-- Enterprise -->
-        <div class="zabbro-pricing-card">
-          <span class="pricing-tier-name">ENTERPRISE</span>
-          <div class="pricing-price-row">
-            <span class="price-val">Custom</span>
+        <!-- Plan 3 -->
+        <div class="pricing-card">
+          <div class="plan-header">
+            <h4>Agency Whitelabel</h4>
+            <div class="plan-price">
+              <span class="price-amount">Custom</span>
+              <span class="price-cycle">/license</span>
+            </div>
+            <p class="plan-desc">For marketing agencies offering WhatsApp automation as a client service.</p>
           </div>
-          <p class="pricing-desc">White-label cluster with custom domain and dedicated SLA.</p>
-          <ul class="pricing-features-list">
-            <li>✓ Unlimited WhatsApp Accounts</li>
-            <li>✓ White-label Domain &amp; Custom Branding</li>
-            <li>✓ Dedicated Proxy Infrastructure</li>
-            <li>✓ CRM Integrations (HubSpot / Zoho)</li>
-            <li>✓ 99.99% Uptime Guarantee</li>
+          <ul class="plan-features">
+            <li><span>✓</span> Multi-client dashboard setup</li>
+            <li><span>✓</span> Custom branding &amp; domain masking</li>
+            <li><span>✓</span> Dedicated high-availability instances</li>
+            <li><span>✓</span> SLA &amp; automated session self-healing</li>
           </ul>
-          <a href="#workspace" class="btn-zabbro-plan-outline">Contact Sales</a>
+          <a href="#connection" class="btn-plan-outline">Contact Setup</a>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ==========================================================
-       ZABBRO FOOTER
-       ========================================================== -->
-  <footer class="zabbro-footer" id="contact">
-    <div class="zabbro-container">
-      <div class="footer-top-row">
-        <div class="footer-brand-info">
-          <span class="brand-text-zabbro">ZΛ33RO</span>
-          <p>Next-generation web development, artificial intelligence, and WhatsApp automation systems.</p>
+    <!-- Activity Console -->
+    <section class="minimal-card console-card" id="console">
+      <div class="card-top">
+        <div class="card-heading">
+          <span class="card-eyebrow">Realtime Activity</span>
+          <h3>Gateway Activity Logs</h3>
         </div>
-        <div class="footer-quick-links">
-          <a href="#services">Services</a>
-          <a href="#workspace">Gateway</a>
-          <a href="#pricing">Pricing</a>
-          <a href="https://github.com/zabbrotechnologies/automation-whatsapp" target="_blank">GitHub</a>
+        <div class="console-actions">
+          <button id="clearLogsBtn" class="btn-subtle-text">Clear</button>
+          <span class="log-indicator" id="logModeTag">Manual Sync Mode</span>
         </div>
       </div>
 
-      <div class="footer-bottom-line">
-        <span>© 2026 ZABBRO-AUTOMATE (ZA). All rights reserved.</span>
-        <div class="system-status-indicator">
-          <span class="status-pulse-dot"></span>
-          <span>All Automation Engines Operational</span>
-        </div>
+      <div class="minimal-console-box" id="logsContainer">
+        <div class="log-line info"><span class="log-time">[Init]</span> Gateway loaded with Horizon-inspired minimalist theme. Auto-refresh is OFF.</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Clean Footer -->
+  <footer class="minimal-footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <span class="brand-name">WhatsApp Gateway</span>
+        <span class="divider">•</span>
+        <span>Google Sheets Automation &amp; AI Integration</span>
+      </div>
+      <div class="footer-right">
+        <span>Baileys Protocol Multi-Device Engine</span>
+        <span class="divider">•</span>
+        <span>Last Synced: <strong id="lastUpdated">Just now</strong></span>
       </div>
     </div>
   </footer>
