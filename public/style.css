@@ -104,14 +104,35 @@ body {
 }
 
 .brand-logo-mark {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
-  background: var(--bg-dark);
+  background: linear-gradient(135deg, #09090b 0%, #27272a 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand-logo-mark.small {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+.za-logo-text {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.brand-logo-mark.small .za-logo-text {
+  font-size: 11px;
 }
 
 .brand-logo-mark svg {
