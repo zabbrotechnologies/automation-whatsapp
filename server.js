@@ -7,12 +7,19 @@ const pino = require('pino');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  DisconnectReason,
-  fetchLatestBaileysVersion
-} = require('@whiskeysockets/baileys');
+let makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion;
+
+if (!process.env.VERCEL) {
+  try {
+    const baileys = require('@whiskeysockets/baileys');
+    makeWASocket = baileys.default || baileys.makeWASocket;
+    useMultiFileAuthState = baileys.useMultiFileAuthState;
+    DisconnectReason = baileys.DisconnectReason;
+    fetchLatestBaileysVersion = baileys.fetchLatestBaileysVersion;
+  } catch (err) {
+    console.warn('⚠️ Could not load Baileys library:', err.message);
+  }
+}
 
 require('dotenv').config();
 
@@ -59,6 +66,18 @@ function addLog(type, message) {
 }
 
 async function connectToWhatsApp() {
+  if (process.env.VERCEL) {
+    connectionStatus = 'SERVERLESS_ACTIVE';
+    addLog('info', 'Running in Vercel Serverless environment. WhatsApp socket gateway requires persistent server (e.g. Render/VPS).');
+    return;
+  }
+
+  if (!makeWASocket || !useMultiFileAuthState) {
+    connectionStatus = 'DISCONNECTED';
+    addLog('warn', 'Baileys not loaded. WhatsApp socket gateway unavailable.');
+    return;
+  }
+
   try {
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
     const { version, isLatest } = await fetchLatestBaileysVersion();
@@ -327,7 +346,8 @@ app.post('/api/admin/user-status', authenticateToken, requireAdmin, async (req, 
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
-    connection: connectionStatus,
+    serverless: !!process.env.VERCEL,
+    connection: process.env.VERCEL ? 'SERVERLESS_ACTIVE' : connectionStatus,
     timestamp: new Date().toISOString()
   });
 });
@@ -335,16 +355,24 @@ app.get('/health', (req, res) => {
 // 2. Status & QR endpoint for Web UI
 app.get('/api/status', (req, res) => {
   res.json({
-    status: connectionStatus,
+    status: process.env.VERCEL ? 'SERVERLESS_ACTIVE' : connectionStatus,
     qr: currentQR,
     user: connectedUser,
-    logs: logs.slice(0, 20)
+    logs: logs.slice(0, 20),
+    serverless: !!process.env.VERCEL
   });
 });
 
 // 3. Send Message endpoint (Called by Google Apps Script)
 app.post('/api/send', verifyApiKey, async (req, res) => {
   try {
+    if (process.env.VERCEL) {
+      return res.status(503).json({
+        success: false,
+        error: 'WhatsApp socket gateway cannot run on Vercel serverless. Deploy persistent daemon to Render or VPS.'
+      });
+    }
+
     if (connectionStatus !== 'CONNECTED' || !sock) {
       return res.status(503).json({
         success: false,
@@ -412,6 +440,13 @@ app.post('/api/logout', verifyApiKey, async (req, res) => {
 // 5. Manual QR Refresh endpoint
 app.post('/api/refresh-qr', async (req, res) => {
   try {
+    if (process.env.VERCEL) {
+      return res.status(503).json({
+        success: false,
+        error: 'WhatsApp gateway socket requires persistent hosting (Render / VPS).'
+      });
+    }
+
     if (connectionStatus === 'CONNECTED') {
       return res.json({ success: false, error: 'Device is already connected!' });
     }
