@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "public": true,
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -8,10 +9,6 @@
     {
       "source": "/health",
       "destination": "/api/index.js"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/public/$1"
     }
   ]
 }
