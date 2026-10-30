@@ -8,10 +8,14 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
     "@whiskeysockets/baileys": "^6.7.9",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
     "pino": "^9.2.0",
     "qrcode": "^1.5.3"
   },

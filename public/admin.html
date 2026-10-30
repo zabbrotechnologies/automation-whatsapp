@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Command Center — WhatsApp Gateway</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Lato:wght@300;400;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    .admin-wrapper {
+      max-width: 1200px;
+      margin: 30px auto 80px;
+      padding: 0 20px;
+    }
+    .admin-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .admin-title-group h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-badge-shield {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.05em;
+    }
+    .admin-stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .admin-stat-card {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .admin-stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .admin-stat-val {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-dark);
+      letter-spacing: -0.02em;
+    }
+    .admin-table-panel {
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+    }
+    .table-panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .table-panel-head h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    .users-table th {
+      padding: 12px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border-light);
+      background: #fafaf9;
+    }
+    .users-table td {
+      padding: 14px;
+      font-size: 13.5px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .role-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .role-badge.admin {
+      background: #fef3c7;
+      color: #b45309;
+    }
+    .role-badge.user {
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    .status-dot-sm {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+    .status-dot-sm.active { background: #22c55e; }
+    .status-dot-sm.suspended { background: #ef4444; }
+    .btn-action-suspend {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-action-activate {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Minimal Nav -->
+  <header class="top-nav-wrapper">
+    <nav class="top-nav">
+      <a href="/" class="nav-brand">
+        <div class="brand-logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+          </svg>
+        </div>
+        <span class="brand-text">Flow Admin</span>
+      </a>
+
+      <div class="nav-actions">
+        <span id="adminGreeting" style="font-size: 13px; font-weight: 600; color: var(--text-dark);">Admin Session</span>
+        <a href="/" class="btn-tier-outline" style="padding: 6px 12px; font-size: 12px;">App Home</a>
+        <button id="btnAdminLogout" class="btn-tier-dark" style="padding: 6px 14px; font-size: 12px; border: none; cursor: pointer;">Sign Out</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="admin-wrapper">
+    <!-- Header Row -->
+    <div class="admin-header-row">
+      <div class="admin-title-group">
+        <h1>
+          <span>Enterprise User &amp; Gateway Monitor</span>
+          <span class="admin-badge-shield">RESTRICTED ADMIN</span>
+        </h1>
+        <p style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">
+          Live overview of registered tenant accounts, linked phone numbers, and WhatsApp socket health.
+        </p>
+      </div>
+
+      <div>
+        <button id="btnRefreshAdmin" class="btn-tier-outline" style="padding: 8px 16px; font-size: 13px; cursor: pointer;">
+          <span>↻ Refresh Data</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="admin-stats-bar">
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Total Users</span>
+        <span class="admin-stat-val" id="statTotalUsers">0</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Active Accounts</span>
+        <span class="admin-stat-val" id="statActiveUsers" style="color: #15803d;">0</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Socket Gateway</span>
+        <span class="admin-stat-val" id="statGatewayStatus" style="font-size: 22px; color: #ea580c;">Checking...</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-label">Linked Device</span>
+        <span class="admin-stat-val" id="statLinkedPhone" style="font-size: 19px; font-family: var(--font-mono); font-weight: 700;">None</span>
+      </div>
+    </div>
+
+    <!-- Users Management Table -->
+    <div class="admin-table-panel">
+      <div class="table-panel-head">
+        <h2>Registered Accounts</h2>
+        <span id="userCountTag" style="font-size: 12.5px; color: var(--text-muted);">Loading accounts...</span>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>User Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Linked Phone</th>
+              <th>Created Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading users from Neon database...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function checkAuthAndLoad() {
+      try {
+        const meRes = await fetch('/api/auth/me');
+        if (!meRes.ok) {
+          window.location.href = '/login.html';
+          return;
+        }
+        const meData = await meRes.json();
+        if (meData.user.role !== 'ADMIN') {
+          alert('Access denied: Administrator privileges required.');
+          window.location.href = '/';
+          return;
+        }
+        document.getElementById('adminGreeting').textContent = `${meData.user.name} (Admin)`;
+        loadAdminUsers();
+      } catch (err) {
+        window.location.href = '/login.html';
+      }
+    }
+
+    async function loadAdminUsers() {
+      try {
+        const res = await fetch('/api/admin/users');
+        if (!res.ok) throw new Error('Failed to fetch admin users');
+        const data = await res.json();
+
+        document.getElementById('statTotalUsers').textContent = data.totalUsers || 0;
+        document.getElementById('statActiveUsers').textContent = data.activeUsers || 0;
+        document.getElementById('statGatewayStatus').textContent = data.gatewayStatus || 'OFFLINE';
+        document.getElementById('statLinkedPhone').textContent = data.connectedNumber ? `+${data.connectedNumber}` : 'Unlinked';
+        document.getElementById('userCountTag').textContent = `${data.users.length} accounts recorded`;
+
+        const tbody = document.getElementById('usersTableBody');
+        if (!data.users || data.users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px;">No users found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.users.map(u => {
+          const isSuspended = u.status === 'SUSPENDED';
+          const dateStr = u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A';
+          return `
+            <tr>
+              <td>#${u.id}</td>
+              <td><strong>${escapeHtml(u.name)}</strong></td>
+              <td>${escapeHtml(u.email)}</td>
+              <td><span class="role-badge ${u.role === 'ADMIN' ? 'admin' : 'user'}">${u.role}</span></td>
+              <td>
+                <span class="status-dot-sm ${isSuspended ? 'suspended' : 'active'}"></span>
+                <span>${u.status || 'ACTIVE'}</span>
+              </td>
+              <td><code>${u.linked_phone ? `+${escapeHtml(u.linked_phone)}` : '—'}</code></td>
+              <td style="color: var(--text-muted); font-size: 12.5px;">${dateStr}</td>
+              <td>
+                ${u.role === 'ADMIN' 
+                  ? '<span style="color:var(--text-muted); font-size: 11px;">Protected</span>' 
+                  : (isSuspended
+                      ? `<button class="btn-action-activate" onclick="toggleStatus(${u.id}, 'ACTIVE')">Activate</button>`
+                      : `<button class="btn-action-suspend" onclick="toggleStatus(${u.id}, 'SUSPENDED')">Suspend</button>`
+                    )
+                }
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        document.getElementById('usersTableBody').innerHTML = `<tr><td colspan="8" style="color:red; text-align:center;">Error loading: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function toggleStatus(userId, newStatus) {
+      if (!confirm(`Are you sure you want to change user #${userId} status to ${newStatus}?`)) return;
+      try {
+        const res = await fetch('/api/admin/user-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, status: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadAdminUsers();
+        } else {
+          alert(data.error || 'Failed to update user');
+        }
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    document.getElementById('btnRefreshAdmin').addEventListener('click', loadAdminUsers);
+
+    document.getElementById('btnAdminLogout').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    checkAuthAndLoad();
+  </script>
+</body>
+</html>

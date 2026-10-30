@@ -4,6 +4,9 @@ const qrcode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 const pino = require('pino');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const {
   default: makeWASocket,
   useMultiFileAuthState,
@@ -13,13 +16,25 @@ const {
 
 require('dotenv').config();
 
+const {
+  initDb,
+  findUserByEmail,
+  findUserById,
+  createUser,
+  getAllUsers,
+  updateUserStatus,
+  updateUserLinkedPhone
+} = require('./db');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_SECRET = process.env.API_SECRET || 'secret123';
+const JWT_SECRET = process.env.JWT_SECRET || 'jwt_flow_secret_key_99182371';
 const AUTH_DIR = path.join(__dirname, 'session_auth');
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Global State
@@ -119,7 +134,30 @@ function clearSession() {
   }
 }
 
-// Middleware: API Secret verification
+// ---------------- AUTH MIDDLEWARES ---------------- //
+
+function authenticateToken(req, res, next) {
+  const token = req.cookies?.flow_auth_token || req.headers['authorization']?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Authentication required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(403).json({ success: false, error: 'Invalid or expired session' });
+  }
+}
+
+function requireAdmin(req, res, next) {
+  if (req.user?.role !== 'ADMIN') {
+    return res.status(403).json({ success: false, error: 'Admin privileges required' });
+  }
+  next();
+}
+
 function verifyApiKey(req, res, next) {
   const token = req.headers['x-api-key'] || req.query.apiKey || req.body.apiKey;
   if (API_SECRET && token !== API_SECRET) {
@@ -127,6 +165,158 @@ function verifyApiKey(req, res, next) {
   }
   next();
 }
+
+// ---------------- AUTHENTICATION ROUTES ---------------- //
+
+// 1. Sign Up
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, error: 'All fields are required.' });
+    }
+
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ success: false, error: 'An account with this email already exists.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // First user or specific admin email becomes ADMIN
+    const isFirstAdmin = email.toLowerCase().includes('admin');
+    const role = isFirstAdmin ? 'ADMIN' : 'USER';
+
+    const user = await createUser({
+      name,
+      email,
+      password: hashedPassword,
+      role
+    });
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, name: user.name, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.cookie('flow_auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'lax'
+    });
+
+    addLog('success', `New user registered: ${user.name} (${user.email}) [Role: ${user.role}]`);
+
+    res.json({
+      success: true,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 2. Sign In
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Email and password are required.' });
+    }
+
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Invalid email or password.' });
+    }
+
+    if (user.status === 'SUSPENDED') {
+      return res.status(403).json({ success: false, error: 'Your account is suspended. Contact administrator.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, error: 'Invalid email or password.' });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, name: user.name, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.cookie('flow_auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'lax'
+    });
+
+    addLog('info', `User logged in: ${user.name} [Role: ${user.role}]`);
+
+    res.json({
+      success: true,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. Current User Profile Session
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+  try {
+    const user = await findUserById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 4. Logout
+app.post('/api/auth/logout', (req, res) => {
+  res.clearCookie('flow_auth_token');
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// ---------------- ADMIN MONITORING API ---------------- //
+
+// Get all users and system metrics (Admin only)
+app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const users = await getAllUsers();
+    res.json({
+      success: true,
+      totalUsers: users.length,
+      activeUsers: users.filter(u => u.status === 'ACTIVE').length,
+      gatewayStatus: connectionStatus,
+      connectedNumber: connectedUser?.phone || null,
+      users
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Toggle user status (Activate / Suspend)
+app.post('/api/admin/user-status', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { userId, status } = req.body;
+    if (!userId || !status) {
+      return res.status(400).json({ success: false, error: 'Missing userId or status' });
+    }
+    await updateUserStatus(userId, status);
+    addLog('info', `Admin updated user #${userId} status to ${status}`);
+    res.json({ success: true, message: `User status changed to ${status}` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // ---------------- REST API ENDPOINTS ---------------- //
 
@@ -168,7 +358,6 @@ app.post('/api/send', verifyApiKey, async (req, res) => {
       });
     }
 
-    // Clean phone number (strip '+', spaces, dashes)
     const cleanNumber = String(phone).replace(/\D/g, '');
     if (cleanNumber.length < 7 || cleanNumber.length > 15) {
       return res.status(400).json({
@@ -179,7 +368,6 @@ app.post('/api/send', verifyApiKey, async (req, res) => {
 
     const jid = `${cleanNumber}@s.whatsapp.net`;
 
-    // Send WhatsApp text message
     const result = await sock.sendMessage(jid, { text: String(message) });
     const messageId = result?.key?.id || 'SENT';
 
@@ -237,12 +425,19 @@ app.post('/api/refresh-qr', async (req, res) => {
   }
 });
 
-// Start Server & WhatsApp Socket
-app.listen(PORT, () => {
+// Start Server, DB & WhatsApp Socket
+app.listen(PORT, async () => {
   console.log(`====================================================`);
   console.log(`🚀 WhatsApp Gateway Server running on port ${PORT}`);
   console.log(`🔑 API Secret: ${API_SECRET}`);
   console.log(`🌐 Dashboard: http://localhost:${PORT}`);
+  console.log(`🔐 Login: http://localhost:${PORT}/login.html`);
+  console.log(`🛡️ Admin: http://localhost:${PORT}/admin.html`);
   console.log(`====================================================`);
+  
+  // Initialize Neon database tables
+  await initDb();
+  
+  // Start Baileys socket
   connectToWhatsApp();
 });
