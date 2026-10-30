@@ -38,7 +38,7 @@ This architecture transforms a basic WhatsApp gateway into a **full-suite automa
 | **G-Sheet Broadcast** | Paste public sheet link, preview contacts, and send bulk messages. | Google Sheets CSV export parser | ⭐️ Paste URL & click send |
 | **Dynamic Templates** | Replace variables like `{Name}`, `{OrderNo}`, `{Amount}` per row. | String token interpolator | ⭐️ Standard tags |
 | **Auto Welcome Message** | Instant greeting sent to new numbers on their first message. | In-memory / JSON contact history | ⭐️ Set greeting text once |
-| **AI Auto-Reply** | Intelligent 24/7 Q&A powered by free LLMs with business prompt. | OpenRouter API (`:free` models) | ⭐️ Add prompt & toggle ON |
+| **Trigger-Based Auto-Reply** | Replies ONLY to product inquiries with trigger keywords (e.g. `price`, `catalog`). | Regex / substring matcher + OpenRouter LLM | ⭐️ Add keywords & prompt |
 | **Anti-Ban Protection** | Random interval jitter (2–5s) and rate throttling. | Async sleep queue manager | ⭐️ Automatic |
 | **Web Dashboard** | Executive dark UI with toggles, progress bars, and live logs. | Vanilla HTML/CSS/JS (Lightweight) | ⭐️ Browser-based |
 
@@ -126,23 +126,39 @@ This architecture transforms a basic WhatsApp gateway into a **full-suite automa
 
 ---
 
-### D. AI-Powered Auto-Reply Engine (OpenRouter Free Tier)
-* **Goal**: Answer incoming user questions 24/7 with zero operational cost using OpenRouter's free models.
-* **Recommended Free Models**:
+### D. Trigger-Word Based Product Enquiry Auto-Reply Engine
+* **Goal**: Selectively reply **ONLY** when an incoming customer message contains specific product enquiry keywords or buying intent triggers (instead of replying to random personal chats, family messages, or casual hellos).
+* **Why Trigger-Word Filtering is Crucial**:
+  - Prevents the bot from interrupting personal conversations or friends chatting on the same WhatsApp account.
+  - Saves API requests and avoids awkward non-contextual AI responses.
+  - Focuses 100% on **lead conversion** and **product sales**.
+
+* **How Keyword Triggering Works**:
+  1. **Define Trigger Keywords** (Configurable via `.env` or Dashboard):
+     - Product terms: `price`, `cost`, `rate`, `pricing`, `catalog`, `catalogue`, `brochure`, `demo`, `details`
+     - Buying intent words: `buy`, `order`, `purchase`, `available`, `discount`, `offer`, `specs`, `specification`
+     - Brand / Product names: e.g., `software`, `plan`, `crm`, `service`, `enquiry`
+  2. **Keyword Matching Pipeline**:
+     - Normalize incoming text (convert to lowercase, strip emojis, punctuation).
+     - Check if **any trigger keyword or phrase** matches (`triggers.some(word => normalizedText.includes(word))`).
+     - **If NO trigger matches**: Silently ignore. Let the human handle the chat manually.
+     - **If a trigger matches**: Forward to the Product Knowledge AI Responder.
+
+* **Product Knowledge Prompting**:
+  - The AI is fed your **exact product specifications, pricing table, and feature list** via the System Prompt.
+  - The AI responds specifically about the product inquired, quotes accurate pricing, and guides the customer toward the next buying step (e.g., *"Would you like to book a demo or proceed with an order?"*).
+
+* **Recommended Free Models (via OpenRouter)**:
   - `google/gemma-2-9b-it:free` (Fast, high comprehension, Tamil/English bilingual proficiency)
   - `nvidia/llama-3.1-nemotron-70b-instruct:free` (Superb conversational tone, best for customer care)
   - `meta-llama/llama-3.3-70b-instruct:free` (Deep reasoning, handles complex catalogs and policy FAQs)
-* **Mechanism**:
-  1. Extract incoming text query: `m.message?.conversation || m.message?.extendedTextMessage?.text`.
-  2. Construct prompt payload:
-     - **System Prompt**: Embeds company catalog, store hours, pricing, delivery policies, and tone instructions.
-     - **User Prompt**: Customer's exact message.
-  3. Send POST request to `https://openrouter.ai/api/v1/chat/completions`.
-  4. Receive generated reply and transmit to the customer's WhatsApp chat.
+
 * **Smart Guardrails**:
-  - **Group Filter**: Automatically ignores messages ending with `@g.us` (WhatsApp Groups) so the AI never interrupts group conversations.
+  - **Keyword Gatekeeper**: Message MUST hit one or more trigger words to activate.
+  - **Cooldown Timer per Customer**: If a customer chats continuously, don't spam them with multiple AI replies in seconds (e.g., 1-minute conversation debounce).
+  - **Group Filter**: Automatically ignores messages ending with `@g.us` (WhatsApp Groups).
   - **Self Filter**: Ignores messages marked `fromMe: true`.
-  - **Fallback**: If AI is confused or model fails, send a polite fallback: *"Thank you for your message. An executive will get back to you shortly."*
+  - **Human Handover Keyword**: If customer types `human`, `agent`, or `talk to person`, the bot pauses auto-reply for that contact and alerts the admin.
 
 ---
 
@@ -213,11 +229,12 @@ OPENROUTER_MODEL=google/gemma-2-9b-it:free
 OPENROUTER_SITE_URL=https://my-whatsapp-gateway.onrender.com
 OPENROUTER_SITE_NAME=WhatsApp Gateway AI
 
-# Automation Settings
+# Automation & Trigger-Word Settings
 ENABLE_AUTO_WELCOME=true
 WELCOME_MESSAGE=Hello! 👋 Thanks for reaching out. How can we help you today?
 ENABLE_AI_REPLY=true
-AI_SYSTEM_PROMPT=You are a professional customer support assistant. Answer politely and concisely.
+PRODUCT_TRIGGER_WORDS=price,cost,rate,buy,order,purchase,catalog,catalogue,brochure,demo,details,features,specs,available,offer
+AI_SYSTEM_PROMPT=You are our dedicated product specialist. When customers ask about pricing, specifications, or product features, answer accurately using our catalog details and guide them to complete their purchase.
 ```
 
 ---
