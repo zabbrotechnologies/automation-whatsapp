@@ -27,10 +27,13 @@ const {
 } = require('./db');
 
 const app = express();
+const os = require('os');
 const PORT = process.env.PORT || 3000;
 const API_SECRET = process.env.API_SECRET || 'secret123';
 const JWT_SECRET = process.env.JWT_SECRET || 'jwt_flow_secret_key_99182371';
-const AUTH_DIR = path.join(__dirname, 'session_auth');
+const AUTH_DIR = process.env.VERCEL 
+  ? path.join(os.tmpdir(), 'session_auth') 
+  : path.join(__dirname, 'session_auth');
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
@@ -425,19 +428,26 @@ app.post('/api/refresh-qr', async (req, res) => {
   }
 });
 
-// Start Server, DB & WhatsApp Socket
-app.listen(PORT, async () => {
-  console.log(`====================================================`);
-  console.log(`🚀 WhatsApp Gateway Server running on port ${PORT}`);
-  console.log(`🔑 API Secret: ${API_SECRET}`);
-  console.log(`🌐 Dashboard: http://localhost:${PORT}`);
-  console.log(`🔐 Login: http://localhost:${PORT}/login.html`);
-  console.log(`🛡️ Admin: http://localhost:${PORT}/admin.html`);
-  console.log(`====================================================`);
-  
-  // Initialize Neon database tables
-  await initDb();
-  
-  // Start Baileys socket
-  connectToWhatsApp();
-});
+// Start Server, DB & WhatsApp Socket when executed directly
+if (require.main === module) {
+  app.listen(PORT, async () => {
+    console.log(`====================================================`);
+    console.log(`🚀 WhatsApp Gateway Server running on port ${PORT}`);
+    console.log(`🔑 API Secret: ${API_SECRET}`);
+    console.log(`🌐 Dashboard: http://localhost:${PORT}`);
+    console.log(`🔐 Login: http://localhost:${PORT}/login.html`);
+    console.log(`🛡️ Admin: http://localhost:${PORT}/admin.html`);
+    console.log(`====================================================`);
+    
+    // Initialize Neon database tables
+    await initDb();
+    
+    // Start Baileys socket
+    connectToWhatsApp();
+  });
+} else {
+  // Cold start in serverless environment (Vercel)
+  initDb().catch(e => console.error('DB Init err:', e.message));
+}
+
+module.exports = app;
