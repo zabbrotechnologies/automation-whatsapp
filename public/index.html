@@ -27,7 +27,7 @@
 
       <!-- Center Links -->
       <ul class="nav-links">
-        <li><a href="#dashboard" class="nav-link active">Product</a></li>
+        <li><a href="#features" class="nav-link active">Product</a></li>
         <li><a href="#features" class="nav-link">Features</a></li>
         <li><a href="#how-it-works" class="nav-link">How it works</a></li>
         <li><a href="#pricing" class="nav-link">Pricing</a></li>
@@ -42,8 +42,8 @@
           <span id="statusText">Checking...</span>
         </div>
 
-        <a href="#dashboard" class="btn-nav-primary">
-          <span>Launch Gateway</span>
+        <a href="#features" class="btn-nav-primary">
+          <span>Explore Capabilities</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
@@ -80,7 +80,7 @@
 
     <!-- Call-To-Action Button Row (Explore Now & Pricing) -->
     <div class="hero-action-buttons">
-      <a href="#dashboard" class="btn-hero-dark">
+      <a href="#features" class="btn-hero-dark">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <polygon points="5 3 19 12 5 21 5 3"></polygon>
         </svg>
@@ -124,287 +124,6 @@
       </div>
     </div>
 
-    <!-- ==========================================================
-         CENTRAL INTERACTIVE PRODUCT DASHBOARD (IMAGE MOCKUP)
-         ========================================================== -->
-    <div class="hero-mockup-wrapper" id="dashboard">
-      <div class="mockup-frame">
-        <!-- Mockup Window Bar -->
-        <div class="mockup-header-bar">
-          <div class="mockup-dots">
-            <span class="mockup-dot red"></span>
-            <span class="mockup-dot yellow"></span>
-            <span class="mockup-dot green"></span>
-          </div>
-          <div class="mockup-search-field">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <span>gateway.flow-precision.internal/api/send</span>
-          </div>
-          <div class="mockup-controls-right">
-            <!-- Auto-Refresh Toggle -->
-            <div class="toggle-control" title="Toggle automatic polling">
-              <label class="switch" for="autoRefreshToggle">
-                <input type="checkbox" id="autoRefreshToggle">
-                <span class="slider"></span>
-              </label>
-              <span class="toggle-text" id="autoRefreshLabel">Auto: <span class="badge-off">OFF</span></span>
-            </div>
-
-            <!-- Manual Refresh Button -->
-            <button id="manualRefreshBtn" class="btn-subtle" title="Sync dashboard status now">
-              <svg class="sync-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-              </svg>
-              <span id="syncBtnText">Sync</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 4 KPI Metrics Ribbon -->
-        <div class="mockup-metrics-grid">
-          <div class="mockup-metric-card">
-            <span class="metric-meta">Delivery Rate</span>
-            <div class="metric-row">
-              <span class="metric-num">99.98%</span>
-              <span class="trend-tag">↑ 0.4%</span>
-            </div>
-            <span class="metric-sub" id="kpiGatewayStatus">Socket Live</span>
-          </div>
-
-          <div class="mockup-metric-card">
-            <span class="metric-meta">Total Broadcasts</span>
-            <div class="metric-row">
-              <span class="metric-num">52,400+</span>
-              <span class="trend-tag">Live</span>
-            </div>
-            <span class="metric-sub">Across Linked Devices</span>
-          </div>
-
-          <div class="mockup-metric-card">
-            <span class="metric-meta">AI Latency</span>
-            <div class="metric-row">
-              <span class="metric-num">1.18s</span>
-              <span class="trend-tag neutral">Fast</span>
-            </div>
-            <span class="metric-sub">OpenRouter Gemma 2</span>
-          </div>
-
-          <div class="mockup-metric-card">
-            <span class="metric-meta">Last Synced</span>
-            <div class="metric-row">
-              <span class="metric-num" id="lastUpdated">Just Now</span>
-            </div>
-            <span class="metric-sub">Auto-Interval Inactive</span>
-          </div>
-        </div>
-
-        <!-- Dashboard Two-Column Workspace -->
-        <div class="mockup-workspace-grid">
-          <!-- Left Column: Google Sheet Link Importer & Table -->
-          <div class="mockup-sheet-panel">
-            <div class="panel-head">
-              <div class="panel-title-group">
-                <span class="panel-icon-tag">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="3" y1="9" x2="21" y2="9"/>
-                    <line x1="9" y1="21" x2="9" y2="9"/>
-                  </svg>
-                </span>
-                <h4>Google Sheet Direct Broadcast Engine</h4>
-              </div>
-              <span class="badge-pill-orange">No Apps Script</span>
-            </div>
-
-            <p class="panel-intro-text">
-              Paste your public Google Sheet URL below. We automatically extract recipient rows, validate international dialing codes, and interpolate template tokens (`{Name}`, `{Param1}`).
-            </p>
-
-            <div class="sheet-input-box">
-              <input type="url" id="sheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5.../edit?usp=sharing">
-              <button id="btnPreviewSheet" class="btn-sheet-parse">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                <span>Parse Contacts</span>
-              </button>
-            </div>
-
-            <!-- Simulated Contacts Table -->
-            <div class="table-container">
-              <table class="contacts-table">
-                <thead>
-                  <tr>
-                    <th>Recipient</th>
-                    <th>Phone</th>
-                    <th>Status</th>
-                    <th>AI Trigger Intent</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>Sarah Jenkins</strong></td>
-                    <td><code>+1 (555) 019-2834</code></td>
-                    <td><span class="status-chip success">Delivered</span></td>
-                    <td><span class="intent-chip">Pricing Inquiry</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Rajesh Kumar</strong></td>
-                    <td><code>+91 98765 43210</code></td>
-                    <td><span class="status-chip success">Delivered</span></td>
-                    <td><span class="intent-chip">Catalog Request</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Elena Rostova</strong></td>
-                    <td><code>+44 7700 900123</code></td>
-                    <td><span class="status-chip pending">Pending Jitter</span></td>
-                    <td><span class="intent-chip">Demo Booking</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="broadcast-template-container">
-              <label for="broadcastTemplate">Custom Broadcast Message Template:</label>
-              <textarea id="broadcastTemplate" rows="2" placeholder="Hello {Name}! Your exclusive enterprise pass for {Param1} is active. Reply CATALOG for specifications."></textarea>
-              <div class="token-helper-chips">
-                <span class="helper-text">Token chips:</span>
-                <span class="token-badge">{Name}</span>
-                <span class="token-badge">{Phone}</span>
-                <span class="token-badge">{Param1}</span>
-                <span class="token-badge">{Param2}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Column: Interactive WhatsApp Companion Pairing & Live Sandbox -->
-          <div class="mockup-pairing-panel">
-            <!-- Pairing Section -->
-            <div class="pairing-box">
-              <div class="panel-head">
-                <div class="panel-title-group">
-                  <span class="panel-icon-tag green">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                      <line x1="12" y1="18" x2="12.01" y2="18"/>
-                    </svg>
-                  </span>
-                  <h4>Companion Device Session</h4>
-                </div>
-                <span class="badge-pill-gray" id="deviceBadge">Multi-Device</span>
-              </div>
-
-              <!-- State 1: QR Ready -->
-              <div id="qrSection" class="qr-panel-wrapper">
-                <div class="qr-frame-box">
-                  <img id="qrImage" src="" alt="WhatsApp Companion QR">
-                  <div id="qrLoading" class="qr-loading-state">
-                    <div class="spinner"></div>
-                    <p>Generating companion handshake...</p>
-                    <span class="qr-guide-text">Open WhatsApp &gt; Linked Devices &gt; Scan</span>
-                  </div>
-                </div>
-
-                <button id="refreshQrBtn" class="btn-refresh-qr">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M23 4v6h-6"/>
-                    <path d="M1 20v-6h6"/>
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                  </svg>
-                  Refresh Pair Code
-                </button>
-              </div>
-
-              <!-- State 2: Connected -->
-              <div id="connectedSection" class="connected-panel-wrapper hidden">
-                <div class="conn-icon-circle">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M20 6L9 17l-5-5"/>
-                  </svg>
-                </div>
-                <span class="conn-live-badge">● Companion Linked</span>
-                <h4>Session Authenticated</h4>
-                <p class="connected-phone" id="connectedPhone">+91 0000000000</p>
-                <p class="conn-hint">Active socket routing direct from your mobile number.</p>
-
-                <button id="logoutBtn" class="btn-disconnect">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
-                  </svg>
-                  Disconnect Session
-                </button>
-              </div>
-            </div>
-
-            <!-- Instant Test Sender Form -->
-            <div class="test-form-box">
-              <h5>Direct Dispatch Sandbox</h5>
-              <form id="testMessageForm" class="sandbox-form">
-                <div class="form-row">
-                  <input type="text" id="testPhone" placeholder="Recipient: e.g. 919876543210" required>
-                </div>
-                <div class="form-row">
-                  <textarea id="testMessage" rows="2" placeholder="Write test broadcast message..." required></textarea>
-                </div>
-                <button type="submit" id="sendBtn" class="btn-dispatch">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="22" y1="2" x2="11" y2="13"/>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                  </svg>
-                  <span>Transmit Single Message</span>
-                </button>
-                <div id="testAlert" class="alert hidden"></div>
-              </form>
-
-              <!-- REST API Credentials -->
-              <div class="api-meta-details">
-                <div class="api-meta-item">
-                  <span class="meta-label">API POST URL:</span>
-                  <div class="code-box">
-                    <code id="apiEndpointUrl">https://.../api/send</code>
-                    <button class="btn-copy" type="button" data-target="apiEndpointUrl">Copy</button>
-                  </div>
-                </div>
-                <div class="api-meta-item">
-                  <span class="meta-label">Secret Header (x-api-key):</span>
-                  <div class="code-box">
-                    <code id="apiSecretDisplay">secret123</code>
-                    <button class="btn-copy" type="button" data-target="apiSecretDisplay">Copy</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Live Activity Console Bar -->
-        <div class="mockup-console-section">
-          <div class="console-head">
-            <div class="console-title">
-              <span class="console-dot"></span>
-              <span>Real-Time WebSocket Stream Console</span>
-            </div>
-            <div class="console-actions">
-              <button id="clearLogsBtn" class="btn-console-clear">Clear Logs</button>
-              <span class="log-mode-tag" id="logModeTag">Manual Sync Mode</span>
-            </div>
-          </div>
-          <div class="logs-console" id="logsContainer">
-            <div class="log-line info">
-              <span class="log-time">[Init]</span>
-              <span>Flow Enterprise Gateway active. Auto-refresh is OFF by default.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </section>
 
   <!-- ==========================================================
