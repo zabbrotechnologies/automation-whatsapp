@@ -3,399 +3,912 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WhatsApp Web Bridge — Enterprise Gateway</title>
+  <title>Flow — WhatsApp Communication Engineered for Enterprise Precision</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Ambient background glow elements (light airy ethereal atmosphere) -->
-  <div class="ambient-glow glow-top"></div>
-  <div class="ambient-glow glow-center"></div>
 
-  <!-- Top Minimal Floating Nav -->
-  <header class="top-nav">
-    <div class="nav-container">
-      <div class="nav-brand">
-        <div class="nav-logo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 6v12M6 12h12"/>
+  <!-- Top Floating Minimalist Enterprise Navbar -->
+  <header class="top-nav-wrapper">
+    <nav class="top-nav">
+      <!-- Brand Logo -->
+      <a href="#" class="nav-brand">
+        <div class="brand-logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
           </svg>
         </div>
-        <span class="nav-title">WhatsApp Gateway</span>
-      </div>
+        <span class="brand-text">Flow</span>
+        <span class="nav-version-badge">PRO</span>
+      </a>
 
-      <nav class="nav-links">
-        <a href="#overview" class="nav-link active">Product</a>
-        <a href="#connection" class="nav-link">Linked Device</a>
-        <a href="#integration" class="nav-link">Integration</a>
-        <a href="#pricing" class="nav-link">Pricing</a>
-        <a href="#console" class="nav-link">Activity</a>
-      </nav>
+      <!-- Center Links -->
+      <ul class="nav-links">
+        <li><a href="#dashboard" class="nav-link active">Product</a></li>
+        <li><a href="#features" class="nav-link">Features</a></li>
+        <li><a href="#how-it-works" class="nav-link">How it works</a></li>
+        <li><a href="#pricing" class="nav-link">Pricing</a></li>
+        <li><a href="#faq" class="nav-link">FAQ</a></li>
+      </ul>
 
+      <!-- Right Action Items -->
       <div class="nav-actions">
-        <!-- Status Pill -->
-        <div class="status-pill initializing" id="statusBadge">
+        <!-- Live Status Pill -->
+        <div class="status-pill initializing" id="statusBadge" title="Live Gateway Connection Status">
           <span class="status-dot"></span>
           <span id="statusText">Checking...</span>
         </div>
 
-        <!-- Sync Button -->
-        <button id="manualRefreshBtn" class="btn-icon-subtle" title="Sync Status">
-          <svg class="sync-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        <a href="#dashboard" class="btn-nav-primary">
+          <span>Launch Gateway</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
           </svg>
-        </button>
-
-        <a href="#connection" class="btn-nav-primary">
-          <span>Start Connecting</span>
         </a>
       </div>
-    </div>
+    </nav>
   </header>
 
-  <!-- Hero Section (Light, Airy, Minimalist) -->
-  <section class="hero-section" id="overview">
-    <div class="hero-content">
-      <div class="hero-badge">
-        <span class="badge-tag">NEW</span>
-        <span class="badge-text">Baileys Multi-Device Engine • Sheets Automation</span>
+  <!-- ==========================================================
+       HERO SECTION (EXACT MATCH TO REFERENCE IMAGE)
+       ========================================================== -->
+  <section class="hero-section">
+    <!-- Top Glowing Pill Badge -->
+    <div class="hero-announcement-badge">
+      <span class="announcement-dot"></span>
+      <span class="announcement-highlight">NEW PROTOCOL</span>
+      <span class="announcement-sep">|</span>
+      <span class="announcement-text">WhatsApp Baileys Companion Engine &amp; Free OpenRouter AI</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </div>
+
+    <!-- Main Headline -->
+    <h1 class="hero-main-heading">
+      WhatsApp communication, engineered<br>for enterprise precision.
+    </h1>
+
+    <!-- Hero Subtitle -->
+    <p class="hero-description">
+      Broadcast personalized campaigns directly from public Google Sheets, automate intelligent AI product responses with custom keyword triggers, and manage companion sessions with zero ban risk.
+    </p>
+
+    <!-- Call-To-Action Button Row (Explore Now & Pricing) -->
+    <div class="hero-action-buttons">
+      <a href="#dashboard" class="btn-hero-dark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <span>Explore Now</span>
+      </a>
+
+      <a href="#pricing" class="btn-hero-light">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+          <line x1="2" y1="10" x2="22" y2="10"></line>
+        </svg>
+        <span>Pricing Plans</span>
+      </a>
+    </div>
+
+    <!-- Feature Tick Row -->
+    <div class="hero-feature-ticks">
+      <div class="tick-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Zero Credit Card Required</span>
       </div>
+      <div class="tick-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Anti-Ban Socket Jitter</span>
+      </div>
+      <div class="tick-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>100% Free OpenRouter AI Models</span>
+      </div>
+      <div class="tick-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>No Apps Script Coding Needed</span>
+      </div>
+    </div>
 
-      <h1 class="hero-title">Build with WhatsApp Gateway</h1>
-      <p class="hero-subtitle">
-        An airy, minimalist bridge designed for effortless Google Sheets marketing, instant linked-device pairing, and high-performance automation.
-      </p>
-
-      <!-- Minimalist Central Action Box (Replaces chat input with Explore & Pricing action panel) -->
-      <div class="hero-action-card">
-        <div class="action-card-header">
-          <div class="action-status-indicator">
-            <span class="indicator-dot"></span>
-            <span id="gatewayStatusText">Gateway ready for companion link</span>
+    <!-- ==========================================================
+         CENTRAL INTERACTIVE PRODUCT DASHBOARD (IMAGE MOCKUP)
+         ========================================================== -->
+    <div class="hero-mockup-wrapper" id="dashboard">
+      <div class="mockup-frame">
+        <!-- Mockup Window Bar -->
+        <div class="mockup-header-bar">
+          <div class="mockup-dots">
+            <span class="mockup-dot red"></span>
+            <span class="mockup-dot yellow"></span>
+            <span class="mockup-dot green"></span>
           </div>
-          <div class="toggle-wrap" title="Auto-refresh status">
-            <span class="toggle-caption">Auto-refresh</span>
-            <label class="switch" for="autoRefreshToggle">
-              <input type="checkbox" id="autoRefreshToggle">
-              <span class="slider"></span>
-            </label>
-            <span class="badge-state" id="autoRefreshLabel"><span class="badge-off">OFF</span></span>
+          <div class="mockup-search-field">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>gateway.flow-precision.internal/api/send</span>
+          </div>
+          <div class="mockup-controls-right">
+            <!-- Auto-Refresh Toggle -->
+            <div class="toggle-control" title="Toggle automatic polling">
+              <label class="switch" for="autoRefreshToggle">
+                <input type="checkbox" id="autoRefreshToggle">
+                <span class="slider"></span>
+              </label>
+              <span class="toggle-text" id="autoRefreshLabel">Auto: <span class="badge-off">OFF</span></span>
+            </div>
+
+            <!-- Manual Refresh Button -->
+            <button id="manualRefreshBtn" class="btn-subtle" title="Sync dashboard status now">
+              <svg class="sync-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+              <span id="syncBtnText">Sync</span>
+            </button>
           </div>
         </div>
 
-        <div class="action-card-body">
-          <p class="action-card-desc">
-            Directly connect your WhatsApp account, transmit Google Sheets contacts with dynamic parameters, or review integration endpoints.
-          </p>
+        <!-- 4 KPI Metrics Ribbon -->
+        <div class="mockup-metrics-grid">
+          <div class="mockup-metric-card">
+            <span class="metric-meta">Delivery Rate</span>
+            <div class="metric-row">
+              <span class="metric-num">99.98%</span>
+              <span class="trend-tag">↑ 0.4%</span>
+            </div>
+            <span class="metric-sub" id="kpiGatewayStatus">Socket Live</span>
+          </div>
 
-          <div class="hero-buttons-group">
-            <a href="#connection" class="btn-hero-primary">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                <line x1="12" y1="18" x2="12.01" y2="18"/>
-              </svg>
-              <span>Explore Now</span>
-            </a>
+          <div class="mockup-metric-card">
+            <span class="metric-meta">Total Broadcasts</span>
+            <div class="metric-row">
+              <span class="metric-num">52,400+</span>
+              <span class="trend-tag">Live</span>
+            </div>
+            <span class="metric-sub">Across Linked Devices</span>
+          </div>
 
-            <a href="#pricing" class="btn-hero-secondary">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="1" x2="12" y2="23"/>
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-              </svg>
-              <span>Pricing</span>
-            </a>
+          <div class="mockup-metric-card">
+            <span class="metric-meta">AI Latency</span>
+            <div class="metric-row">
+              <span class="metric-num">1.18s</span>
+              <span class="trend-tag neutral">Fast</span>
+            </div>
+            <span class="metric-sub">OpenRouter Gemma 2</span>
+          </div>
 
-            <a href="#integration" class="btn-hero-ghost">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="16 18 22 12 16 6"/>
-                <polyline points="8 6 2 12 8 18"/>
-              </svg>
-              <span>API Endpoint</span>
-            </a>
+          <div class="mockup-metric-card">
+            <span class="metric-meta">Last Synced</span>
+            <div class="metric-row">
+              <span class="metric-num" id="lastUpdated">Just Now</span>
+            </div>
+            <span class="metric-sub">Auto-Interval Inactive</span>
           </div>
         </div>
 
-        <!-- Capability Pills underneath -->
-        <div class="capability-pills">
-          <span class="pill-item">Google Sheets Integration</span>
-          <span class="pill-item">No Meta Template Approvals</span>
-          <span class="pill-item">Zero Account Deletion Risk</span>
-          <span class="pill-item">Auto Welcome &amp; Trigger AI</span>
+        <!-- Dashboard Two-Column Workspace -->
+        <div class="mockup-workspace-grid">
+          <!-- Left Column: Google Sheet Link Importer & Table -->
+          <div class="mockup-sheet-panel">
+            <div class="panel-head">
+              <div class="panel-title-group">
+                <span class="panel-icon-tag">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="3" y1="9" x2="21" y2="9"/>
+                    <line x1="9" y1="21" x2="9" y2="9"/>
+                  </svg>
+                </span>
+                <h4>Google Sheet Direct Broadcast Engine</h4>
+              </div>
+              <span class="badge-pill-orange">No Apps Script</span>
+            </div>
+
+            <p class="panel-intro-text">
+              Paste your public Google Sheet URL below. We automatically extract recipient rows, validate international dialing codes, and interpolate template tokens (`{Name}`, `{Param1}`).
+            </p>
+
+            <div class="sheet-input-box">
+              <input type="url" id="sheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5.../edit?usp=sharing">
+              <button id="btnPreviewSheet" class="btn-sheet-parse">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Parse Contacts</span>
+              </button>
+            </div>
+
+            <!-- Simulated Contacts Table -->
+            <div class="table-container">
+              <table class="contacts-table">
+                <thead>
+                  <tr>
+                    <th>Recipient</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>AI Trigger Intent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Sarah Jenkins</strong></td>
+                    <td><code>+1 (555) 019-2834</code></td>
+                    <td><span class="status-chip success">Delivered</span></td>
+                    <td><span class="intent-chip">Pricing Inquiry</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Rajesh Kumar</strong></td>
+                    <td><code>+91 98765 43210</code></td>
+                    <td><span class="status-chip success">Delivered</span></td>
+                    <td><span class="intent-chip">Catalog Request</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Elena Rostova</strong></td>
+                    <td><code>+44 7700 900123</code></td>
+                    <td><span class="status-chip pending">Pending Jitter</span></td>
+                    <td><span class="intent-chip">Demo Booking</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="broadcast-template-container">
+              <label for="broadcastTemplate">Custom Broadcast Message Template:</label>
+              <textarea id="broadcastTemplate" rows="2" placeholder="Hello {Name}! Your exclusive enterprise pass for {Param1} is active. Reply CATALOG for specifications."></textarea>
+              <div class="token-helper-chips">
+                <span class="helper-text">Token chips:</span>
+                <span class="token-badge">{Name}</span>
+                <span class="token-badge">{Phone}</span>
+                <span class="token-badge">{Param1}</span>
+                <span class="token-badge">{Param2}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Interactive WhatsApp Companion Pairing & Live Sandbox -->
+          <div class="mockup-pairing-panel">
+            <!-- Pairing Section -->
+            <div class="pairing-box">
+              <div class="panel-head">
+                <div class="panel-title-group">
+                  <span class="panel-icon-tag green">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                      <line x1="12" y1="18" x2="12.01" y2="18"/>
+                    </svg>
+                  </span>
+                  <h4>Companion Device Session</h4>
+                </div>
+                <span class="badge-pill-gray" id="deviceBadge">Multi-Device</span>
+              </div>
+
+              <!-- State 1: QR Ready -->
+              <div id="qrSection" class="qr-panel-wrapper">
+                <div class="qr-frame-box">
+                  <img id="qrImage" src="" alt="WhatsApp Companion QR">
+                  <div id="qrLoading" class="qr-loading-state">
+                    <div class="spinner"></div>
+                    <p>Generating companion handshake...</p>
+                    <span class="qr-guide-text">Open WhatsApp &gt; Linked Devices &gt; Scan</span>
+                  </div>
+                </div>
+
+                <button id="refreshQrBtn" class="btn-refresh-qr">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6"/>
+                    <path d="M1 20v-6h6"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                  </svg>
+                  Refresh Pair Code
+                </button>
+              </div>
+
+              <!-- State 2: Connected -->
+              <div id="connectedSection" class="connected-panel-wrapper hidden">
+                <div class="conn-icon-circle">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M20 6L9 17l-5-5"/>
+                  </svg>
+                </div>
+                <span class="conn-live-badge">● Companion Linked</span>
+                <h4>Session Authenticated</h4>
+                <p class="connected-phone" id="connectedPhone">+91 0000000000</p>
+                <p class="conn-hint">Active socket routing direct from your mobile number.</p>
+
+                <button id="logoutBtn" class="btn-disconnect">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                  Disconnect Session
+                </button>
+              </div>
+            </div>
+
+            <!-- Instant Test Sender Form -->
+            <div class="test-form-box">
+              <h5>Direct Dispatch Sandbox</h5>
+              <form id="testMessageForm" class="sandbox-form">
+                <div class="form-row">
+                  <input type="text" id="testPhone" placeholder="Recipient: e.g. 919876543210" required>
+                </div>
+                <div class="form-row">
+                  <textarea id="testMessage" rows="2" placeholder="Write test broadcast message..." required></textarea>
+                </div>
+                <button type="submit" id="sendBtn" class="btn-dispatch">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                  <span>Transmit Single Message</span>
+                </button>
+                <div id="testAlert" class="alert hidden"></div>
+              </form>
+
+              <!-- REST API Credentials -->
+              <div class="api-meta-details">
+                <div class="api-meta-item">
+                  <span class="meta-label">API POST URL:</span>
+                  <div class="code-box">
+                    <code id="apiEndpointUrl">https://.../api/send</code>
+                    <button class="btn-copy" type="button" data-target="apiEndpointUrl">Copy</button>
+                  </div>
+                </div>
+                <div class="api-meta-item">
+                  <span class="meta-label">Secret Header (x-api-key):</span>
+                  <div class="code-box">
+                    <code id="apiSecretDisplay">secret123</code>
+                    <button class="btn-copy" type="button" data-target="apiSecretDisplay">Copy</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Activity Console Bar -->
+        <div class="mockup-console-section">
+          <div class="console-head">
+            <div class="console-title">
+              <span class="console-dot"></span>
+              <span>Real-Time WebSocket Stream Console</span>
+            </div>
+            <div class="console-actions">
+              <button id="clearLogsBtn" class="btn-console-clear">Clear Logs</button>
+              <span class="log-mode-tag" id="logModeTag">Manual Sync Mode</span>
+            </div>
+          </div>
+          <div class="logs-console" id="logsContainer">
+            <div class="log-line info">
+              <span class="log-time">[Init]</span>
+              <span>Flow Enterprise Gateway active. Auto-refresh is OFF by default.</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Big Bold Typography Break -->
-  <section class="quote-break">
-    <h2>Imagine messaging automation without limits.</h2>
-    <p>Seamlessly pair any existing number and broadcast personalized updates straight from your spreadsheet.</p>
+  <!-- ==========================================================
+       TRUSTED BY BANNER (MATCHING REFERENCE IMAGE)
+       ========================================================== -->
+  <section class="trusted-by-section">
+    <p class="trusted-label">TRUSTED BY ENTERPRISE AUTOMATION TEAMS &amp; HIGH-VOLUME BROADCASTERS</p>
+    <div class="trusted-logos-grid">
+      <div class="logo-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span>Google Sheets</span>
+      </div>
+
+      <div class="logo-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+          <line x1="9" y1="9" x2="9.01" y2="9"/>
+          <line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+        <span>OpenRouter AI</span>
+      </div>
+
+      <div class="logo-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+        </svg>
+        <span>WhatsApp Web</span>
+      </div>
+
+      <div class="logo-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+          <line x1="6" y1="6" x2="6.01" y2="6"/>
+          <line x1="6" y1="18" x2="6.01" y2="18"/>
+        </svg>
+        <span>Baileys Socket</span>
+      </div>
+
+      <div class="logo-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <span>Render Cloud</span>
+      </div>
+
+      <div class="logo-item">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>CRM Webhooks</span>
+      </div>
+    </div>
   </section>
 
-  <!-- Main Functional Workspace -->
-  <main class="app-workspace" id="connection">
-    <div class="workspace-grid">
-      
-      <!-- Device Pairing Card -->
-      <section class="minimal-card connection-card">
-        <div class="card-top">
-          <div class="card-heading">
-            <span class="card-eyebrow">Authentication</span>
-            <h3>Device Connection</h3>
-          </div>
-          <span class="status-chip" id="kpiGatewayStatus">Connecting...</span>
-        </div>
-
-        <!-- QR Code View -->
-        <div id="qrSection" class="qr-wrapper">
-          <div class="qr-canvas-box">
-            <img id="qrImage" src="" alt="WhatsApp QR Code">
-            <div id="qrLoading" class="qr-state-loader">
-              <div class="minimal-spinner"></div>
-              <p>Preparing Baileys QR handshake...</p>
-              <span class="subtext">Scan using WhatsApp Linked Devices</span>
-            </div>
-          </div>
-
-          <button id="refreshQrBtn" class="btn-minimal-action">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M23 4v6h-6"/>
-              <path d="M1 20v-6h6"/>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-            </svg>
-            <span>Request Fresh QR</span>
-          </button>
-
-          <div class="minimal-instructions">
-            <h4>Quick Pairing:</h4>
-            <div class="steps-row">
-              <div class="step-pill"><span>1</span> Open WhatsApp</div>
-              <div class="step-pill"><span>2</span> Tap Linked Devices</div>
-              <div class="step-pill"><span>3</span> Scan QR</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Connected View -->
-        <div id="connectedSection" class="connected-wrapper hidden">
-          <div class="success-ring">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M20 6L9 17l-5-5"/>
-            </svg>
-          </div>
-          <div class="connected-info">
-            <span class="live-tag">● Live Session</span>
-            <h4 id="connectedPhone">+00 0000000000</h4>
-            <p>Ready to dispatch automated broadcasts directly from your connected Google Sheet.</p>
-          </div>
-
-          <div class="connected-stats-row">
-            <div class="stat-box">
-              <span class="stat-label">Mode</span>
-              <span class="stat-val">Companion Web</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-label">Protocol</span>
-              <span class="stat-val">Baileys v6.7</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-label">Status</span>
-              <span class="stat-val text-green">Online</span>
-            </div>
-          </div>
-
-          <button id="logoutBtn" class="btn-minimal-danger">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-            <span>Disconnect Session</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- Right Column: Sheet Integration & Configuration -->
-      <div class="right-stack" id="integration">
-        
-        <!-- Google Sheets Integration Card -->
-        <section class="minimal-card">
-          <div class="card-top">
-            <div class="card-heading">
-              <span class="card-eyebrow">Google Sheets</span>
-              <h3>REST API Configuration</h3>
-            </div>
-            <span class="status-chip chip-neutral">Web Service</span>
-          </div>
-
-          <p class="card-subdesc">
-            Use these credentials inside your Google Apps Script (<code class="inline-code">Code.js</code>) to trigger instant WhatsApp transmissions.
-          </p>
-
-          <div class="endpoint-block">
-            <div class="field-row">
-              <label>API Endpoint (Target URL)</label>
-              <span class="copy-hint" id="hint-apiEndpointUrl">Click copy</span>
-            </div>
-            <div class="input-copy-box">
-              <code id="apiEndpointUrl">https://.../api/send</code>
-              <button class="btn-copy-chip" type="button" data-target="apiEndpointUrl">
-                <span>Copy</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="endpoint-block">
-            <div class="field-row">
-              <label>API Authorization Key (x-api-key)</label>
-              <span class="copy-hint" id="hint-apiSecretDisplay">Click copy</span>
-            </div>
-            <div class="input-copy-box">
-              <code id="apiSecretDisplay">secret123</code>
-              <button class="btn-copy-chip" type="button" data-target="apiSecretDisplay">
-                <span>Copy</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="features-checklist">
-            <div class="check-item">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Zero template approval latency</span>
-            </div>
-            <div class="check-item">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Personalized variables ({Name}, {Param1})</span>
-            </div>
-            <div class="check-item">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>Automatic keep-alive ping support</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Quick Explorer Box -->
-        <section class="minimal-card feature-highlight-card">
-          <div class="highlight-flex">
-            <div>
-              <span class="card-eyebrow">Capabilities</span>
-              <h4>Explore Automation Features</h4>
-              <p>Experience multi-device pairing, direct Google Sheets broadcast, welcome replies, and OpenRouter trigger AI.</p>
-            </div>
-            <a href="#connection" class="btn-action-small">
-              Explore Now
-            </a>
-          </div>
-        </section>
-      </div>
-
+  <!-- ==========================================================
+       3-COLUMN CAPABILITIES GRID (MATCHING REFERENCE IMAGE)
+       ========================================================== -->
+  <section class="capabilities-section" id="features">
+    <div class="section-center-head">
+      <span class="badge-pill-orange">ENGINEERED CAPABILITIES</span>
+      <h2>Built from the ground up for high-volume automated messaging and lead conversion.</h2>
+      <p>Eliminate costly template approvals and monthly per-conversation fees with companion device socket architecture.</p>
     </div>
 
-    <!-- Pricing Section -->
-    <section class="pricing-section" id="pricing">
-      <div class="section-header-center">
-        <span class="card-eyebrow">Transparent Pricing</span>
-        <h3>Zero Subscriptions. 100% Free Tier.</h3>
-        <p>Built on free companion web protocol and free tier cloud infrastructure.</p>
+    <div class="capabilities-grid">
+      <!-- Feature Card 1 -->
+      <div class="capability-card">
+        <div class="cap-icon-box orange">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+        </div>
+        <h3>Direct Google Sheet CSV Import</h3>
+        <p>
+          Simply paste your public spreadsheet link. We parse contact numbers, sanitize international calling codes, and replace template placeholders dynamically without requiring Google Apps Script.
+        </p>
+        <div class="cap-footer">
+          <a href="#dashboard" class="cap-link">
+            <span>Explore Sheet Broadcast</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        </div>
       </div>
 
-      <div class="pricing-grid">
-        <!-- Plan 1 -->
-        <div class="pricing-card">
-          <div class="plan-header">
-            <h4>Free Self-Hosted</h4>
-            <div class="plan-price">
-              <span class="price-amount">$0</span>
-              <span class="price-cycle">/forever</span>
+      <!-- Feature Card 2 -->
+      <div class="capability-card">
+        <div class="cap-icon-box peach">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+        <h3>Trigger-Word Product AI Agent</h3>
+        <p>
+          The AI activates ONLY when messages contain buying intent keywords (price, catalog, brochure, buy, order). Personal chats and family messages are completely ignored, keeping your account private.
+        </p>
+        <div class="cap-footer">
+          <a href="#dashboard" class="cap-link">
+            <span>View Trigger Pipeline</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Feature Card 3 -->
+      <div class="capability-card">
+        <div class="cap-icon-box dark">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h3>Anti-Ban Socket Safeguards</h3>
+        <p>
+          Employs randomized algorithmic delays (2.5 to 5.0 seconds between dispatches) and chunk pauses every 50 messages. Connects as a standard linked companion device so your account stays 100% safe.
+        </p>
+        <div class="cap-footer">
+          <a href="#dashboard" class="cap-link">
+            <span>Learn Protocol Specs</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       HOW IT WORKS & MOBILE DEVICE PREVIEW (MATCHING IMAGE)
+       ========================================================== -->
+  <section class="how-it-works-section" id="how-it-works">
+    <div class="how-it-works-grid">
+      <!-- Left Steps Column -->
+      <div class="steps-column">
+        <span class="badge-pill-orange">SEAMLESS WORKFLOW</span>
+        <h2>From raw spreadsheet to 50,000 personalized WhatsApp deliveries in four measured steps.</h2>
+        <p class="steps-intro">Take control of your customer conversations with zero third-party platform markups.</p>
+
+        <div class="steps-list">
+          <div class="step-card">
+            <div class="step-badge">01</div>
+            <div class="step-info">
+              <h4>Scan Companion Device QR</h4>
+              <p>Navigate to WhatsApp &gt; Linked Devices &gt; Link a Device. Your phone camera links your companion web session instantly.</p>
             </div>
-            <p class="plan-desc">For individual developers and small businesses running on Render / Cloud.</p>
           </div>
-          <ul class="plan-features">
-            <li><span>✓</span> Unlimited WhatsApp linked sessions</li>
-            <li><span>✓</span> Google Sheets direct synchronization</li>
-            <li><span>✓</span> Baileys companion web protocol</li>
-            <li><span>✓</span> No Meta per-message conversation fees</li>
-            <li><span>✓</span> Community open-source support</li>
-          </ul>
-          <a href="#connection" class="btn-plan-outline">Get Started Free</a>
-        </div>
 
-        <!-- Plan 2 (Highlighted) -->
-        <div class="pricing-card featured-plan">
-          <div class="featured-badge">RECOMMENDED</div>
-          <div class="plan-header">
-            <h4>Enterprise Gateway</h4>
-            <div class="plan-price">
-              <span class="price-amount">Free</span>
-              <span class="price-cycle">with OpenRouter</span>
+          <div class="step-card">
+            <div class="step-badge">02</div>
+            <div class="step-info">
+              <h4>Paste Public Google Sheet URL</h4>
+              <p>Set sharing to "Anyone with the link can view". The engine automatically extracts phone numbers and contact names.</p>
             </div>
-            <p class="plan-desc">Includes AI Trigger-Word Auto-Reply and automated welcome messaging.</p>
           </div>
-          <ul class="plan-features">
-            <li><span>✓</span> All Free Self-Hosted features</li>
-            <li><span>✓</span> OpenRouter Free Models (Gemma 2, Nemotron, Llama)</li>
-            <li><span>✓</span> Product query trigger-word filtering</li>
-            <li><span>✓</span> Automated first-touch customer welcome</li>
-            <li><span>✓</span> Anti-ban interval jitter (2.5–5.0s)</li>
-          </ul>
-          <a href="#connection" class="btn-plan-solid">Explore Gateway</a>
-        </div>
 
-        <!-- Plan 3 -->
-        <div class="pricing-card">
-          <div class="plan-header">
-            <h4>Agency Whitelabel</h4>
-            <div class="plan-price">
-              <span class="price-amount">Custom</span>
-              <span class="price-cycle">/license</span>
+          <div class="step-card">
+            <div class="step-badge">03</div>
+            <div class="step-info">
+              <h4>Define Custom Product Triggers</h4>
+              <p>Specify buying intent keywords (e.g. <code>price, catalog, demo</code>). The AI is pre-loaded with your product specifications.</p>
             </div>
-            <p class="plan-desc">For marketing agencies offering WhatsApp automation as a client service.</p>
           </div>
-          <ul class="plan-features">
-            <li><span>✓</span> Multi-client dashboard setup</li>
-            <li><span>✓</span> Custom branding &amp; domain masking</li>
-            <li><span>✓</span> Dedicated high-availability instances</li>
-            <li><span>✓</span> SLA &amp; automated session self-healing</li>
-          </ul>
-          <a href="#connection" class="btn-plan-outline">Contact Setup</a>
-        </div>
-      </div>
-    </section>
 
-    <!-- Activity Console -->
-    <section class="minimal-card console-card" id="console">
-      <div class="card-top">
-        <div class="card-heading">
-          <span class="card-eyebrow">Realtime Activity</span>
-          <h3>Gateway Activity Logs</h3>
-        </div>
-        <div class="console-actions">
-          <button id="clearLogsBtn" class="btn-subtle-text">Clear</button>
-          <span class="log-indicator" id="logModeTag">Manual Sync Mode</span>
+          <div class="step-card">
+            <div class="step-badge">04</div>
+            <div class="step-info">
+              <h4>Launch Broadcast &amp; 24/7 AI Desk</h4>
+              <p>Outgoing messages dispatch with randomized anti-ban delays. Inbound queries are immediately resolved by the AI.</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="minimal-console-box" id="logsContainer">
-        <div class="log-line info"><span class="log-time">[Init]</span> Gateway loaded with Horizon-inspired minimalist theme. Auto-refresh is OFF.</div>
-      </div>
-    </section>
-  </main>
+      <!-- Right Smartphone Frame Simulation -->
+      <div class="phone-frame-wrapper">
+        <div class="smartphone-frame">
+          <!-- Notch & Camera -->
+          <div class="phone-notch"></div>
+          
+          <!-- WhatsApp Chat Header -->
+          <div class="wa-chat-header">
+            <div class="wa-user-avatar">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <div class="wa-chat-meta">
+              <h5>Flow Precision Support</h5>
+              <span class="online-indicator">● Online &amp; AI Active</span>
+            </div>
+          </div>
 
-  <!-- Clean Footer -->
-  <footer class="minimal-footer">
-    <div class="footer-inner">
-      <div class="footer-left">
-        <span class="brand-name">WhatsApp Gateway</span>
-        <span class="divider">•</span>
-        <span>Google Sheets Automation &amp; AI Integration</span>
+          <!-- Chat Conversation Body -->
+          <div class="wa-chat-body">
+            <!-- Inbound Message -->
+            <div class="chat-bubble incoming">
+              <p>Hi! Can you share the pricing catalog and feature specifications for your WhatsApp automation suite?</p>
+              <span class="chat-time">10:42 AM</span>
+            </div>
+
+            <!-- Outbound AI Generated Message -->
+            <div class="chat-bubble outgoing">
+              <p>Hello Alex! 👋 Thank you for inquiring about <strong>Flow Precision</strong>.</p>
+              <p>Our complete catalog is ready for you:</p>
+              <p>• <strong>Community / Starter</strong>: $0 Free Forever<br>• <strong>Pro Growth</strong>: $149/mo (Unlimited Sheet Rows &amp; AI Triggers)<br>• <strong>Enterprise</strong>: Custom Cluster</p>
+              <p>Would you like to schedule an interactive walkthrough or connect your Google Sheet now?</p>
+              <span class="chat-time">10:42 AM ✓✓</span>
+            </div>
+
+            <div class="chat-bubble incoming">
+              <p>Sounds awesome! How do I get started with the free starter?</p>
+              <span class="chat-time">10:43 AM</span>
+            </div>
+          </div>
+
+          <!-- Phone Input Bar -->
+          <div class="wa-input-bar">
+            <span>Type a message...</span>
+            <div class="wa-send-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="footer-right">
-        <span>Baileys Protocol Multi-Device Engine</span>
-        <span class="divider">•</span>
-        <span>Last Synced: <strong id="lastUpdated">Just now</strong></span>
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       IMPACT STATS BANNER (MATCHING REFERENCE IMAGE)
+       ========================================================== -->
+  <section class="impact-metrics-section">
+    <div class="impact-grid">
+      <div class="impact-card">
+        <span class="impact-num">99.4%</span>
+        <span class="impact-label">Delivery Accuracy Rate</span>
+        <p class="impact-desc">Real-time socket confirmation with direct companion bridge delivery.</p>
+      </div>
+
+      <div class="impact-card">
+        <span class="impact-num">&lt; 1.2s</span>
+        <span class="impact-label">Average AI Response Latency</span>
+        <p class="impact-desc">Accelerated inference via OpenRouter Free Tier LLM endpoints.</p>
+      </div>
+
+      <div class="impact-card">
+        <span class="impact-num">500k+</span>
+        <span class="impact-label">Monthly Dispatches</span>
+        <p class="impact-desc">High-throughput broadcast campaigns without Meta Graph API rate blocks.</p>
+      </div>
+
+      <div class="impact-card">
+        <span class="impact-num">4.9/5</span>
+        <span class="impact-label">Agency Satisfaction</span>
+        <p class="impact-desc">Rated #1 by e-commerce brands, realtors, and automation specialists.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       PRICING SECTION (MATCHING REFERENCE IMAGE)
+       ========================================================== -->
+  <section class="pricing-enterprise-section" id="pricing">
+    <div class="section-center-head">
+      <span class="badge-pill-orange">FLEXIBLE SUBSCRIPTIONS</span>
+      <h2>Plans suited for independent consultants up to global multi-brand enterprises.</h2>
+      <p>Self-host for free or deploy on our managed companion cloud infrastructure with SLA guarantees.</p>
+    </div>
+
+    <div class="pricing-container-grid">
+      <!-- Tier 1: Starter -->
+      <div class="price-tier-card">
+        <div class="tier-top">
+          <div class="tier-name-row">
+            <h3>Starter</h3>
+            <span class="tier-tag">Self-Hosted</span>
+          </div>
+          <p class="tier-description">Ideal for founders, solopreneurs, and local business marketing.</p>
+          <div class="price-amount-box">
+            <span class="price-sign">$</span>
+            <span class="price-figure">49</span>
+            <span class="price-interval">/ month</span>
+          </div>
+        </div>
+
+        <ul class="tier-features-list">
+          <li>✓ 1 Companion WhatsApp Link</li>
+          <li>✓ Unlimited Google Sheet Imports</li>
+          <li>✓ OpenRouter Free Model Support</li>
+          <li>✓ Trigger-Word Enquiry Filter</li>
+          <li>✓ Local &amp; Render.com Free Deployment</li>
+          <li>✓ Standard GitHub Community Support</li>
+        </ul>
+
+        <a href="#dashboard" class="btn-tier-outline">Get Started Free</a>
+      </div>
+
+      <!-- Tier 2: Pro Growth (Featured Dark Button) -->
+      <div class="price-tier-card featured-tier">
+        <div class="tier-top">
+          <div class="tier-badge-highlight">MOST POPULAR</div>
+          <div class="tier-name-row">
+            <h3>Growth</h3>
+            <span class="tier-tag primary">Recommended</span>
+          </div>
+          <p class="tier-description">High-volume broadcast engine for agencies and growing online brands.</p>
+          <div class="price-amount-box">
+            <span class="price-sign">$</span>
+            <span class="price-figure">149</span>
+            <span class="price-interval">/ month</span>
+          </div>
+        </div>
+
+        <ul class="tier-features-list">
+          <li>✓ Up to 5 Companion Device Links</li>
+          <li>✓ Dynamic Anti-Ban Rate Limiter</li>
+          <li>✓ Custom Product Catalog Vector Embedding</li>
+          <li>✓ Webhook Delivery Receipts (Delivered / Read)</li>
+          <li>✓ Managed Cloud Cluster Deployment</li>
+          <li>✓ Priority 1-on-1 Engineering Support</li>
+        </ul>
+
+        <a href="#dashboard" class="btn-tier-dark">Start Free Broadcast</a>
+      </div>
+
+      <!-- Tier 3: Enterprise -->
+      <div class="price-tier-card">
+        <div class="tier-top">
+          <div class="tier-name-row">
+            <h3>Enterprise</h3>
+            <span class="tier-tag">Custom SLA</span>
+          </div>
+          <p class="tier-description">Custom dedicated cluster for enterprise CRM pipelines and multi-tenant SaaS.</p>
+          <div class="price-amount-box">
+            <span class="price-figure custom">Custom</span>
+          </div>
+        </div>
+
+        <ul class="tier-features-list">
+          <li>✓ Unlimited WhatsApp Companion Accounts</li>
+          <li>✓ Dedicated Residential Proxy Integration</li>
+          <li>✓ White-Label Custom Domain &amp; Logo</li>
+          <li>✓ Custom CRM Pipelines (HubSpot, Salesforce)</li>
+          <li>✓ 99.99% Uptime Guarantee &amp; Dedicated Rep</li>
+          <li>✓ Signed Enterprise BAA / SLA Contract</li>
+        </ul>
+
+        <a href="#dashboard" class="btn-tier-outline">Contact Sales</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       TECHNICAL FAQ ACCORDION (MATCHING REFERENCE IMAGE)
+       ========================================================== -->
+  <section class="faq-section" id="faq">
+    <div class="section-center-head">
+      <span class="badge-pill-orange">COMMON INQUIRIES</span>
+      <h2>Frequently Asked Technical Questions</h2>
+      <p>Everything you need to know about the Baileys companion protocol and OpenRouter integration.</p>
+    </div>
+
+    <div class="faq-accordion-list">
+      <details class="faq-item" open>
+        <summary class="faq-question">
+          <span>How does the companion device protocol prevent WhatsApp bans?</span>
+          <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="faq-answer">
+          <p>Unlike unauthorized modified WhatsApp APKs or unofficial reverse-engineered tools, our system connects using the official Multi-Device Companion protocol (the same technology WhatsApp Web uses). Messages are transmitted over standard secure WebSockets, and our anti-ban jitter engine inserts randomized pauses (2.5–5.0 seconds) to mirror natural human behavior.</p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-question">
+          <span>Do I need to install or run Google Apps Script in my spreadsheet?</span>
+          <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="faq-answer">
+          <p>No! That is the core innovation of Flow. You simply set your Google Sheet share setting to "Anyone with the link can view" and paste the link into our dashboard. The engine fetches the public CSV stream directly, extracts the recipient list, and starts dispatching immediately.</p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-question">
+          <span>How does the trigger-word filter ensure personal messages are ignored?</span>
+          <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="faq-answer">
+          <p>The server intercepts incoming messages and passes them through a keyword gatekeeper. Only if the message contains explicit buying intent words (such as <code>price</code>, <code>cost</code>, <code>catalog</code>, <code>buy</code>, or <code>demo</code>) does the AI activate. Friends, family, and group chats (@g.us) are completely ignored.</p>
+        </div>
+      </details>
+
+      <details class="faq-item">
+        <summary class="faq-question">
+          <span>Are the OpenRouter AI models really 100% free?</span>
+          <svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="faq-answer">
+          <p>Yes! OpenRouter provides generous free tiers for high-performance open-source models like Google Gemma 2 9B (`google/gemma-2-9b-it:free`) and NVIDIA Nemotron 70B (`nvidia/llama-3.1-nemotron-70b-instruct:free`). You do not need to add a credit card or pay per-token fees.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       DARK ENTERPRISE CTA BANNER (MATCHING REFERENCE IMAGE)
+       ========================================================== -->
+  <section class="cta-banner-section">
+    <div class="cta-dark-card">
+      <div class="cta-content">
+        <span class="cta-tag">ENTERPRISE PRECISION</span>
+        <h2>Transform your WhatsApp customer journey today.</h2>
+        <p>Deploy your companion bridge in under 5 minutes on Render, VPS, or your local machine with zero recurring fees.</p>
+      </div>
+
+      <div class="cta-input-group">
+        <input type="text" placeholder="Enter recipient phone with country code..." id="quickCtaPhone">
+        <a href="#dashboard" class="btn-cta-gold">Launch Gateway</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================
+       FOOTER (MATCHING REFERENCE IMAGE)
+       ========================================================== -->
+  <footer class="enterprise-footer">
+    <div class="footer-grid">
+      <!-- Col 1: Brand -->
+      <div class="footer-brand-col">
+        <div class="footer-brand-title">
+          <span class="brand-text">Flow</span>
+          <span class="nav-version-badge">ENTERPRISE</span>
+        </div>
+        <p class="footer-desc">
+          High-precision WhatsApp communication gateway built on the Baileys multi-device companion protocol and free OpenRouter AI models.
+        </p>
+        <div class="footer-newsletter">
+          <input type="email" placeholder="Your work email...">
+          <button type="button">Subscribe</button>
+        </div>
+      </div>
+
+      <!-- Col 2: Product -->
+      <div class="footer-nav-col">
+        <h6>Product</h6>
+        <ul>
+          <li><a href="#dashboard">Sheet Broadcast</a></li>
+          <li><a href="#features">AI Auto-Reply</a></li>
+          <li><a href="#dashboard">Companion Pairing</a></li>
+          <li><a href="#features">Anti-Ban Engine</a></li>
+          <li><a href="#pricing">Pricing Plans</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Integrations -->
+      <div class="footer-nav-col">
+        <h6>Integrations</h6>
+        <ul>
+          <li><a href="#">Google Sheets</a></li>
+          <li><a href="#">OpenRouter AI</a></li>
+          <li><a href="#">Meta Graph API</a></li>
+          <li><a href="#">Render.com</a></li>
+          <li><a href="#">Zapier Webhooks</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Resources -->
+      <div class="footer-nav-col">
+        <h6>Resources</h6>
+        <ul>
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">Deployment Guide</a></li>
+          <li><a href="#">API Reference</a></li>
+          <li><a href="#">Release Notes</a></li>
+          <li><a href="#">Community Forum</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 5: Company -->
+      <div class="footer-nav-col">
+        <h6>Company</h6>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Security &amp; Privacy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">GitHub Repository</a></li>
+          <li><a href="#">Contact Engineering</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom-bar">
+      <span>© 2026 Flow Precision Automation. All rights reserved. Open-source under MIT.</span>
+      <div class="status-live-indicator">
+        <span class="green-dot"></span>
+        <span>All Gateway Services Operational</span>
       </div>
     </div>
   </footer>
