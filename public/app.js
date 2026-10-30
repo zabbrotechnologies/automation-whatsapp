@@ -392,6 +392,28 @@ if (btnPreviewSheet && sheetUrlInput) {
   });
 }
 
+// Parallax Scroll Effect for Hero Sky Background
+const parallaxBg = document.getElementById('parallaxBg');
+if (parallaxBg) {
+  let latestScrollY = 0;
+  let ticking = false;
+
+  function updateParallax() {
+    // Moves sky at ~35% scroll speed for authentic atmospheric depth
+    const offset = latestScrollY * 0.35;
+    parallaxBg.style.transform = `translate3d(0, ${offset}px, 0)`;
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    latestScrollY = window.pageYOffset || document.documentElement.scrollTop;
+    if (!ticking) {
+      window.requestAnimationFrame(updateParallax);
+      ticking = true;
+    }
+  }, { passive: true });
+}
+
 // Initial single status fetch on load (Auto-refresh remains strictly OFF)
 setAutoRefresh(false);
 checkStatus(false);
