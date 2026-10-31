@@ -569,10 +569,7 @@
           document.getElementById('adminLink').style.display = 'inline-flex';
         }
 
-        // If user already has a linked phone saved in profile
-        if (currentUser.linked_phone) {
-          renderConnectedState(currentUser.linked_phone);
-        }
+        // Check gateway connection for live socket status
 
         // Poll gateway status
         checkGatewayStatus();
@@ -608,7 +605,7 @@
         const tag = document.getElementById('linkingStatusTag');
         const sNotice = document.getElementById('serverlessNotice');
 
-        if (status === 'CONNECTED' || currentUser.linked_phone || user?.phone) {
+        if (status === 'CONNECTED') {
           const phone = user?.phone || currentUser.linked_phone || 'Active';
           renderConnectedState(phone);
           tag.textContent = 'CONNECTED';
@@ -622,13 +619,17 @@
           tag.style.background = '#fff7ed';
           if (sNotice) sNotice.style.display = 'none';
         } else if (isServerless && !activeGatewayUrl) {
+          document.getElementById('connectedArea').style.display = 'none';
+          document.getElementById('qrArea').style.display = 'flex';
           tag.textContent = 'NEEDS PERSISTENT GATEWAY';
           tag.style.color = '#b45309';
           tag.style.background = '#fef3c7';
           document.getElementById('qrLoader').style.display = 'none';
           if (sNotice) sNotice.style.display = 'block';
         } else {
-          tag.textContent = status || 'INITIALIZING...';
+          document.getElementById('connectedArea').style.display = 'none';
+          document.getElementById('qrArea').style.display = 'flex';
+          tag.textContent = status || 'CONNECTING...';
           tag.style.color = '#f59e0b';
           tag.style.background = '#fffbeb';
           if (sNotice) sNotice.style.display = 'none';

@@ -633,7 +633,10 @@ app.post(['/api/send', '/send'], verifyApiKey, async (req, res) => {
       });
     }
 
-    const cleanNumber = String(phone).replace(/\D/g, '');
+    let cleanNumber = String(phone).replace(/\D/g, '');
+    if (cleanNumber.length === 10) {
+      cleanNumber = '91' + cleanNumber;
+    }
     if (cleanNumber.length < 7 || cleanNumber.length > 15) {
       return res.status(400).json({
         success: false,
