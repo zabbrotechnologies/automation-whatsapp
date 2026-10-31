@@ -51,6 +51,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3.5-super-vl:free';
 const OPENROUTER_ENDPOINT = process.env.OPENROUTER_ENDPOINT || 'https://openrouter.ai/api/v1/chat/completions';
+const RENDER_GATEWAY_DEFAULT = process.env.GATEWAY_URL || 'https://automation-whatsapp-00cl.onrender.com';
+
 
 async function generateAIResponse(userMessage, contactPhone = '') {
   try {
@@ -229,6 +231,45 @@ async function connectToWhatsApp() {
       }
     });
 
+    // Inbound Messages & AI Auto-Reply Engine via OpenRouter
+    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+      try {
+        if (type !== 'notify') return;
+        for (const msg of messages) {
+          if (!msg.message || msg.key.fromMe) continue;
+          
+          const remoteJid = msg.key.remoteJid || '';
+          if (remoteJid.endsWith('@g.us') || remoteJid === 'status@broadcast') continue;
+
+          const text = msg.message.conversation || 
+                       msg.message.extendedTextMessage?.text || 
+                       msg.message.imageMessage?.caption || '';
+          if (!text || text.trim().length === 0) continue;
+
+          const cleanText = text.trim();
+          const senderPhone = remoteJid.split('@')[0];
+
+          addLog('info', `📩 Incoming from +${senderPhone}: "${cleanText}"`);
+
+          // Keyword Triggers for AI Auto Reply
+          const triggers = ['price', 'pricing', 'cost', 'demo', 'catalog', 'catalogue', 'brochure', 'details', 'buy', 'order', 'software', 'service', 'enquiry', 'hi', 'hello'];
+          const lower = cleanText.toLowerCase();
+          const isTrigger = triggers.some(t => lower.includes(t));
+
+          if (isTrigger) {
+            addLog('info', `⚡ AI Trigger matched. Formulating reply via OpenRouter (${OPENROUTER_MODEL})...`);
+            const aiReply = await generateAIResponse(cleanText, senderPhone);
+            if (aiReply) {
+              await sock.sendMessage(remoteJid, { text: aiReply });
+              addLog('success', `🤖 AI Auto-Replied to +${senderPhone}: "${aiReply.substring(0, 70)}..."`);
+            }
+          }
+        }
+      } catch (err) {
+        addLog('error', `Error processing incoming message: ${err.message}`);
+      }
+    });
+
   } catch (error) {
     connectionStatus = 'DISCONNECTED';
     addLog('error', `Connection error: ${error.message}`);
@@ -339,6 +380,25 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
   }
 });
 
+// 6. Test OpenRouter AI Auto-Reply Simulation
+app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
+  try {
+    const { message, phone } = req.body;
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'Field "message" is required' });
+    }
+    const reply = await generateAIResponse(message, phone);
+    res.json({
+      success: true,
+      model: OPENROUTER_MODEL,
+      incomingMessage: message,
+      aiReply: reply
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 2. Sign In
 app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   try {
@@ -385,6 +445,25 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   }
 });
 
+// 6. Test OpenRouter AI Auto-Reply Simulation
+app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
+  try {
+    const { message, phone } = req.body;
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'Field "message" is required' });
+    }
+    const reply = await generateAIResponse(message, phone);
+    res.json({
+      success: true,
+      model: OPENROUTER_MODEL,
+      incomingMessage: message,
+      aiReply: reply
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 3. Current User Profile Session
 app.get(['/api/auth/me', '/auth/me'], authenticateToken, async (req, res) => {
   try {
@@ -393,6 +472,25 @@ app.get(['/api/auth/me', '/auth/me'], authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
     res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 6. Test OpenRouter AI Auto-Reply Simulation
+app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
+  try {
+    const { message, phone } = req.body;
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'Field "message" is required' });
+    }
+    const reply = await generateAIResponse(message, phone);
+    res.json({
+      success: true,
+      model: OPENROUTER_MODEL,
+      incomingMessage: message,
+      aiReply: reply
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -423,6 +521,25 @@ app.get(['/api/admin/users', '/admin/users'], authenticateToken, requireAdmin, a
   }
 });
 
+// 6. Test OpenRouter AI Auto-Reply Simulation
+app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
+  try {
+    const { message, phone } = req.body;
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'Field "message" is required' });
+    }
+    const reply = await generateAIResponse(message, phone);
+    res.json({
+      success: true,
+      model: OPENROUTER_MODEL,
+      incomingMessage: message,
+      aiReply: reply
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Toggle user status (Activate / Suspend)
 app.post(['/api/admin/user-status', '/admin/user-status'], authenticateToken, requireAdmin, async (req, res) => {
   try {
@@ -433,6 +550,25 @@ app.post(['/api/admin/user-status', '/admin/user-status'], authenticateToken, re
     await updateUserStatus(userId, status);
     addLog('info', `Admin updated user #${userId} status to ${status}`);
     res.json({ success: true, message: `User status changed to ${status}` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 6. Test OpenRouter AI Auto-Reply Simulation
+app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
+  try {
+    const { message, phone } = req.body;
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'Field "message" is required' });
+    }
+    const reply = await generateAIResponse(message, phone);
+    res.json({
+      success: true,
+      model: OPENROUTER_MODEL,
+      incomingMessage: message,
+      aiReply: reply
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -545,6 +681,25 @@ app.post('/api/logout', verifyApiKey, async (req, res) => {
   }
 });
 
+// 6. Test OpenRouter AI Auto-Reply Simulation
+app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
+  try {
+    const { message, phone } = req.body;
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'Field "message" is required' });
+    }
+    const reply = await generateAIResponse(message, phone);
+    res.json({
+      success: true,
+      model: OPENROUTER_MODEL,
+      incomingMessage: message,
+      aiReply: reply
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 5. Manual QR Refresh endpoint
 app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
   try {
@@ -571,6 +726,25 @@ app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
   }
 });
 
+
+// 6. Test OpenRouter AI Auto-Reply Simulation
+app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
+  try {
+    const { message, phone } = req.body;
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'Field "message" is required' });
+    }
+    const reply = await generateAIResponse(message, phone);
+    res.json({
+      success: true,
+      model: OPENROUTER_MODEL,
+      incomingMessage: message,
+      aiReply: reply
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // 6. Test OpenRouter AI Auto-Reply Simulation
 app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
