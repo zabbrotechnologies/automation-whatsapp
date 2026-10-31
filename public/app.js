@@ -418,3 +418,23 @@ if (parallaxBg) {
 setAutoRefresh(false);
 checkStatus(false);
 
+
+// Check if user is logged in to adapt nav buttons
+async function checkAuthNav() {
+  try {
+    const res = await fetch('/api/auth/me');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.user) {
+        const navSignIn = document.getElementById('navSignInLink');
+        const navDash = document.getElementById('navDashboardLink');
+        if (navSignIn) navSignIn.style.display = 'none';
+        if (navDash) {
+          navDash.style.display = 'inline-block';
+          navDash.textContent = 'Dashboard (' + data.user.name.split(' ')[0] + ')';
+        }
+      }
+    }
+  } catch (e) {}
+}
+checkAuthNav();
