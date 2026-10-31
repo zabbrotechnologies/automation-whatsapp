@@ -112,3 +112,4 @@ htmlFiles.forEach(file => {
 });
 
 console.log('✓ Translucent frosted glass and cache-busting v=apple3.0 complete');
+

@@ -134,30 +134,30 @@ textarea {
   padding: 0 20px;
 }
 
-/* Apple White Translucent Frosted Glass Navbar */
+/* Apple Ultra-Frosted Translucent Glass Navbar */
 .top-nav,
 .translucent-glass {
   width: 100%;
   max-width: 1140px;
   height: 58px;
-  background: rgba(255, 255, 255, 0.65) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.38) !important;
+  backdrop-filter: blur(18px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 14px 0 18px;
-  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08), inset 0 1.5px 0 0 rgba(255, 255, 255, 0.9) !important;
 }
 
 @media (prefers-color-scheme: dark) {
   .top-nav,
   .translucent-glass {
-    background: rgba(255, 255, 255, 0.7) !important;
-    border-color: rgba(255, 255, 255, 0.5) !important;
-    box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+    background: rgba(255, 255, 255, 0.42) !important;
+    border-color: rgba(255, 255, 255, 0.65) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 1.5px 0 0 rgba(255, 255, 255, 0.9) !important;
   }
 }
 
@@ -212,8 +212,8 @@ textarea {
 .nav-link {
   text-decoration: none;
   font-size: 13.5px;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: #18181b;
   transition: color 0.15s ease;
 }
 
