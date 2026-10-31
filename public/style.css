@@ -4,7 +4,7 @@
    ========================================================== */
 
 :root {
-  --bg-page: #fbfbf9;
+  --bg-page: #ffffff;
   --bg-white: #ffffff;
   --bg-subtle: #f8fafc;
   --bg-dark: #09090b;
@@ -325,44 +325,19 @@ textarea {
   align-items: center;
   text-align: center;
   width: 100%;
-  margin-top: -72px; /* Pull under top nav for seamless sky bleed */
+  margin-top: -72px;
   min-height: 520px;
+  background: #ffffff;
 }
 
 /* Parallax Sky Background Image Layer */
 .hero-parallax-bg {
-  position: absolute;
-  top: -20%;
-  left: 0;
-  width: 100%;
-  height: 140%;
-  background-image: url('hero-sky.jpg');
-  background-size: cover;
-  background-position: center bottom;
-  background-repeat: no-repeat;
-  z-index: 0;
-  pointer-events: none;
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
-  transition: transform 0.1s cubic-bezier(0.2, 0, 0.2, 1);
+  display: none;
 }
 
 /* Subtle Sky Fade / Mist overlay for pristine readability */
 .hero-sky-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.35) 0%,
-    rgba(255, 255, 255, 0.15) 40%,
-    rgba(251, 251, 249, 0.85) 85%,
-    rgba(251, 251, 249, 1) 100%
-  );
-  z-index: 1;
-  pointer-events: none;
+  display: none;
 }
 
 .hero-inner-content {

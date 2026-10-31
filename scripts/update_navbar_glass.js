@@ -50,3 +50,4 @@ if (oldNavRegex.test(css)) {
 } else {
   console.error('Pattern oldNavRegex not found in public/style.css');
 }
+
