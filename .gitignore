@@ -3,4 +3,5 @@ session_auth/
 .env
 .DS_Store
 npm-debug.log*
+screenshots/
 .neon

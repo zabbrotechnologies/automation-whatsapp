@@ -36,13 +36,16 @@
   --radius-md: 8px;
   --radius-sm: 6px;
   
-  --font-sans: 'Inter', 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-body: 'Lato', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --ease-apple: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-apple-press: cubic-bezier(0.2, 0, 0, 1);
+  --ease-apple-spring: cubic-bezier(0.175, 0.885, 0.32, 1.15);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Inter", -apple-system-subheadline, system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", "Inter", system-ui, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
   
-  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-mockup: 0 20px 50px -10px rgba(0, 0, 0, 0.08), 0 8px 24px -6px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --shadow-mockup: 0 20px 50px -10px rgba(0, 0, 0, 0.08), 0 8px 24px -6px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --shadow-hover: 0 12px 30px -4px rgba(0, 0, 0, 0.08);
 }
 
@@ -67,6 +70,32 @@ body {
   overflow-x: hidden;
   line-height: 1.6;
   font-weight: 400;
+}
+
+
+/* Apple Touch Ergonomics & Active Press Feedback */
+button,
+.btn,
+[role="button"],
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button:active,
+.btn:active,
+.btn-nav-primary:active,
+.btn-hero-dark:active,
+.btn-hero-light:active,
+.btn-tier-dark:active,
+.btn-tier-outline:active,
+.tab-btn:active,
+.faq-summary:active {
+  transform: scale(0.975);
+  transition: transform 100ms var(--ease-apple-press) !important;
 }
 
 /* Typography refinement for UI labels, navigation, and controls */
@@ -110,8 +139,9 @@ textarea {
   max-width: 1140px;
   height: 58px;
   background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-full);
   display: flex;
@@ -199,7 +229,7 @@ textarea {
   font-weight: 600;
   border-radius: var(--radius-full);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: transform 0.2s var(--ease-apple), background-color 0.2s var(--ease-apple);
 }
 
 .btn-nav-primary:hover {
@@ -403,7 +433,7 @@ textarea {
   border-radius: var(--radius-full);
   text-decoration: none;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s var(--ease-apple), background-color 0.2s var(--ease-apple), box-shadow 0.2s var(--ease-apple);
 }
 
 .btn-hero-dark:hover {
@@ -1773,7 +1803,7 @@ input:checked + .slider:before {
   font-weight: 600;
   color: var(--text-dark);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: transform 0.2s var(--ease-apple), background-color 0.2s var(--ease-apple), border-color 0.2s var(--ease-apple);
 }
 
 .btn-tier-outline:hover {
@@ -1792,7 +1822,7 @@ input:checked + .slider:before {
   font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: transform 0.2s var(--ease-apple), background-color 0.2s var(--ease-apple);
 }
 
 .btn-tier-dark:hover {
@@ -2083,4 +2113,32 @@ input:checked + .slider:before {
   .footer-grid { grid-template-columns: 1fr; }
   .cta-dark-card { padding: 24px; }
   .top-nav { padding: 0 10px; }
+}
+
+
+/* ==========================================================
+   APPLE ACCESSIBILITY & REDUCED MOTION / TRANSPARENCY
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .rotating {
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .top-nav,
+  .dash-card,
+  .mockup-frame,
+  .modal,
+  .glass-panel {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background-color: #ffffff !important;
+  }
 }

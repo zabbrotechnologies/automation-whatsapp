@@ -151,6 +151,29 @@
       margin-left: 6px;
       letter-spacing: 0.03em;
     }
+  
+    /* Apple Touch & Physical Press Feedback */
+    button, .btn-auth-submit, .auth-tab-btn {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    button:active,
+    .btn-auth-submit:active,
+    .auth-tab-btn:active {
+      transform: scale(0.975);
+      transition: transform 100ms var(--ease-apple-press, cubic-bezier(0.2, 0, 0, 1)) !important;
+    }
+    .auth-card {
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+
   </style>
 </head>
 <body>
