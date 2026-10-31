@@ -100,9 +100,13 @@ async function connectToWhatsApp() {
 
       if (qr) {
         try {
-          currentQR = await qrcode.toDataURL(qr);
+          currentQR = await qrcode.toDataURL(qr, {
+            margin: 2,
+            scale: 6,
+            color: { dark: '#0b0f19', light: '#ffffff' }
+          });
           connectionStatus = 'QR_READY';
-          addLog('info', 'New QR Code generated. Ready for scanning.');
+          addLog('info', 'New high-resolution QR Code generated. Ready for scanning.');
         } catch (err) {
           addLog('error', `Failed to generate QR Data URL: ${err.message}`);
         }
@@ -118,7 +122,11 @@ async function connectToWhatsApp() {
 
         addLog('error', `Connection closed (Status code: ${statusCode}). Reconnecting: ${shouldReconnect}`);
 
-        if (shouldReconnect) {
+        if (statusCode === DisconnectReason.timedOut || statusCode === 408) {
+          addLog('info', 'QR scan window timed out. Resetting unlinked session to generate fresh pair code...');
+          clearSession();
+          setTimeout(connectToWhatsApp, 1500);
+        } else if (shouldReconnect) {
           setTimeout(connectToWhatsApp, 3000);
         } else {
           addLog('error', 'Device logged out. Clearing session and waiting for new scan.');
@@ -147,6 +155,13 @@ async function connectToWhatsApp() {
 
 function clearSession() {
   try {
+    if (sock) {
+      try {
+        sock.ev.removeAllListeners();
+        sock.end(undefined);
+      } catch (e) {}
+      sock = null;
+    }
     if (fs.existsSync(AUTH_DIR)) {
       fs.rmSync(AUTH_DIR, { recursive: true, force: true });
       addLog('info', 'Session folder cleared.');
