@@ -673,11 +673,16 @@
       });
     }
 
+    let lastRenderedQr = null;
+
     function renderQrState(qrDataUrl) {
       document.getElementById('connectedArea').style.display = 'none';
       document.getElementById('qrArea').style.display = 'flex';
       const img = document.getElementById('qrImageTag');
-      img.src = qrDataUrl;
+      if (lastRenderedQr !== qrDataUrl) {
+        lastRenderedQr = qrDataUrl;
+        img.src = qrDataUrl;
+      }
       img.style.display = 'block';
       document.getElementById('qrLoader').style.display = 'none';
     }
@@ -727,6 +732,7 @@
 
     // Refresh QR Code
     document.getElementById('btnRefreshQr').addEventListener('click', async () => {
+      lastRenderedQr = null;
       document.getElementById('qrImageTag').style.display = 'none';
       document.getElementById('qrLoader').style.display = 'flex';
       try {

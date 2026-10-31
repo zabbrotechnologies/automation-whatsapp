@@ -72,8 +72,11 @@ async function generateAIResponse(userMessage, contactPhone = '') {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage }
         ],
-        max_tokens: 600,
-        temperature: 0.7
+        max_tokens: 150,
+        temperature: 0.5,
+        reasoning: {
+          max_tokens: 0
+        }
       })
     });
 
@@ -95,6 +98,7 @@ async function generateAIResponse(userMessage, contactPhone = '') {
 // Global State
 let sock = null;
 let currentQR = null;
+let isManualRefreshRequested = false;
 let connectionStatus = 'INITIALIZING'; // 'INITIALIZING', 'QR_READY', 'CONNECTED', 'DISCONNECTED'
 let connectedUser = null;
 const logs = [];
@@ -135,7 +139,8 @@ async function connectToWhatsApp() {
       auth: state,
       printQRInTerminal: true,
       defaultQueryTimeoutMs: undefined,
-      syncFullHistory: false
+      syncFullHistory: false,
+      qrTimeout: 180000
     });
 
     sock.ev.on('creds.update', saveCreds);
@@ -145,13 +150,16 @@ async function connectToWhatsApp() {
 
       if (qr) {
         try {
-          currentQR = await qrcode.toDataURL(qr, {
-            margin: 2,
-            scale: 6,
-            color: { dark: '#0b0f19', light: '#ffffff' }
-          });
-          connectionStatus = 'QR_READY';
-          addLog('info', 'New high-resolution QR Code generated. Ready for scanning.');
+          if (!currentQR || isManualRefreshRequested) {
+            currentQR = await qrcode.toDataURL(qr, {
+              margin: 2,
+              scale: 6,
+              color: { dark: '#0b0f19', light: '#ffffff' }
+            });
+            connectionStatus = 'QR_READY';
+            isManualRefreshRequested = false;
+            addLog('info', 'Fixed pairing QR code generated and locked. Waiting for scan.');
+          }
         } catch (err) {
           addLog('error', `Failed to generate QR Data URL: ${err.message}`);
         }
@@ -719,10 +727,9 @@ app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
     addLog('info', 'Manual QR Refresh requested by user.');
     connectionStatus = 'INITIALIZING';
     currentQR = null;
-    if (sock) {
-      try { sock.end(undefined); } catch (e) {}
-    }
-    setTimeout(connectToWhatsApp, 1000);
+    isManualRefreshRequested = true;
+    clearSession();
+    setTimeout(connectToWhatsApp, 800);
     res.json({ success: true, message: 'Generating fresh QR code...' });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
