@@ -61,8 +61,8 @@ async function checkStatus(isManual = false) {
     renderState(data);
     updateTimestamp();
   } catch (err) {
-    statusBadge.className = 'status-pill disconnected';
-    statusText.textContent = 'Server Offline';
+    if (statusBadge) statusBadge.className = 'status-pill disconnected';
+    if (statusText) statusText.textContent = 'Server Offline';
     if (kpiGatewayStatus) kpiGatewayStatus.textContent = 'Offline';
     appendLog('error', `Could not reach gateway server: ${err.message}`);
   } finally {
@@ -81,8 +81,8 @@ function renderState(data) {
   const { status, qr, user, logs } = data;
 
   if (status === 'CONNECTED') {
-    statusBadge.className = 'status-pill connected';
-    statusText.textContent = 'Connected';
+    if (statusBadge) statusBadge.className = 'status-pill connected';
+    if (statusText) statusText.textContent = 'Connected';
     if (kpiGatewayStatus) kpiGatewayStatus.textContent = 'Active (Linked)';
     
     qrSection.classList.add('hidden');
@@ -90,8 +90,8 @@ function renderState(data) {
     connectedPhone.textContent = user?.phone ? `+${user.phone}` : 'Connected';
     currentDisplayedQR = null;
   } else if (status === 'QR_READY' && qr) {
-    statusBadge.className = 'status-pill qr';
-    statusText.textContent = 'Scan QR Code';
+    if (statusBadge) statusBadge.className = 'status-pill qr';
+    if (statusText) statusText.textContent = 'Scan QR Code';
     if (kpiGatewayStatus) kpiGatewayStatus.textContent = 'Scan Required';
     
     connectedSection.classList.add('hidden');
@@ -105,8 +105,8 @@ function renderState(data) {
       qrLoading.style.display = 'none';
     }
   } else {
-    statusBadge.className = 'status-pill initializing';
-    statusText.textContent = 'Initializing...';
+    if (statusBadge) statusBadge.className = 'status-pill initializing';
+    if (statusText) statusText.textContent = 'Initializing...';
     if (kpiGatewayStatus) kpiGatewayStatus.textContent = 'Initializing...';
     
     connectedSection.classList.add('hidden');
