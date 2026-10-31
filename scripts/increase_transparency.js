@@ -66,3 +66,4 @@ htmlFiles.forEach(file => {
 });
 
 console.log('✓ Increased transparency to rgba(255,255,255,0.38) and blur(18px) saturate(200%)');
+
