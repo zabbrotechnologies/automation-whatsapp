@@ -21,7 +21,7 @@ if (!process.env.VERCEL) {
   }
 }
 
-require('dotenv').config();
+require('dotenv').config({ override: true });
 
 const {
   initDb,
@@ -46,6 +46,49 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// OpenRouter AI Engine Configuration (nvidia/nemotron-3.5-super-vl:free)
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3.5-super-vl:free';
+const OPENROUTER_ENDPOINT = process.env.OPENROUTER_ENDPOINT || 'https://openrouter.ai/api/v1/chat/completions';
+
+async function generateAIResponse(userMessage, contactPhone = '') {
+  try {
+    const systemPrompt = 'You are an automated, courteous, and highly knowledgeable assistant for our WhatsApp enterprise service. Respond clearly and professionally in 1-3 concise sentences. Guide customer inquiries warmly and offer next steps.';
+
+    const response = await fetch(OPENROUTER_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + OPENROUTER_API_KEY,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://zabbro-automate.vercel.app',
+        'X-Title': 'WhatsApp Gateway AI'
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage }
+        ],
+        max_tokens: 600,
+        temperature: 0.7
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      addLog('error', 'OpenRouter error (' + response.status + '): ' + errText);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content?.trim() || null;
+  } catch (err) {
+    addLog('error', 'OpenRouter AI call failed: ' + err.message);
+    return null;
+  }
+}
+
 
 // Global State
 let sock = null;
@@ -143,6 +186,46 @@ async function connectToWhatsApp() {
           phone: phone
         };
         addLog('success', `WhatsApp connected successfully for +${phone}!`);
+
+    // Inbound Messages & AI Auto-Reply Engine via OpenRouter
+    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+      try {
+        if (type !== 'notify') return;
+        for (const msg of messages) {
+          if (!msg.message || msg.key.fromMe) continue;
+          
+          const remoteJid = msg.key.remoteJid || '';
+          if (remoteJid.endsWith('@g.us') || remoteJid === 'status@broadcast') continue;
+
+          const text = msg.message.conversation || 
+                       msg.message.extendedTextMessage?.text || 
+                       msg.message.imageMessage?.caption || '';
+          if (!text || text.trim().length === 0) continue;
+
+          const cleanText = text.trim();
+          const senderPhone = remoteJid.split('@')[0];
+
+          addLog('info', '?? Incoming from +' + senderPhone + ': "' + cleanText + '"');
+
+          // Keyword Triggers for AI Auto Reply
+          const triggers = ['price', 'pricing', 'cost', 'demo', 'catalog', 'catalogue', 'brochure', 'details', 'buy', 'order', 'software', 'service', 'enquiry', 'hi', 'hello'];
+          const lower = cleanText.toLowerCase();
+          const isTrigger = triggers.some(t => lower.includes(t));
+
+          if (isTrigger) {
+            addLog('info', '? AI Trigger matched. Formulating reply via OpenRouter (' + OPENROUTER_MODEL + ')...');
+            const aiReply = await generateAIResponse(cleanText, senderPhone);
+            if (aiReply) {
+              await sock.sendMessage(remoteJid, { text: aiReply });
+              addLog('success', '?? AI Auto-Replied to +' + senderPhone + ': "' + aiReply.substring(0, 70) + '..."');
+            }
+          }
+        }
+      } catch (err) {
+        addLog('error', 'Error processing incoming message: ' + err.message);
+      }
+    });
+
       }
     });
 
@@ -483,6 +566,26 @@ app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
     }
     setTimeout(connectToWhatsApp, 1000);
     res.json({ success: true, message: 'Generating fresh QR code...' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+
+// 6. Test OpenRouter AI Auto-Reply Simulation
+app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
+  try {
+    const { message, phone } = req.body;
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'Field "message" is required' });
+    }
+    const reply = await generateAIResponse(message, phone);
+    res.json({
+      success: true,
+      model: OPENROUTER_MODEL,
+      incomingMessage: message,
+      aiReply: reply
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
