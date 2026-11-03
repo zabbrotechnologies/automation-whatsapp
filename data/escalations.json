@@ -1,0 +1,10 @@
+{
+  "919988776655": {
+    "phone": "919988776655",
+    "name": "Test Escalation Lead",
+    "reason": "Triggered by \"agent\"",
+    "query": "I want to talk to an agent",
+    "escalatedAt": "2026-11-03T10:04:30.726Z",
+    "status": "PENDING"
+  }
+}

@@ -53,12 +53,20 @@ const RENDER_GATEWAY_DEFAULT = process.env.GATEWAY_URL || 'https://automation-wh
 
 // ---------------- BUSINESS SETTINGS & TARGETING REPOSITORY ---------------- //
 const SETTINGS_FILE = path.join(__dirname, 'business_settings.json');
+const LEADS_FILE = path.join(__dirname, 'data', 'leads.json');
+const OPTOUTS_FILE = path.join(__dirname, 'data', 'optouts.json');
+const ESCALATIONS_FILE = path.join(__dirname, 'data', 'escalations.json');
+const SESSION_INFO_FILE = path.join(__dirname, 'data', 'session_info.json');
 
 const DEFAULT_SETTINGS = {
   business_profile: "Flow provides automated WhatsApp communication engineered for enterprise precision. Broadcast personalized campaigns directly from public Google Sheets, automate intelligent AI product responses with custom keyword triggers, and manage companion sessions with zero ban risk.",
   website_url: "https://zabbro-automate.vercel.app",
   auto_reply_enabled: true,
   welcome_msg_enabled: true,
+  outside_kb_action: "FALLBACK_MSG",
+  fallback_message: "I don't have that specific detail in our catalog right now, but I've alerted our team. An executive will follow up with you shortly!",
+  escalation_notice: "Understood! Automated replies are now paused for this chat. Our executive has been notified and will assist you directly.",
+  optout_message: "You have been unsubscribed from automated updates. Reply START anytime to re-enable.",
   keyword_pairs: [
     {
       keyword: "price",
@@ -71,9 +79,343 @@ const DEFAULT_SETTINGS = {
     {
       keyword: "support",
       answer: "Our priority technical support team is available 24/7. Reply to this chat with any questions!"
+    },
+    {
+      keyword: "catalog",
+      answer: "You can view our complete service catalog and integrations on our official website: https://zabbro-automate.vercel.app"
     }
   ]
 };
+
+// --- DATA ACCESS HELPERS (LEADS, OPTOUTS, ESCALATIONS) --- //
+function getLeads() {
+  try {
+    if (fs.existsSync(LEADS_FILE)) {
+      return JSON.parse(fs.readFileSync(LEADS_FILE, 'utf-8'));
+    }
+  } catch (e) {
+    console.error('Error reading leads:', e.message);
+  }
+  return [];
+}
+
+function saveLeads(leads) {
+  try {
+    fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('Error saving leads:', e.message);
+  }
+}
+
+function recordLeadInteraction({ phone, name = '', inquiry, reply = '', intent = 'General', status = 'AI_HANDLED' }) {
+  try {
+    const clean = String(phone).replace(/\D/g, '');
+    const leads = getLeads();
+    const existingIndex = leads.findIndex(l => l.phone === clean);
+    const now = new Date().toISOString();
+    if (existingIndex >= 0) {
+      leads[existingIndex].lastSeen = now;
+      leads[existingIndex].totalMessages = (leads[existingIndex].totalMessages || 1) + 1;
+      leads[existingIndex].lastInquiry = inquiry;
+      if (reply) leads[existingIndex].lastReply = reply;
+      leads[existingIndex].matchedIntent = intent;
+      if (status) leads[existingIndex].status = status;
+      if (name && (!leads[existingIndex].name || leads[existingIndex].name.startsWith('Lead +'))) {
+        leads[existingIndex].name = name;
+      }
+    } else {
+      leads.unshift({
+        phone: clean,
+        name: name || `Lead +${clean.slice(-4)}`,
+        firstSeen: now,
+        lastSeen: now,
+        totalMessages: 1,
+        lastInquiry: inquiry,
+        lastReply: reply,
+        matchedIntent: intent,
+        status: status
+      });
+    }
+    saveLeads(leads.slice(0, 100));
+  } catch (e) {
+    console.error('Error recording lead:', e.message);
+  }
+}
+
+function getOptOuts() {
+  try {
+    if (fs.existsSync(OPTOUTS_FILE)) {
+      return JSON.parse(fs.readFileSync(OPTOUTS_FILE, 'utf-8'));
+    }
+  } catch (e) {
+    console.error('Error reading optouts:', e.message);
+  }
+  return [];
+}
+
+function saveOptOuts(optouts) {
+  try {
+    fs.writeFileSync(OPTOUTS_FILE, JSON.stringify(optouts, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('Error saving optouts:', e.message);
+  }
+}
+
+function isOptedOut(phone) {
+  const clean = String(phone).replace(/\D/g, '');
+  const optouts = getOptOuts();
+  return optouts.some(o => o.phone === clean);
+}
+
+function addOptOut(phone, reason = 'User requested stop') {
+  const clean = String(phone).replace(/\D/g, '');
+  const optouts = getOptOuts();
+  if (!optouts.some(o => o.phone === clean)) {
+    optouts.unshift({ phone: clean, optedOutAt: new Date().toISOString(), reason });
+    saveOptOuts(optouts);
+  }
+}
+
+function removeOptOut(phone) {
+  const clean = String(phone).replace(/\D/g, '');
+  const optouts = getOptOuts().filter(o => o.phone !== clean);
+  saveOptOuts(optouts);
+}
+
+function getEscalations() {
+  try {
+    if (fs.existsSync(ESCALATIONS_FILE)) {
+      return JSON.parse(fs.readFileSync(ESCALATIONS_FILE, 'utf-8'));
+    }
+  } catch (e) {
+    console.error('Error reading escalations:', e.message);
+  }
+  return {};
+}
+
+function saveEscalations(esc) {
+  try {
+    fs.writeFileSync(ESCALATIONS_FILE, JSON.stringify(esc, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('Error saving escalations:', e.message);
+  }
+}
+
+function isEscalated(phone) {
+  const clean = String(phone).replace(/\D/g, '');
+  const esc = getEscalations();
+  return Boolean(esc[clean] && esc[clean].status === 'PENDING');
+}
+
+function addEscalation(phone, name, query, reason = 'Customer requested live human executive') {
+  const clean = String(phone).replace(/\D/g, '');
+  const esc = getEscalations();
+  esc[clean] = {
+    phone: clean,
+    name: name || `Contact +${clean.slice(-4)}`,
+    reason,
+    query,
+    escalatedAt: new Date().toISOString(),
+    status: 'PENDING'
+  };
+  saveEscalations(esc);
+}
+
+function resolveEscalation(phone) {
+  const clean = String(phone).replace(/\D/g, '');
+  const esc = getEscalations();
+  if (esc[clean]) {
+    delete esc[clean];
+    saveEscalations(esc);
+  }
+}
+
+const ESCALATION_TRIGGERS = [
+  'agent', 'human', 'executive', 'representative', 'complaint',
+  'talk to agent', 'talk to an agent', 'speak to an agent', 'speak to agent',
+  'live support', 'real person', 'customer care', 'person'
+];
+
+const OPTOUT_TRIGGERS = ['stop', 'unsubscribe', 'cancel', 'quit', 'end', 'optout'];
+const OPTIN_TRIGGERS = ['start', 'resubscribe', 'subscribe', 'restart'];
+
+// --- MASTER INBOUND PROCESSING ENGINE (SHARED BY WHATSAPP SOCKET & SIMULATOR) --- //
+async function processInboundText(cleanText, senderPhone = '', senderName = '') {
+  const lower = cleanText.toLowerCase().trim();
+  const settings = getBusinessSettings();
+
+  // 1. Check Opt-Out Triggers (STOP / UNSUBSCRIBE)
+  if (OPTOUT_TRIGGERS.includes(lower)) {
+    addOptOut(senderPhone, 'User sent ' + cleanText);
+    const reply = settings.optout_message || 'You have been unsubscribed from automated updates. Reply START anytime to re-enable.';
+    recordLeadInteraction({
+      phone: senderPhone,
+      name: senderName,
+      inquiry: cleanText,
+      reply: reply,
+      intent: 'Opt-Out',
+      status: 'OPTED_OUT'
+    });
+    return {
+      type: 'OPTOUT',
+      matched: cleanText,
+      reply: reply,
+      explanation: 'Contact opted out. Phone added to blacklist; automated broadcasts will safely bypass this number.'
+    };
+  }
+
+  // 2. Check Opt-In Triggers (START / RESUBSCRIBE)
+  if (OPTIN_TRIGGERS.includes(lower)) {
+    removeOptOut(senderPhone);
+    const welcomeBack = 'Welcome back! You have been successfully resubscribed to updates.';
+    recordLeadInteraction({
+      phone: senderPhone,
+      name: senderName,
+      inquiry: cleanText,
+      reply: welcomeBack,
+      intent: 'Opt-In',
+      status: 'AI_HANDLED'
+    });
+    return {
+      type: 'OPTIN',
+      matched: cleanText,
+      reply: welcomeBack,
+      explanation: 'Contact resubscribed. Phone removed from blacklist.'
+    };
+  }
+
+  // 3. Check if contact is currently under Human Takeover
+  if (isEscalated(senderPhone)) {
+    recordLeadInteraction({
+      phone: senderPhone,
+      name: senderName,
+      inquiry: cleanText,
+      reply: '(Suppressed - Human Takeover Active)',
+      intent: 'Escalation Follow-up',
+      status: 'ESCALATED'
+    });
+    return {
+      type: 'HUMAN_TAKEOVER_ACTIVE',
+      reply: null,
+      explanation: 'Chat is currently in Human Takeover mode. Bot responses are paused to let live executives chat directly.'
+    };
+  }
+
+  // 4. Check Escalation Triggers (talk to agent, complaint, etc.)
+  const matchedEsc = ESCALATION_TRIGGERS.find(t => lower.includes(t));
+  if (matchedEsc) {
+    addEscalation(senderPhone, senderName, cleanText, `Triggered by "${matchedEsc}"`);
+    const escReply = settings.escalation_notice || 'Understood! Automated replies are now paused for this chat. Our executive has been notified and will assist you directly.';
+    recordLeadInteraction({
+      phone: senderPhone,
+      name: senderName,
+      inquiry: cleanText,
+      reply: escReply,
+      intent: 'Escalation',
+      status: 'ESCALATED'
+    });
+    return {
+      type: 'ESCALATION',
+      matched: matchedEsc,
+      reply: escReply,
+      explanation: `Human escalation trigger "${matchedEsc}" matched. Bot paused for this chat and support team alerted.`
+    };
+  }
+
+  // 5. Check Prerequisite Gating (Business details must be set)
+  if (!isBusinessKnowledgeConfigured(settings)) {
+    return {
+      type: 'SETUP_REQUIRED',
+      reply: null,
+      explanation: 'Automated replies are paused because the customer has not configured business details yet.'
+    };
+  }
+
+  // 6. Direct Targeting Words & Answers (Key-Value Matching)
+  let matchedPair = null;
+  if (Array.isArray(settings.keyword_pairs)) {
+    matchedPair = settings.keyword_pairs.find(p => {
+      const kw = (p.keyword || '').trim().toLowerCase();
+      return kw && lower.includes(kw);
+    });
+  }
+
+  if (matchedPair && matchedPair.answer && matchedPair.answer.trim()) {
+    const ans = matchedPair.answer.trim();
+    recordLeadInteraction({
+      phone: senderPhone,
+      name: senderName,
+      inquiry: cleanText,
+      reply: ans,
+      intent: matchedPair.keyword,
+      status: 'AI_HANDLED'
+    });
+    return {
+      type: 'KEYWORD_MATCH',
+      matched: matchedPair.keyword,
+      reply: ans,
+      explanation: `Targeting keyword "${matchedPair.keyword}" matched instantly. Direct answer sent without consuming AI tokens.`
+    };
+  }
+
+  // 7. Intelligent AI Auto-Reply (Grounded in Business Knowledge Base)
+  if (settings.auto_reply_enabled !== false) {
+    const aiReply = await generateAIResponse(cleanText, senderPhone, settings);
+    if (aiReply) {
+      recordLeadInteraction({
+        phone: senderPhone,
+        name: senderName,
+        inquiry: cleanText,
+        reply: aiReply.trim(),
+        intent: 'Knowledge Base',
+        status: 'AI_HANDLED'
+      });
+      return {
+        type: 'AI_KNOWLEDGE_BASE',
+        reply: aiReply.trim(),
+        explanation: 'Inquiry addressed using verified facts strictly grounded in your Business Knowledge Base.'
+      };
+    } else {
+      // Outside Knowledge Base
+      if (settings.outside_kb_action === 'FALLBACK_MSG') {
+        const fallback = settings.fallback_message || "I don't have that specific detail in our catalog right now, but I've alerted our team. An executive will follow up with you shortly!";
+        recordLeadInteraction({
+          phone: senderPhone,
+          name: senderName,
+          inquiry: cleanText,
+          reply: fallback,
+          intent: 'Fallback',
+          status: 'AI_HANDLED'
+        });
+        return {
+          type: 'OUTSIDE_KB_FALLBACK',
+          reply: fallback,
+          explanation: 'Question is outside Knowledge Base. Sent courteous fallback message without inventing facts.'
+        };
+      } else {
+        recordLeadInteraction({
+          phone: senderPhone,
+          name: senderName,
+          inquiry: cleanText,
+          reply: '(Silent - Zero Hallucinations)',
+          intent: 'Outside Knowledge',
+          status: 'AI_HANDLED'
+        });
+        return {
+          type: 'OUTSIDE_KB_SILENT',
+          reply: null,
+          explanation: 'Question is outside Knowledge Base. Bot remained completely silent (zero hallucinations).'
+        };
+      }
+    }
+  }
+
+  return {
+    type: 'AUTO_REPLY_DISABLED',
+    reply: null,
+    explanation: 'AI Auto-Reply toggle switch is currently OFF.'
+  };
+}
 
 function isBusinessKnowledgeConfigured(settings) {
   if (!settings) return false;
@@ -189,6 +531,11 @@ let currentQR = null;
 let isManualRefreshRequested = false;
 let connectionStatus = 'INITIALIZING'; // 'INITIALIZING', 'QR_READY', 'CONNECTED', 'RECONNECTING', 'DISCONNECTED'
 let connectedUser = null;
+try {
+  if (fs.existsSync(SESSION_INFO_FILE)) {
+    connectedUser = JSON.parse(fs.readFileSync(SESSION_INFO_FILE, 'utf-8'));
+  }
+} catch (e) {}
 const logs = [];
 
 // Message Deduplication cache to prevent duplicate bot replies
@@ -314,6 +661,9 @@ async function connectToWhatsApp() {
           name: sock.user?.name || state.creds?.me?.name || 'WhatsApp User',
           phone: phone
         };
+        try {
+          fs.writeFileSync(SESSION_INFO_FILE, JSON.stringify(connectedUser, null, 2), 'utf-8');
+        } catch (e) {}
         addLog('success', `WhatsApp connected successfully for +${phone}!`);
       }
     });
@@ -347,41 +697,16 @@ async function connectToWhatsApp() {
 
           addLog('info', `📩 Incoming from +${senderPhone}: "${cleanText}"`);
 
-          const settings = getBusinessSettings();
-
-          // Prerequisite gating: Customers must configure their business details before automated replies occur
-          if (!isBusinessKnowledgeConfigured(settings)) {
-            addLog('info', `Automated reply paused for +${senderPhone}: Business details and targeting keywords have not been configured yet.`);
-            continue;
-          }
-
-          // Step 1: Direct Targeting Words & Answers (Key-Value Matching)
-          let matchedPair = null;
-          if (Array.isArray(settings.keyword_pairs)) {
-            const lower = cleanText.toLowerCase();
-            matchedPair = settings.keyword_pairs.find(p => {
-              const kw = (p.keyword || '').trim().toLowerCase();
-              return kw && lower.includes(kw);
-            });
-          }
-
-          if (matchedPair && matchedPair.answer && matchedPair.answer.trim()) {
-            addLog('info', `🎯 Targeting keyword "${matchedPair.keyword}" matched for +${senderPhone}. Sending configured answer...`);
-            await sock.sendMessage(remoteJid, { text: matchedPair.answer.trim() });
-            addLog('success', `🤖 Direct Replied to +${senderPhone}: "${matchedPair.answer.trim().substring(0, 60)}..."`);
-            continue;
-          }
-
-          // Step 2: Intelligent AI Auto-Reply (Grounded strictly in Business Knowledge Base)
-          if (settings.auto_reply_enabled !== false) {
-            addLog('info', `⚡ Checking inquiry against Business Knowledge Base for +${senderPhone}...`);
-            const aiReply = await generateAIResponse(cleanText, senderPhone, settings);
-            if (aiReply) {
-              await sock.sendMessage(remoteJid, { text: aiReply.trim() });
-              addLog('success', `🤖 AI Replied to +${senderPhone} from Knowledge Base: "${aiReply.trim().substring(0, 70)}..."`);
-            } else {
-              addLog('info', `Query from +${senderPhone} ("${cleanText}") is outside Business Knowledge Base. No reply sent.`);
-            }
+          const result = await processInboundText(cleanText, senderPhone, msg.pushName || '');
+          if (result && result.reply) {
+            await sock.sendMessage(remoteJid, { text: result.reply });
+            addLog('success', `🤖 Replied to +${senderPhone} [${result.type}]: "${result.reply.substring(0, 60)}..."`);
+          } else if (result && result.type === 'OUTSIDE_KB_SILENT') {
+            addLog('info', `Query from +${senderPhone} is outside Business Knowledge Base. Bot remained silent (zero hallucinations).`);
+          } else if (result && result.type === 'HUMAN_TAKEOVER_ACTIVE') {
+            addLog('info', `Human takeover active for +${senderPhone}. Automated reply suppressed.`);
+          } else if (result && result.type === 'SETUP_REQUIRED') {
+            addLog('info', `Automated reply paused for +${senderPhone}: Business details have not been configured yet.`);
           }
         }
       } catch (err) {
@@ -409,6 +734,11 @@ function clearSession() {
       fs.rmSync(AUTH_DIR, { recursive: true, force: true });
       addLog('info', 'Session folder cleared.');
     }
+    try {
+      if (fs.existsSync(SESSION_INFO_FILE)) {
+        fs.unlinkSync(SESSION_INFO_FILE);
+      }
+    } catch (e) {}
   } catch (e) {
     addLog('error', `Error clearing session: ${e.message}`);
   }
@@ -613,7 +943,7 @@ app.get(['/api/business-settings', '/business-settings'], (req, res) => {
 // POST Business Knowledge Base & Targeting Keywords
 app.post(['/api/business-settings', '/business-settings'], (req, res) => {
   try {
-    const { business_profile, website_url, keyword_pairs, auto_reply_enabled, welcome_msg_enabled } = req.body;
+    const { business_profile, website_url, keyword_pairs, auto_reply_enabled, welcome_msg_enabled, outside_kb_action, fallback_message } = req.body;
     
     const current = getBusinessSettings();
     const updated = {
@@ -622,6 +952,8 @@ app.post(['/api/business-settings', '/business-settings'], (req, res) => {
       website_url: typeof website_url === 'string' ? website_url : current.website_url,
       auto_reply_enabled: auto_reply_enabled !== undefined ? Boolean(auto_reply_enabled) : current.auto_reply_enabled,
       welcome_msg_enabled: welcome_msg_enabled !== undefined ? Boolean(welcome_msg_enabled) : current.welcome_msg_enabled,
+      outside_kb_action: typeof outside_kb_action === 'string' ? outside_kb_action : current.outside_kb_action,
+      fallback_message: typeof fallback_message === 'string' ? fallback_message : current.fallback_message,
       keyword_pairs: Array.isArray(keyword_pairs) 
         ? keyword_pairs.filter(p => p && typeof p.keyword === 'string' && p.keyword.trim().length > 0)
         : current.keyword_pairs
@@ -794,6 +1126,180 @@ app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
     clearSession();
     setTimeout(connectToWhatsApp, 800);
     res.json({ success: true, message: 'Generating fresh QR code...' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 7. Interactive Bot Simulator / Preview Sandbox Endpoint
+app.post(['/api/simulate-reply', '/simulate-reply'], async (req, res) => {
+  try {
+    const { query, phone, name } = req.body;
+    if (!query || !query.trim()) {
+      return res.status(400).json({ success: false, error: 'Query text is required.' });
+    }
+    const result = await processInboundText(query.trim(), phone || '919999900000', name || 'Test Lead');
+    res.json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 8. Measurable ROI & Lead Inbox Analytics Endpoint
+app.get(['/api/leads-analytics', '/leads-analytics'], (req, res) => {
+  try {
+    const leads = getLeads();
+    const escalations = getEscalations();
+    const optouts = getOptOuts();
+
+    const totalLeads = leads.length;
+    const totalInquiries = leads.reduce((acc, l) => acc + (l.totalMessages || 1), 0);
+    const activeEscalationsCount = Object.keys(escalations).length;
+    const aiHandledCount = leads.filter(l => l.status === 'AI_HANDLED').length;
+    const optedOutCount = optouts.length;
+
+    // Intent counts
+    const intentCounts = {};
+    leads.forEach(l => {
+      const intent = l.matchedIntent || 'General';
+      intentCounts[intent] = (intentCounts[intent] || 0) + 1;
+    });
+    const topKeywords = Object.entries(intentCounts)
+      .map(([k, v]) => ({ keyword: k, count: v, pct: Math.round((v / (totalLeads || 1)) * 100) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // Support time saved calculation (avg 3.5 mins per inquiry)
+    const hoursSaved = Math.round(((totalInquiries * 3.5) / 60) * 10) / 10;
+
+    res.json({
+      success: true,
+      summary: {
+        totalLeads,
+        totalInquiries,
+        aiHandledCount,
+        activeEscalationsCount,
+        optedOutCount,
+        hoursSaved,
+        topKeywords
+      },
+      escalations: Object.values(escalations),
+      leads: leads.slice(0, 50)
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 9. Resolve Escalation & Resume Bot for Contact
+app.post(['/api/escalations/resolve', '/escalations/resolve'], (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ success: false, error: 'Phone is required.' });
+    resolveEscalation(phone);
+    
+    // Update lead status
+    const leads = getLeads();
+    const clean = String(phone).replace(/\D/g, '');
+    const lead = leads.find(l => l.phone === clean);
+    if (lead) {
+      lead.status = 'AI_HANDLED';
+      saveLeads(leads);
+    }
+
+    addLog('info', `Human takeover resolved for +${clean}. Bot automated replies resumed.`);
+    res.json({ success: true, message: `Bot resumed for +${clean}` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 10. Opt-Outs Blacklist Manager
+app.get(['/api/optouts', '/optouts'], (req, res) => {
+  res.json({ success: true, optouts: getOptOuts() });
+});
+
+app.post(['/api/optouts/remove', '/optouts/remove'], (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ success: false, error: 'Phone is required.' });
+    removeOptOut(phone);
+    addLog('info', `Phone +${phone} removed from Opt-Out blacklist.`);
+    res.json({ success: true, message: `+${phone} removed from Opt-Out blacklist.` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 11. Anti-Ban Campaign Broadcast Endpoint (Randomized Socket Jitter & Opt-Out Filter)
+app.post(['/api/broadcast', '/broadcast'], async (req, res) => {
+  try {
+    if (connectionStatus !== 'CONNECTED' || !sock) {
+      return res.status(503).json({ success: false, error: 'WhatsApp device not connected.' });
+    }
+    const { recipients, templateMessage, minDelayMs = 4000, maxDelayMs = 8000 } = req.body;
+    if (!Array.isArray(recipients) || recipients.length === 0) {
+      return res.status(400).json({ success: false, error: 'Recipients list is required.' });
+    }
+    if (!templateMessage || !templateMessage.trim()) {
+      return res.status(400).json({ success: false, error: 'Template message is required.' });
+    }
+
+    const total = recipients.length;
+    addLog('info', `🚀 Starting Broadcast Campaign to ${total} recipients with anti-ban socket pacing (${minDelayMs / 1000}s - ${maxDelayMs / 1000}s)...`);
+
+    // Async batch execution with randomized jitter
+    (async () => {
+      let sent = 0;
+      let skippedOptOut = 0;
+      let failed = 0;
+
+      for (let i = 0; i < recipients.length; i++) {
+        const r = recipients[i];
+        const rawPhone = r.phone || r.Phone || (typeof r === 'string' ? r : '');
+        let cleanNumber = String(rawPhone).replace(/\D/g, '');
+        if (cleanNumber.length === 10) cleanNumber = '91' + cleanNumber;
+        
+        if (!cleanNumber || cleanNumber.length < 8) {
+          failed++;
+          continue;
+        }
+
+        if (isOptedOut(cleanNumber)) {
+          skippedOptOut++;
+          addLog('info', `🛡️ Skipped +${cleanNumber}: In Opt-Out Blacklist (Anti-Spam safeguard).`);
+          continue;
+        }
+
+        let msgText = templateMessage;
+        const name = r.name || r.Name || 'Valued Customer';
+        msgText = msgText.replace(/\{\{Name\}\}/gi, name);
+        msgText = msgText.replace(/\{\{Phone\}\}/gi, '+' + cleanNumber);
+
+        try {
+          const jid = `${cleanNumber}@s.whatsapp.net`;
+          await sock.sendMessage(jid, { text: msgText });
+          sent++;
+          addLog('success', `Campaign (${i + 1}/${total}) sent to +${cleanNumber}`);
+        } catch (e) {
+          failed++;
+          addLog('error', `Campaign send error to +${cleanNumber}: ${e.message}`);
+        }
+
+        // Anti-Ban socket jitter between messages
+        if (i < recipients.length - 1) {
+          const jitter = Math.floor(Math.random() * (maxDelayMs - minDelayMs + 1)) + minDelayMs;
+          await new Promise(resolve => setTimeout(resolve, jitter));
+        }
+      }
+      addLog('success', `🎉 Broadcast Campaign completed: ${sent} Sent, ${skippedOptOut} Opt-Outs Skipped, ${failed} Failed.`);
+    })();
+
+    res.json({
+      success: true,
+      message: `Broadcast campaign started for ${total} contacts with anti-ban jitter (${minDelayMs / 1000}s - ${maxDelayMs / 1000}s). Track progress in Activity Feed.`,
+      recipientCount: total
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

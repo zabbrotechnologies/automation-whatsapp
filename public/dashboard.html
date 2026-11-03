@@ -552,6 +552,234 @@
       }
     }
 
+    /* ROI Metrics Grid */
+    .roi-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    @media (max-width: 900px) {
+      .roi-metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 480px) {
+      .roi-metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+    }
+    .roi-stat-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+    }
+    .roi-stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.08);
+    }
+    .roi-stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .roi-stat-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+    .roi-stat-val {
+      font-family: 'Butler', Georgia, serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-dark);
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .roi-stat-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Escalation Alert Banner */
+    .dash-alert-banner {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 14px;
+      padding: 12px 18px;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12.5px;
+      color: #9a3412;
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.06);
+    }
+    @media (max-width: 640px) {
+      .dash-alert-banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .dash-alert-banner button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    /* Bot Simulator / Preview Sandbox Styles */
+    .simulator-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 14px;
+    }
+    @media (max-width: 768px) {
+      .simulator-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    .simulator-input-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sim-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .sim-chip {
+      background: #f4f4f5;
+      border: 1px solid #e4e4e7;
+      color: var(--text-dark);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sim-chip:hover {
+      background: #e4e4e7;
+      border-color: #d4d4d8;
+    }
+    .sim-chip:active {
+      transform: scale(0.96);
+    }
+    .simulator-phone-screen {
+      background: #efeae2;
+      border: 1px solid #d1d7db;
+      border-radius: 16px;
+      padding: 16px;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 12px;
+      position: relative;
+      background-image: radial-gradient(#000000 0.4px, transparent 0.4px);
+      background-size: 12px 12px;
+      background-color: #efeae2;
+    }
+    .sim-bubble-user {
+      align-self: flex-end;
+      background: #d9fdd3;
+      color: #111b21;
+      font-size: 13px;
+      line-height: 1.4;
+      padding: 8px 12px;
+      border-radius: 12px 12px 2px 12px;
+      max-width: 82%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+      word-break: break-word;
+    }
+    .sim-bubble-bot {
+      align-self: flex-start;
+      background: #ffffff;
+      color: #111b21;
+      font-size: 13px;
+      line-height: 1.4;
+      padding: 9px 13px;
+      border-radius: 12px 12px 12px 2px;
+      max-width: 86%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+      word-break: break-word;
+    }
+    .sim-meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+    }
+    .sim-meta-pill.keyword { background: #dbeafe; color: #1d4ed8; }
+    .sim-meta-pill.ai { background: #dcfce7; color: #15803d; }
+    .sim-meta-pill.escalate { background: #ffedd5; color: #c2410c; }
+    .sim-meta-pill.optout { background: #fee2e2; color: #b91c1c; }
+    .sim-meta-pill.silent { background: #f3f4f6; color: #4b5563; }
+    .sim-meta-pill.fallback { background: #fef9c3; color: #854d0e; }
+
+    /* Leads Table */
+    .leads-table-container {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border-light);
+      background: #ffffff;
+    }
+    .leads-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      text-align: left;
+    }
+    .leads-table th {
+      background: #fafafa;
+      padding: 10px 14px;
+      font-weight: 700;
+      color: var(--text-dark);
+      border-bottom: 1px solid var(--border-light);
+      white-space: nowrap;
+    }
+    .leads-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid #f4f4f5;
+      color: var(--text-dark);
+      vertical-align: middle;
+    }
+    .leads-table tr:last-child td {
+      border-bottom: none;
+    }
+    .leads-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2.5px 7.5px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+    .leads-badge.ai { background: #dcfce7; color: #166534; }
+    .leads-badge.escalated { background: #ffedd5; color: #9a3412; }
+    .leads-badge.optout { background: #fee2e2; color: #991b1b; }
+
     /* Small Screen & Mobile Adaptations */
     @media (max-width: 640px) {
       .top-nav-wrapper {
@@ -699,6 +927,58 @@
           <span>↻ Refresh Status</span>
         </button>
       </div>
+    </div>
+
+    <!-- ROI Metrics Bar -->
+    <div class="roi-metrics-grid">
+      <div class="roi-stat-card">
+        <div class="roi-stat-header">
+          <span class="roi-stat-title">Active Inbound Leads</span>
+          <span class="status-dot-mini active" title="Live Synced"></span>
+        </div>
+        <div class="roi-stat-val" id="roiTotalLeads">4</div>
+        <div class="roi-stat-desc">Captured from WhatsApp inquiries</div>
+      </div>
+
+      <div class="roi-stat-card">
+        <div class="roi-stat-header">
+          <span class="roi-stat-title">AI Inquiries Handled</span>
+          <span class="status-dot-mini active" title="Strictly Grounded"></span>
+        </div>
+        <div class="roi-stat-val" id="roiAiHandled">12</div>
+        <div class="roi-stat-desc">Zero hallucinations; answered from KB</div>
+      </div>
+
+      <div class="roi-stat-card">
+        <div class="roi-stat-header">
+          <span class="roi-stat-title">Human Escalations</span>
+          <span class="status-dot-mini waiting" title="Pending Handover"></span>
+        </div>
+        <div class="roi-stat-val" id="roiEscalations" style="color: #ea580c;">1</div>
+        <div class="roi-stat-desc">Live agent requested; bot paused</div>
+      </div>
+
+      <div class="roi-stat-card">
+        <div class="roi-stat-header">
+          <span class="roi-stat-title">Support Hours Saved</span>
+          <span class="status-dot-mini active" title="Calculated ROI"></span>
+        </div>
+        <div class="roi-stat-val" id="roiTimeSaved">0.7 hrs</div>
+        <div class="roi-stat-desc">~3.5 mins saved per inquiry</div>
+      </div>
+    </div>
+
+    <!-- Active Human Escalation Alert Banner -->
+    <div id="escalationAlertBanner" class="dash-alert-banner" style="display: none;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">🚨</span>
+        <div>
+          <strong>Active Human Escalation:</strong> <span id="escalationAlertText">A customer requested live human support. Bot is paused for this chat.</span>
+        </div>
+      </div>
+      <button type="button" id="btnBannerResumeBot" class="btn-outline" style="background: #ffffff; border-color: #ea580c; color: #c2410c; font-size: 12px; padding: 5px 12px;">
+        Resume Bot for Contact
+      </button>
     </div>
 
     <div class="dash-grid">
@@ -943,6 +1223,18 @@
             </div>
           </div>
 
+          <!-- Section: Out-of-Scope Safety Mode -->
+          <div style="margin-bottom: 16px; background: #fafafa; border: 1px solid var(--border-light); border-radius: 9px; padding: 12px;">
+            <label style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px;">
+              🛡️ Out-of-Scope Safety Mode (Zero Hallucinations)
+            </label>
+            <select id="kbOutsideAction" class="kb-input" style="margin-bottom: 8px; cursor: pointer;">
+              <option value="FALLBACK_MSG">Send Courteous Fallback ("Let me connect you with our team")</option>
+              <option value="SILENT">Stay Completely Silent (Ignore off-topic inquiries)</option>
+            </select>
+            <input type="text" id="kbFallbackMessage" class="kb-input" placeholder="Fallback message sent when query is outside business knowledge..." value="I don't have that specific detail in our catalog right now, but I've alerted our team. An executive will follow up with you shortly!">
+          </div>
+
           <!-- Save Actions -->
           <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 4px;">
             <button type="button" id="btnSaveBusinessSettings" class="btn-kb-save">
@@ -967,6 +1259,158 @@
           </h4>
           <div id="dashActivityLog" style="background: #18181b; color: #a1a1aa; font-family: var(--font-mono); font-size: 11.5px; border-radius: 10px; padding: 12px; max-height: 140px; overflow-y: auto;">
             <div>[System] Gateway service initialized. Ready for device connection.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. Bot Simulator & Sandbox Preview Card -->
+    <div class="dash-card" style="margin-top: 24px;">
+      <div class="card-title-bar">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          <span>Bot Simulator &amp; Sandbox Preview</span>
+        </h2>
+        <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 20px;">
+          ● Zero-Risk Safe Test
+        </span>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 14px 0; line-height: 1.45;">
+        Test queries before turning automation loose on real customers. The simulator evaluates your exact current Business Profile, targeting keywords, human escalations, and opt-out filters.
+      </p>
+
+      <div class="simulator-layout">
+        <div class="simulator-input-panel">
+          <label style="font-size: 12.5px; font-weight: 600; color: var(--text-dark);">
+            Test Customer Message
+          </label>
+          <div style="position: relative;">
+            <input type="text" id="simQueryInput" class="kb-input" placeholder="Type a test customer message (e.g. What are your prices?)..." value="What are your packages?">
+          </div>
+
+          <div style="margin-top: 4px;">
+            <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">
+              Quick Preset Tests:
+            </span>
+            <div class="sim-chips-row">
+              <button type="button" class="sim-chip" data-test="What are your prices?">💰 Pricing Query</button>
+              <button type="button" class="sim-chip" data-test="Can I see a demo?">🖥️ Demo Inquiry</button>
+              <button type="button" class="sim-chip" data-test="Can you give me 50% discount?">⚠️ Off-Topic / Discount</button>
+              <button type="button" class="sim-chip" data-test="I want to talk to a human agent">🚨 Human Escalation</button>
+              <button type="button" class="sim-chip" data-test="STOP">🛑 Opt-Out (STOP)</button>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <button type="button" id="btnRunSimulator" class="btn-kb-save" style="flex: 1; justify-content: center;">
+              <span>Simulate Response</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- WhatsApp Mockup Screen -->
+        <div class="simulator-phone-screen" id="simPhoneScreen">
+          <div class="sim-bubble-user" id="simUserBubble">
+            What are your packages?
+          </div>
+          <div class="sim-bubble-bot" id="simBotBubble">
+            <span class="sim-meta-pill keyword" id="simActionPill">🎯 KEYWORD MATCH</span>
+            <div id="simBotText">Our packages start at ₹999/month for unlimited campaigns with live socket synchronization. Visit our website for full details!</div>
+          </div>
+          <div style="font-size: 11px; color: #475569; background: rgba(255,255,255,0.85); padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1;" id="simExplanationText">
+            ℹ️ Matched targeting keyword "price". Direct configured answer delivered without consuming AI tokens.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Lead Capture Inbox & ROI Activity Card -->
+    <div class="dash-card" style="margin-top: 24px;">
+      <div class="card-title-bar">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Lead Capture Inbox &amp; Activity</span>
+        </h2>
+        <span id="leadCountBadge" style="font-size: 11px; font-weight: 700; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 20px;">
+          ● 4 Captured Leads
+        </span>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 14px 0;">
+        Real-time log of leads captured from WhatsApp chats, their inquiry intents, and status.
+      </p>
+
+      <div class="leads-table-container">
+        <table class="leads-table">
+          <thead>
+            <tr>
+              <th>Contact / Phone</th>
+              <th>Last Inquiry</th>
+              <th>Intent</th>
+              <th>Status</th>
+              <th>Last Active</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="leadsTableBody">
+            <!-- Dynamic rows injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. Campaign Broadcaster (Anti-Ban Protected) Card -->
+    <div class="dash-card" style="margin-top: 24px;">
+      <div class="card-title-bar">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          <span>Campaign Broadcaster (Anti-Ban Protected)</span>
+        </h2>
+        <span style="font-size: 11px; font-weight: 700; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 20px;">
+          🛡️ Pacing Jitter: 4s - 8s Active
+        </span>
+      </div>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 14px 0;">
+        Broadcast personalized WhatsApp campaigns directly. Intelligent socket jitter and automated opt-out checks safeguard your phone number against spam bans.
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <label style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px;">
+            Recipient Phone Numbers (comma-separated or lines)
+          </label>
+          <textarea id="broadcastRecipientsInput" class="kb-textarea" rows="4" placeholder="919876543210, 919123456789&#10;or phone with country code..."></textarea>
+          <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">
+            Contacts that sent "STOP" are automatically bypassed.
+          </span>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px;">
+            Message Template (Supports {{Name}}, {{Phone}})
+          </label>
+          <textarea id="broadcastTemplateInput" class="kb-textarea" rows="4" placeholder="Hello {{Name}}! We are thrilled to share our new service catalog with you. Reply price for details or STOP to unsubscribe.">Hello {{Name}}! Thank you for connecting with us. Explore our interactive features on our portal. Reply price for packages or STOP to unsubscribe.</textarea>
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+            <button type="button" id="btnDispatchBroadcast" class="btn-kb-save">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 2L11 13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+              <span>Dispatch Protected Campaign</span>
+            </button>
+            <span id="broadcastResultStatus" style="font-size: 12px; font-weight: 600;"></span>
           </div>
         </div>
       </div>
@@ -1003,9 +1447,11 @@
         // Load Business Profile & Targeting Settings
         loadBusinessSettings();
 
-        // Poll gateway status
+        // Poll gateway status & leads analytics
         checkGatewayStatus();
+        loadLeadsAnalytics();
         pollInterval = setInterval(checkGatewayStatus, 4000);
+        setInterval(loadLeadsAnalytics, 8000);
       } catch (err) {
         window.location.href = '/login.html';
       }
@@ -1244,6 +1690,15 @@
           
           const welcomeMsgToggle = document.getElementById('toggleWelcomeMsg');
           if (welcomeMsgToggle) welcomeMsgToggle.checked = data.settings.welcome_msg_enabled !== false;
+
+          const outsideActionSel = document.getElementById('kbOutsideAction');
+          if (outsideActionSel && data.settings.outside_kb_action) {
+            outsideActionSel.value = data.settings.outside_kb_action;
+          }
+          const fallbackMsgInput = document.getElementById('kbFallbackMessage');
+          if (fallbackMsgInput && data.settings.fallback_message) {
+            fallbackMsgInput.value = data.settings.fallback_message;
+          }
         }
       } catch (err) {
         console.warn('Error loading business settings:', err.message);
@@ -1325,6 +1780,8 @@
       const website = document.getElementById('kbWebsiteUrl').value.trim();
       const autoReply = document.getElementById('toggleAutoReply') ? document.getElementById('toggleAutoReply').checked : false;
       const welcomeMsg = document.getElementById('toggleWelcomeMsg') ? document.getElementById('toggleWelcomeMsg').checked : true;
+      const outsideAction = document.getElementById('kbOutsideAction') ? document.getElementById('kbOutsideAction').value : 'FALLBACK_MSG';
+      const fallbackMsg = document.getElementById('kbFallbackMessage') ? document.getElementById('kbFallbackMessage').value.trim() : '';
 
       // Extract rows
       const rows = document.querySelectorAll('#keywordPairsList .kb-row');
@@ -1349,7 +1806,9 @@
             website_url: website,
             keyword_pairs: keyword_pairs,
             auto_reply_enabled: autoReply,
-            welcome_msg_enabled: welcomeMsg
+            welcome_msg_enabled: welcomeMsg,
+            outside_kb_action: outsideAction,
+            fallback_message: fallbackMsg
           })
         });
 
@@ -1490,6 +1949,261 @@
     document.getElementById('btnManualSync').addEventListener('click', () => {
       checkGatewayStatus();
     });
+
+    // ---------------- ADD-ONS: LEADS, SIMULATOR & CAMPAIGN DISPATCHER ---------------- //
+
+    async function loadLeadsAnalytics() {
+      try {
+        const res = await fetch('/api/leads-analytics');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success) {
+          const s = data.summary;
+          const elLeads = document.getElementById('roiTotalLeads');
+          const elAi = document.getElementById('roiAiHandled');
+          const elEsc = document.getElementById('roiEscalations');
+          const elTime = document.getElementById('roiTimeSaved');
+          if (elLeads) elLeads.textContent = s.totalLeads;
+          if (elAi) elAi.textContent = s.aiHandledCount;
+          if (elEsc) elEsc.textContent = s.activeEscalationsCount;
+          if (elTime) elTime.textContent = s.hoursSaved + ' hrs';
+          
+          const badge = document.getElementById('leadCountBadge');
+          if (badge) badge.textContent = `● ${s.totalLeads} Captured Leads`;
+
+          // Handle escalation banner
+          const banner = document.getElementById('escalationAlertBanner');
+          const bannerText = document.getElementById('escalationAlertText');
+          const bannerBtn = document.getElementById('btnBannerResumeBot');
+          if (banner && bannerText && bannerBtn) {
+            if (data.escalations && data.escalations.length > 0) {
+              const esc = data.escalations[0];
+              banner.style.display = 'flex';
+              bannerText.textContent = `${esc.name || '+' + esc.phone} requested live human support (${esc.reason || 'Escalation'}). Bot paused for this contact.`;
+              bannerBtn.dataset.phone = esc.phone;
+            } else {
+              banner.style.display = 'none';
+            }
+          }
+
+          // Render leads table
+          const tbody = document.getElementById('leadsTableBody');
+          if (tbody) {
+            tbody.innerHTML = (data.leads || []).map(lead => {
+              let badgeHtml = '<span class="leads-badge ai">● AI Handled</span>';
+              let actionHtml = `<button type="button" class="btn-outline btn-fill-test" data-phone="${lead.phone}" style="padding:3px 8px; font-size:11px;">Message</button>`;
+              
+              if (lead.status === 'ESCALATED') {
+                badgeHtml = '<span class="leads-badge escalated">🚨 Escalated</span>';
+                actionHtml = `<button type="button" class="btn-outline btn-resume-lead" data-phone="${lead.phone}" style="padding:3px 8px; font-size:11px; border-color:#ea580c; color:#c2410c;">Resume Bot</button>`;
+              } else if (lead.status === 'OPTED_OUT') {
+                badgeHtml = '<span class="leads-badge optout">🛑 Opted Out</span>';
+                actionHtml = `<span style="font-size:11px; color:#9ca3af;">Blacklisted</span>`;
+              }
+
+              const timeDisplay = lead.lastSeen ? new Date(lead.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+
+              return `
+                <tr>
+                  <td>
+                    <div style="font-weight:600;">${escapeHtml(lead.name || 'WhatsApp Contact')}</div>
+                    <div style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">+${escapeHtml(lead.phone)}</div>
+                  </td>
+                  <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(lead.lastInquiry || '')}">
+                    ${escapeHtml(lead.lastInquiry || 'Initial contact')}
+                  </td>
+                  <td>
+                    <span style="font-size:11px; font-weight:600; background:#f4f4f5; padding:2px 7px; border-radius:6px;">
+                      ${escapeHtml(lead.matchedIntent || 'General')}
+                    </span>
+                  </td>
+                  <td>${badgeHtml}</td>
+                  <td style="font-size:11.5px; color:var(--text-muted);">${timeDisplay}</td>
+                  <td>${actionHtml}</td>
+                </tr>
+              `;
+            }).join('');
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching leads analytics:', err.message);
+      }
+    }
+
+    // Delegated actions (Resume Bot / Message contact)
+    document.addEventListener('click', async (e) => {
+      const resumeBtn = e.target.closest('.btn-resume-lead') || (e.target.id === 'btnBannerResumeBot' ? e.target : null);
+      if (resumeBtn) {
+        const phone = resumeBtn.dataset.phone;
+        if (!phone) return;
+        resumeBtn.disabled = true;
+        try {
+          const res = await fetch('/api/escalations/resolve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone })
+          });
+          const d = await res.json();
+          if (d.success) {
+            showToast(`✓ Bot resumed for +${phone}. Automated replies active.`, 'success');
+            loadLeadsAnalytics();
+          } else {
+            showToast(d.error || 'Failed to resume bot', 'error');
+          }
+        } catch (err) {
+          showToast('Error: ' + err.message, 'error');
+        } finally {
+          resumeBtn.disabled = false;
+        }
+        return;
+      }
+
+      const msgBtn = e.target.closest('.btn-fill-test');
+      if (msgBtn) {
+        const phone = msgBtn.dataset.phone;
+        const testInput = document.getElementById('testRecipientPhone');
+        if (testInput && phone) {
+          testInput.value = phone;
+          testInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          testInput.focus();
+        }
+      }
+    });
+
+    // Preset simulator chips
+    document.querySelectorAll('.sim-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const queryInput = document.getElementById('simQueryInput');
+        if (queryInput) {
+          queryInput.value = chip.dataset.test;
+          document.getElementById('btnRunSimulator').click();
+        }
+      });
+    });
+
+    // Bot Simulator Runner
+    const btnSim = document.getElementById('btnRunSimulator');
+    if (btnSim) {
+      btnSim.addEventListener('click', async () => {
+        const query = document.getElementById('simQueryInput').value.trim();
+        if (!query) return;
+
+        const userBubble = document.getElementById('simUserBubble');
+        const actionPill = document.getElementById('simActionPill');
+        const botText = document.getElementById('simBotText');
+        const expText = document.getElementById('simExplanationText');
+
+        userBubble.textContent = query;
+        botText.textContent = 'Evaluating against live business profile & rules...';
+        actionPill.className = 'sim-meta-pill';
+        actionPill.textContent = '⏳ EVALUATING';
+        expText.textContent = 'Routing through inbound automation pipeline...';
+        btnSim.disabled = true;
+
+        try {
+          const res = await fetch('/api/simulate-reply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+          });
+          const d = await res.json();
+          if (d.success && d.result) {
+            const r = d.result;
+            if (r.type === 'KEYWORD_MATCH') {
+              actionPill.className = 'sim-meta-pill keyword';
+              actionPill.textContent = '🎯 KEYWORD MATCH';
+            } else if (r.type === 'AI_KNOWLEDGE_BASE') {
+              actionPill.className = 'sim-meta-pill ai';
+              actionPill.textContent = '🤖 KNOWLEDGE BASE (GROUNDED)';
+            } else if (r.type === 'ESCALATION') {
+              actionPill.className = 'sim-meta-pill escalate';
+              actionPill.textContent = '🚨 HUMAN ESCALATION';
+            } else if (r.type === 'OPTOUT') {
+              actionPill.className = 'sim-meta-pill optout';
+              actionPill.textContent = '🛑 OPT-OUT BLACKLIST';
+            } else if (r.type === 'OPTIN') {
+              actionPill.className = 'sim-meta-pill ai';
+              actionPill.textContent = '✅ RESUBSCRIBED';
+            } else if (r.type === 'OUTSIDE_KB_FALLBACK') {
+              actionPill.className = 'sim-meta-pill fallback';
+              actionPill.textContent = '🛡️ COURTEOUS FALLBACK';
+            } else {
+              actionPill.className = 'sim-meta-pill silent';
+              actionPill.textContent = '🔇 ZERO HALLUCINATION (SILENT)';
+            }
+
+            botText.textContent = r.reply || '(Bot remained completely silent. Zero hallucinations.)';
+            expText.textContent = 'ℹ️ ' + (r.explanation || 'Processed successfully.');
+            loadLeadsAnalytics();
+          } else {
+            actionPill.className = 'sim-meta-pill silent';
+            actionPill.textContent = 'ERROR';
+            botText.textContent = 'Simulation failed: ' + (d.error || 'Server error');
+          }
+        } catch (err) {
+          actionPill.className = 'sim-meta-pill silent';
+          actionPill.textContent = 'ERROR';
+          botText.textContent = err.message;
+        } finally {
+          btnSim.disabled = false;
+        }
+      });
+    }
+
+    // Campaign Broadcaster with Anti-Ban Jitter & Opt-Out Safeguard
+    const btnBcast = document.getElementById('btnDispatchBroadcast');
+    if (btnBcast) {
+      btnBcast.addEventListener('click', async () => {
+        const rawInput = document.getElementById('broadcastRecipientsInput').value.trim();
+        const template = document.getElementById('broadcastTemplateInput').value.trim();
+        const resSpan = document.getElementById('broadcastResultStatus');
+
+        if (!rawInput || !template) {
+          resSpan.textContent = 'Recipients and template required!';
+          resSpan.style.color = '#dc2626';
+          return;
+        }
+
+        const lines = rawInput.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+        if (lines.length === 0) {
+          resSpan.textContent = 'No valid phone numbers found!';
+          resSpan.style.color = '#dc2626';
+          return;
+        }
+
+        btnBcast.disabled = true;
+        resSpan.textContent = `Queuing ${lines.length} messages with anti-ban socket pacing...`;
+        resSpan.style.color = '#0284c7';
+
+        try {
+          const res = await fetch('/api/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': 'secret123' },
+            body: JSON.stringify({
+              recipients: lines.map(p => ({ phone: p, name: 'Valued Customer' })),
+              templateMessage: template,
+              minDelayMs: 4000,
+              maxDelayMs: 8000
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            resSpan.textContent = `✓ Started! (${lines.length} contacts paced 4s-8s)`;
+            resSpan.style.color = '#16a34a';
+            showToast(`🚀 Campaign started for ${lines.length} contacts with anti-ban jitter.`, 'success');
+          } else {
+            resSpan.textContent = `Failed: ${data.error}`;
+            resSpan.style.color = '#dc2626';
+            showToast(data.error, 'error');
+          }
+        } catch (err) {
+          resSpan.textContent = 'Error: ' + err.message;
+          resSpan.style.color = '#dc2626';
+        } finally {
+          btnBcast.disabled = false;
+        }
+      });
+    }
 
     function escapeHtml(text) {
       if (!text) return '';
