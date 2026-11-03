@@ -1547,7 +1547,8 @@ input:checked + .slider:before {
 }
 
 .smartphone-frame {
-  width: 320px;
+  width: 100%;
+  max-width: 320px;
   height: 520px;
   background: #ffffff;
   border: 8px solid #09090b;
@@ -1557,6 +1558,7 @@ input:checked + .slider:before {
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  box-sizing: border-box;
 }
 
 .phone-notch {
@@ -1984,7 +1986,10 @@ input:checked + .slider:before {
   padding: 12px 18px;
   font-size: 13.5px;
   color: #ffffff;
-  min-width: 280px;
+  min-width: 0;
+  width: 100%;
+  max-width: 280px;
+  box-sizing: border-box;
   outline: none;
 }
 
@@ -2147,7 +2152,27 @@ input:checked + .slider:before {
   .impact-grid { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
   .cta-dark-card { padding: 24px; }
-  .top-nav { padding: 0 10px; }
+  .top-nav-wrapper { top: 8px; padding: 0 10px; }
+  .top-nav { padding: 8px 12px; border-radius: 18px; }
+  .how-it-works-section { padding: 40px 14px; }
+  .step-card { padding: 14px; gap: 12px; }
+  .smartphone-frame {
+    height: 470px;
+    border-width: 6px;
+    border-radius: 28px;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero-main-heading { font-size: 26px; }
+  .hero-subheading { font-size: 14px; }
+  .hero-cta-group { flex-direction: column; gap: 10px; width: 100%; }
+  .hero-cta-group .btn-landing-primary,
+  .hero-cta-group .btn-landing-secondary { width: 100%; justify-content: center; }
+  .top-nav { height: auto; padding: 8px 10px; }
+  .brand-logo-mark { width: 28px; height: 28px; }
+  .brand-text { font-size: 15px; }
+  .nav-action-pill { padding: 4px 10px; font-size: 12px; }
 }
 
 
