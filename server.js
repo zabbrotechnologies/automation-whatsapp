@@ -100,14 +100,36 @@ function saveBusinessSettings(newSettings) {
 async function generateAIResponse(userMessage, contactPhone = '', customSettings = null) {
   try {
     const settings = customSettings || getBusinessSettings();
-    const systemPrompt = `You are a courteous, professional customer assistant for the business described below:
-Business Profile: ${settings.business_profile || 'WhatsApp Enterprise Automation Service'}
-Website Link: ${settings.website_url || 'https://zabbro-automate.vercel.app'}
 
-Rules:
-1. Respond clearly, warmly, and helpfully in 1-3 concise sentences based on the business details above.
-2. If relevant or asked, refer them to the website link: ${settings.website_url || ''}.
-3. Keep the tone conversational, professional, and optimized for WhatsApp chat.`;
+    // Format all configured keyword pairs into structured knowledge context
+    let pairsContext = '';
+    if (Array.isArray(settings.keyword_pairs) && settings.keyword_pairs.length > 0) {
+      pairsContext = settings.keyword_pairs
+        .filter(p => p && p.keyword && p.answer)
+        .map(p => `- Topic/Keyword: "${p.keyword}" -> Details: "${p.answer}"`)
+        .join('\n');
+    }
+
+    const systemPrompt = `You are a strictly grounded customer assistant for our business.
+You must answer questions strictly and solely using the business knowledge provided below.
+
+=== BUSINESS KNOWLEDGE BASE ===
+Business Profile:
+${settings.business_profile || 'Not provided.'}
+
+Official Website:
+${settings.website_url || 'Not provided.'}
+
+Configured Topics & Knowledge Pairs:
+${pairsContext || 'None provided.'}
+===============================
+
+CRITICAL RULES:
+1. Answer ONLY using the facts explicitly stated in the Business Knowledge Base above.
+2. If the user's message is a simple polite greeting (e.g. "hi", "hello", "hey", "good morning"), reply warmly welcoming them to our business in 1 concise sentence.
+3. If the user asks about ANYTHING outside the Business Knowledge Base above (e.g. unrelated questions, general knowledge, weather, coding, personal questions, other companies, jokes, or off-topic queries), you MUST output EXACTLY: [NO_REPLY]
+4. NEVER use external general knowledge, do NOT invent facts, and NEVER answer questions outside this business data.
+5. If the question can be answered from the data above, respond clearly, politely, and concisely in 1-2 sentences.`;
 
     const response = await fetch(OPENROUTER_ENDPOINT, {
       method: 'POST',
@@ -124,7 +146,7 @@ Rules:
           { role: 'user', content: userMessage }
         ],
         max_tokens: 160,
-        temperature: 0.5,
+        temperature: 0.3,
         reasoning: {
           max_tokens: 0
         }
@@ -138,7 +160,11 @@ Rules:
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content?.trim() || null;
+    const rawReply = data.choices?.[0]?.message?.content?.trim() || null;
+    if (!rawReply || rawReply.includes('[NO_REPLY]')) {
+      return null;
+    }
+    return rawReply;
   } catch (err) {
     addLog('error', 'OpenRouter AI call failed: ' + err.message);
     return null;
@@ -328,19 +354,15 @@ async function connectToWhatsApp() {
             continue;
           }
 
-          // Step 2: Intelligent AI Auto-Reply (If enabled, incorporates Business Profile & Website Link)
+          // Step 2: Intelligent AI Auto-Reply (Grounded strictly in Business Knowledge Base)
           if (settings.auto_reply_enabled !== false) {
-            const defaultTriggers = ['price', 'pricing', 'cost', 'demo', 'catalog', 'catalogue', 'brochure', 'details', 'buy', 'order', 'software', 'service', 'enquiry', 'hi', 'hello', 'hey', 'help', 'info', 'website'];
-            const lower = cleanText.toLowerCase();
-            const shouldAIRespond = defaultTriggers.some(t => lower.includes(t)) || cleanText.length > 2;
-
-            if (shouldAIRespond) {
-              addLog('info', `⚡ AI Trigger matched. Formulating context-aware reply for +${senderPhone}...`);
-              const aiReply = await generateAIResponse(cleanText, senderPhone, settings);
-              if (aiReply) {
-                await sock.sendMessage(remoteJid, { text: aiReply });
-                addLog('success', `🤖 AI Auto-Replied to +${senderPhone}: "${aiReply.substring(0, 70)}..."`);
-              }
+            addLog('info', `⚡ Checking inquiry against Business Knowledge Base for +${senderPhone}...`);
+            const aiReply = await generateAIResponse(cleanText, senderPhone, settings);
+            if (aiReply) {
+              await sock.sendMessage(remoteJid, { text: aiReply.trim() });
+              addLog('success', `🤖 AI Replied to +${senderPhone} from Knowledge Base: "${aiReply.trim().substring(0, 70)}..."`);
+            } else {
+              addLog('info', `Query from +${senderPhone} ("${cleanText}") is outside Business Knowledge Base. No reply sent.`);
             }
           }
         }
@@ -717,7 +739,9 @@ app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
       success: true,
       model: OPENROUTER_MODEL,
       incomingMessage: message,
-      aiReply: reply
+      replied: Boolean(reply),
+      aiReply: reply || null,
+      note: reply ? 'Answered from Knowledge Base' : 'Outside Knowledge Base - No reply sent'
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
