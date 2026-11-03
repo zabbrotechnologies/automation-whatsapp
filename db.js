@@ -44,19 +44,22 @@ const memoryStore = {
  * Verify Supabase connectivity & auto-initialize tables
  */
 async function initDb() {
-  if (!supabase) return;
+  if (!supabase) {
+    console.warn('⚠️ Supabase client not initialized (missing SUPABASE_URL or SUPABASE_SERVICE_KEY). Operating in local in-memory fallback mode.');
+    return;
+  }
   try {
     // Check if table exists by reading 1 row
     const { error } = await supabase.from('users').select('id').limit(1);
     if (error && error.code === '42P01') {
       console.warn('⚠️ "users" table does not exist in Supabase yet. Run the SQL schema provided in SUPABASE_SCHEMA.sql.');
     } else if (error) {
-      console.warn('Supabase check note:', error.message);
+      console.warn('⚠️ Supabase table check notice:', error.message);
     } else {
       console.log('✅ Supabase "users" table verified and ready.');
     }
   } catch (err) {
-    console.error('Error verifying Supabase database:', err.message);
+    console.error('❌ Error verifying Supabase database connectivity:', err.message);
   }
 }
 

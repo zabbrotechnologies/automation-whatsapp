@@ -139,7 +139,8 @@ function recordLeadInteraction({ phone, name = '', inquiry, reply = '', intent =
         status: status
       });
     }
-    saveLeads(leads.slice(0, 100));
+    const MAX_LEADS_RETAINED = parseInt(process.env.MAX_LEADS_RETAINED, 10) || 2000;
+    saveLeads(leads.slice(0, MAX_LEADS_RETAINED));
   } catch (e) {
     console.error('Error recording lead:', e.message);
   }
@@ -787,6 +788,10 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, error: 'All fields are required.' });
+    }
+
+    if (typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long.' });
     }
 
     const existingUser = await findUserByEmail(email);

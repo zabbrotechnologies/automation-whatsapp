@@ -5,3 +5,6 @@ session_auth/
 npm-debug.log*
 screenshots/
 .neon
+data/
+*.png
+
