@@ -150,6 +150,32 @@
       font-weight: 600;
       cursor: pointer;
     }
+    .btn-action-role {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-action-delete {
+      background: #fff1f2;
+      color: #be123c;
+      border: 1px solid #fecdd3;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .actions-cluster {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
   
     /* Apple Touch & Physical Press Feedback */
     button, .btn-outline, .btn-action {
@@ -333,6 +359,8 @@
   </div>
 
   <script>
+    let currentAdminUser = null;
+
     async function checkAuthAndLoad() {
       try {
         const meRes = await fetch('/api/auth/me');
@@ -346,6 +374,7 @@
           window.location.href = '/';
           return;
         }
+        currentAdminUser = meData.user;
         document.getElementById('adminGreeting').textContent = `${meData.user.name} (Admin)`;
         loadAdminUsers();
       } catch (err) {
@@ -373,6 +402,7 @@
 
         tbody.innerHTML = data.users.map(u => {
           const isSuspended = u.status === 'SUSPENDED';
+          const isSelf = currentAdminUser && String(currentAdminUser.id) === String(u.id);
           const dateStr = u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A';
           return `
             <tr>
@@ -387,13 +417,22 @@
               <td><code>${u.linked_phone ? `+${escapeHtml(u.linked_phone)}` : '—'}</code></td>
               <td style="color: var(--text-muted); font-size: 12.5px;">${dateStr}</td>
               <td>
-                ${u.role === 'ADMIN' 
-                  ? '<span style="color:var(--text-muted); font-size: 11px;">Protected</span>' 
-                  : (isSuspended
+                <div class="actions-cluster">
+                  ${isSelf ? `
+                    <span style="color:var(--text-muted); font-size: 11px; font-weight: 600;">(Current Admin)</span>
+                  ` : `
+                    ${isSuspended
                       ? `<button class="btn-action-activate" onclick="toggleStatus(${u.id}, 'ACTIVE')">Activate</button>`
                       : `<button class="btn-action-suspend" onclick="toggleStatus(${u.id}, 'SUSPENDED')">Suspend</button>`
-                    )
-                }
+                    }
+                    <button class="btn-action-role" onclick="toggleRole(${u.id}, '${u.role}')">
+                      ${u.role === 'ADMIN' ? 'Make User' : 'Make Admin'}
+                    </button>
+                    <button class="btn-action-delete" onclick="deleteUserRecord(${u.id}, '${escapeHtml(u.email)}')">
+                      Delete
+                    </button>
+                  `}
+                </div>
               </td>
             </tr>
           `;
@@ -407,7 +446,7 @@
       if (!confirm(`Are you sure you want to change user #${userId} status to ${newStatus}?`)) return;
       try {
         const res = await fetch('/api/admin/user-status', {
-          method: 'POST',
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, status: newStatus })
         });
@@ -415,7 +454,44 @@
         if (data.success) {
           loadAdminUsers();
         } else {
-          alert(data.error || 'Failed to update user');
+          alert(data.error || 'Failed to update user status');
+        }
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function toggleRole(userId, currentRole) {
+      const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN';
+      if (!confirm(`Are you sure you want to change user #${userId} role to ${newRole}?`)) return;
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: newRole })
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadAdminUsers();
+        } else {
+          alert(data.error || 'Failed to update user role');
+        }
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function deleteUserRecord(userId, email) {
+      if (!confirm(`Are you sure you want to permanently delete user #${userId} (${email})? This action cannot be undone.`)) return;
+      try {
+        const res = await fetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadAdminUsers();
+        } else {
+          alert(data.error || 'Failed to delete user');
         }
       } catch (e) {
         alert(e.message);

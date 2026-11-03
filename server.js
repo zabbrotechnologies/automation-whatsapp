@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const qrcode = require('qrcode');
@@ -27,6 +28,8 @@ const {
   findUserById,
   createUser,
   getAllUsers,
+  updateUser,
+  deleteUser,
   updateUserStatus,
   updateUserLinkedPhone
 } = require('./db');
@@ -896,7 +899,7 @@ app.post(['/api/auth/logout', '/auth/logout'], (req, res) => {
 
 // ---------------- ADMIN MONITORING API ---------------- //
 
-// Get all users and system metrics (Admin only)
+// GET all users and system metrics (Admin only)
 app.get(['/api/admin/users', '/admin/users'], authenticateToken, requireAdmin, async (req, res) => {
   try {
     const users = await getAllUsers();
@@ -913,8 +916,53 @@ app.get(['/api/admin/users', '/admin/users'], authenticateToken, requireAdmin, a
   }
 });
 
-// Toggle user status (Activate / Suspend)
-app.post(['/api/admin/user-status', '/admin/user-status'], authenticateToken, requireAdmin, async (req, res) => {
+// GET single user by ID (Admin only)
+app.get(['/api/admin/users/:id', '/admin/users/:id'], authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const user = await findUserById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT update user details (Admin only)
+app.put(['/api/admin/users/:id', '/admin/users/:id'], authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, role, status, password } = req.body;
+    
+    const existing = await findUserById(id);
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    const updates = {};
+    if (name) updates.name = name.trim();
+    if (email) updates.email = email.toLowerCase().trim();
+    if (role && (role === 'ADMIN' || role === 'USER')) updates.role = role;
+    if (status && (status === 'ACTIVE' || status === 'SUSPENDED')) updates.status = status;
+    if (password && password.length >= 6) {
+      updates.password = await bcrypt.hash(password, 10);
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ success: false, error: 'No valid fields provided for update' });
+    }
+
+    const updatedUser = await updateUser(id, updates);
+    addLog('info', `Admin updated user #${id} details: ${Object.keys(updates).join(', ')}`);
+    res.json({ success: true, message: 'User updated successfully', user: updatedUser });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Toggle user status (Activate / Suspend) - Supports both PUT and POST
+const handleUserStatus = async (req, res) => {
   try {
     const { userId, status } = req.body;
     if (!userId || !status) {
@@ -923,6 +971,50 @@ app.post(['/api/admin/user-status', '/admin/user-status'], authenticateToken, re
     await updateUserStatus(userId, status);
     addLog('info', `Admin updated user #${userId} status to ${status}`);
     res.json({ success: true, message: `User status changed to ${status}` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+app.put(['/api/admin/user-status', '/admin/user-status'], authenticateToken, requireAdmin, handleUserStatus);
+app.post(['/api/admin/user-status', '/admin/user-status'], authenticateToken, requireAdmin, handleUserStatus);
+
+// DELETE user (Admin only)
+app.delete(['/api/admin/users/:id', '/admin/users/:id'], authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    if (String(req.user.id) === String(targetId)) {
+      return res.status(400).json({ success: false, error: 'Cannot delete your own active administrator account.' });
+    }
+    const existing = await findUserById(targetId);
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    await deleteUser(targetId);
+    addLog('warning', `Admin deleted user #${targetId} (${existing.email})`);
+    res.json({ success: true, message: `User #${targetId} deleted successfully` });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete(['/api/admin/users', '/admin/users'], authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'Missing userId' });
+    }
+    if (String(req.user.id) === String(userId)) {
+      return res.status(400).json({ success: false, error: 'Cannot delete your own active administrator account.' });
+    }
+    const existing = await findUserById(userId);
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    await deleteUser(userId);
+    addLog('warning', `Admin deleted user #${userId} (${existing.email})`);
+    res.json({ success: true, message: `User #${userId} deleted successfully` });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

@@ -149,3 +149,4 @@ htmlFiles.forEach(file => {
 });
 
 console.log('✓ Butler typography applied and hero contents centralized successfully!');
+

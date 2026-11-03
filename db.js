@@ -64,24 +64,30 @@ async function initDb() {
  * User Operations
  */
 async function findUserByEmail(email) {
+  if (!email) return null;
   const normalizedEmail = email.toLowerCase().trim();
   if (supabase) {
     try {
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('email', normalizedEmail)
+        .ilike('email', normalizedEmail)
         .maybeSingle();
       
-      if (!error && data) return data;
+      if (error) {
+        console.error('Supabase findUserByEmail query error:', error.message);
+      } else if (data) {
+        return data;
+      }
     } catch (e) {
-      console.error('Supabase findUserByEmail error:', e.message);
+      console.error('Supabase findUserByEmail exception:', e.message);
     }
   }
   return memoryStore.users.find(u => u.email.toLowerCase() === normalizedEmail) || null;
 }
 
 async function findUserById(id) {
+  if (!id) return null;
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -90,9 +96,13 @@ async function findUserById(id) {
         .eq('id', id)
         .maybeSingle();
       
-      if (!error && data) return data;
+      if (error) {
+        console.error('Supabase findUserById query error:', error.message);
+      } else if (data) {
+        return data;
+      }
     } catch (e) {
-      console.error('Supabase findUserById error:', e.message);
+      console.error('Supabase findUserById exception:', e.message);
     }
   }
   const u = memoryStore.users.find(u => u.id === parseInt(id, 10));
@@ -191,12 +201,68 @@ async function updateUserLinkedPhone(userId, phone) {
   return true;
 }
 
+async function updateUser(userId, updateFields) {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update(updateFields)
+        .eq('id', userId)
+        .select('id, name, email, role, status, linked_phone, last_login, created_at')
+        .single();
+
+      if (error) {
+        console.error('Supabase updateUser error:', error.message);
+        throw new Error(error.message);
+      }
+      return data;
+    } catch (e) {
+      console.error('Supabase updateUser exception:', e.message);
+      throw e;
+    }
+  }
+  const u = memoryStore.users.find(u => u.id === parseInt(userId, 10));
+  if (u) {
+    Object.assign(u, updateFields);
+    const { password, ...safeUser } = u;
+    return safeUser;
+  }
+  return null;
+}
+
+async function deleteUser(userId) {
+  if (supabase) {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Supabase deleteUser error:', error.message);
+        throw new Error(error.message);
+      }
+      return true;
+    } catch (e) {
+      console.error('Supabase deleteUser exception:', e.message);
+      throw e;
+    }
+  }
+  const index = memoryStore.users.findIndex(u => u.id === parseInt(userId, 10));
+  if (index !== -1) {
+    memoryStore.users.splice(index, 1);
+  }
+  return true;
+}
+
 module.exports = {
   initDb,
   findUserByEmail,
   findUserById,
   createUser,
   getAllUsers,
+  updateUser,
+  deleteUser,
   updateUserStatus,
   updateUserLinkedPhone
 };
