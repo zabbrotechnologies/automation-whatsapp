@@ -192,8 +192,8 @@
 
       <!-- Tab Switcher -->
       <div class="auth-tabs">
-        <button id="tabLogin" class="auth-tab-btn active" type="button">Sign In</button>
-        <button id="tabRegister" class="auth-tab-btn" type="button">Create Account</button>
+        <button id="tabLogin" class="auth-tab-btn active" type="button">Login</button>
+        <button id="tabRegister" class="auth-tab-btn" type="button">Sign Up</button>
       </div>
 
       <div id="authAlert" class="auth-error-banner"></div>
@@ -208,7 +208,7 @@
           <label for="loginPassword">Password</label>
           <input type="password" id="loginPassword" placeholder="••••••••" required>
         </div>
-        <button type="submit" id="btnLoginSubmit" class="btn-auth-submit">Sign In to Dashboard</button>
+        <button type="submit" id="btnLoginSubmit" class="btn-auth-submit">Login to Dashboard</button>
       </form>
 
       <!-- Register Form -->
@@ -225,7 +225,7 @@
           <label for="regPassword">Password (Min 6 chars)</label>
           <input type="password" id="regPassword" placeholder="••••••••" minlength="6" required>
         </div>
-        <button type="submit" id="btnRegSubmit" class="btn-auth-submit">Create Account</button>
+        <button type="submit" id="btnRegSubmit" class="btn-auth-submit">Sign Up Free</button>
       </form>
 
       <div class="auth-footer-nav">
@@ -287,6 +287,12 @@
       e.preventDefault();
       setTab(true);
     });
+
+    // Check URL parameters to open Login or Sign Up directly
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'register' || urlParams.get('mode') === 'signup' || window.location.hash === '#register' || window.location.hash === '#signup') {
+      setTab(true);
+    }
 
     // Login Form Submission
     loginForm.addEventListener('submit', async (e) => {
