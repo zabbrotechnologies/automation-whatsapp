@@ -343,6 +343,98 @@
     input:checked + .slider {
       background-color: #10b981;
     }
+    /* Business Knowledge Base & Targeting Inputs */
+    .kb-input, .kb-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      border: 1px solid var(--border-light);
+      border-radius: 9px;
+      background: #fafafa;
+      color: var(--text-dark);
+      outline: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .kb-input:focus, .kb-textarea:focus {
+      border-color: #0b0f19;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(11, 15, 25, 0.08);
+    }
+    .kb-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 34px;
+      gap: 8px;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+    @media (max-width: 640px) {
+      .kb-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+    }
+    .btn-kb-remove {
+      width: 32px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #fee2e2;
+      background: #fff5f5;
+      color: #ef4444;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+    .btn-kb-remove:hover {
+      background: #fee2e2;
+      color: #b91c1c;
+      transform: scale(0.97);
+    }
+    .btn-kb-add {
+      background: #f4f4f5;
+      border: 1px dashed #d4d4d8;
+      color: #18181b;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .btn-kb-add:hover {
+      background: #e4e4e7;
+      border-color: #a1a1aa;
+    }
+    .btn-kb-add:active {
+      transform: scale(0.975);
+    }
+    .btn-kb-save {
+      background: #0b0f19;
+      color: #ffffff;
+      border: none;
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 9px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-kb-save:hover {
+      background: #27272a;
+    }
+    .btn-kb-save:active {
+      transform: scale(0.975);
+    }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.001ms !important;
@@ -572,6 +664,80 @@
           </div>
         </div>
 
+        <!-- Business Knowledge Base & Targeting Section -->
+        <div style="margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+            <h3 style="font-family: 'Butler', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 7px;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              <span>Business Knowledge Base</span>
+            </h3>
+            <span style="font-size: 11px; font-weight: 600; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 20px;">
+              ● Active Sync
+            </span>
+          </div>
+
+          <!-- Section: Tell me your business -->
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px;">
+              Tell me your business
+            </label>
+            <textarea id="kbBusinessProfile" class="kb-textarea" rows="3" placeholder="Describe your company, products, services, operating hours, and instructions for how the AI bot should address inquiries..."></textarea>
+          </div>
+
+          <!-- Section: Website link -->
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 12.5px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px;">
+              Website link
+            </label>
+            <div style="position: relative;">
+              <input type="url" id="kbWebsiteUrl" class="kb-input" placeholder="https://yourwebsite.com" style="padding-left: 32px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Section: Targeting words and their answers (Key-Value pairs) -->
+          <div style="margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <label style="font-size: 12.5px; font-weight: 600; color: var(--text-dark); margin: 0;">
+                Targeting words and their answers (Key-Value pairs)
+              </label>
+              <button type="button" id="btnAddKeywordPair" class="btn-kb-add">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                <span>Add Pair</span>
+              </button>
+            </div>
+            
+            <div id="keywordPairsList" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Dynamic rows injected via JS -->
+            </div>
+          </div>
+
+          <!-- Save Actions -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 4px;">
+            <button type="button" id="btnSaveBusinessSettings" class="btn-kb-save">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              <span>Save Business Settings</span>
+            </button>
+            <span id="kbSaveNotification" style="font-size: 12px; font-weight: 600; color: #16a34a; opacity: 0; transition: opacity 0.3s ease;">
+              ✓ Saved Successfully
+            </span>
+          </div>
+        </div>
+
         <!-- Activity Feed -->
         <div style="margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 16px;">
           <h4 style="margin: 0 0 10px; font-size: 13.5px; font-weight: 700; color: var(--text-dark); display: flex; justify-content: space-between;">
@@ -613,6 +779,9 @@
 
         // Check gateway connection for live socket status
 
+        // Load Business Profile & Targeting Settings
+        loadBusinessSettings();
+
         // Poll gateway status
         checkGatewayStatus();
         pollInterval = setInterval(checkGatewayStatus, 4000);
@@ -647,12 +816,18 @@
         const tag = document.getElementById('linkingStatusTag');
         const sNotice = document.getElementById('serverlessNotice');
 
-        if (status === 'CONNECTED') {
+        if (status === 'CONNECTED' || (status === 'RECONNECTING' && (user?.phone || currentUser.linked_phone))) {
           const phone = user?.phone || currentUser.linked_phone || 'Active';
           renderConnectedState(phone);
-          tag.textContent = 'CONNECTED';
-          tag.style.color = '#15803d';
-          tag.style.background = '#dcfce7';
+          if (status === 'RECONNECTING') {
+            tag.textContent = 'RECONNECTING...';
+            tag.style.color = '#ea580c';
+            tag.style.background = '#fff7ed';
+          } else {
+            tag.textContent = 'CONNECTED';
+            tag.style.color = '#15803d';
+            tag.style.background = '#dcfce7';
+          }
           if (sNotice) sNotice.style.display = 'none';
         } else if (status === 'QR_READY' && qr) {
           renderQrState(qr);
@@ -734,6 +909,162 @@
       const connArea = document.getElementById('connectedArea');
       connArea.style.display = 'flex';
       document.getElementById('activePhoneDisplay').textContent = phone.startsWith('+') ? phone : '+' + phone;
+    }
+
+    // ---------------- BUSINESS SETTINGS & TARGETING RULES ---------------- //
+    let currentBusinessSettings = null;
+
+    async function loadBusinessSettings() {
+      try {
+        const res = await fetch('/api/business-settings');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success && data.settings) {
+          currentBusinessSettings = data.settings;
+          document.getElementById('kbBusinessProfile').value = data.settings.business_profile || '';
+          document.getElementById('kbWebsiteUrl').value = data.settings.website_url || '';
+          
+          const autoReplyToggle = document.getElementById('toggleAutoReply');
+          if (autoReplyToggle) autoReplyToggle.checked = data.settings.auto_reply_enabled !== false;
+          
+          const welcomeMsgToggle = document.getElementById('toggleWelcomeMsg');
+          if (welcomeMsgToggle) welcomeMsgToggle.checked = data.settings.welcome_msg_enabled !== false;
+
+          renderKeywordPairs(data.settings.keyword_pairs || []);
+        }
+      } catch (err) {
+        console.warn('Error loading business settings:', err.message);
+      }
+    }
+
+    function renderKeywordPairs(pairs) {
+      const list = document.getElementById('keywordPairsList');
+      list.innerHTML = '';
+      if (!pairs || pairs.length === 0) {
+        addKeywordPairRow('', '');
+        return;
+      }
+      pairs.forEach(p => {
+        addKeywordPairRow(p.keyword || '', p.answer || '');
+      });
+    }
+
+    function addKeywordPairRow(keyword = '', answer = '') {
+      const list = document.getElementById('keywordPairsList');
+      const row = document.createElement('div');
+      row.className = 'kb-row';
+      row.innerHTML = `
+        <input type="text" class="kb-input kb-kw" placeholder="Keyword (e.g. price)" value="${escapeHtml(keyword)}">
+        <input type="text" class="kb-input kb-ans" placeholder="Configured answer message..." value="${escapeHtml(answer)}">
+        <button type="button" class="btn-kb-remove" title="Remove Pair">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      `;
+      list.appendChild(row);
+      return row;
+    }
+
+    // Add Pair button handler
+    document.getElementById('btnAddKeywordPair').addEventListener('click', () => {
+      const newRow = addKeywordPairRow('', '');
+      const firstInput = newRow.querySelector('.kb-kw');
+      if (firstInput) firstInput.focus();
+    });
+
+    // Remove Pair event delegation
+    document.getElementById('keywordPairsList').addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-kb-remove');
+      if (btn) {
+        const row = btn.closest('.kb-row');
+        if (row) {
+          row.style.opacity = '0';
+          row.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            row.remove();
+            const list = document.getElementById('keywordPairsList');
+            if (list.children.length === 0) {
+              addKeywordPairRow('', '');
+            }
+          }, 150);
+        }
+      }
+    });
+
+    // Save Business Settings button handler
+    document.getElementById('btnSaveBusinessSettings').addEventListener('click', async () => {
+      const saveBtn = document.getElementById('btnSaveBusinessSettings');
+      const note = document.getElementById('kbSaveNotification');
+      
+      const profile = document.getElementById('kbBusinessProfile').value.trim();
+      const website = document.getElementById('kbWebsiteUrl').value.trim();
+      const autoReply = document.getElementById('toggleAutoReply') ? document.getElementById('toggleAutoReply').checked : true;
+      const welcomeMsg = document.getElementById('toggleWelcomeMsg') ? document.getElementById('toggleWelcomeMsg').checked : true;
+
+      // Extract rows
+      const rows = document.querySelectorAll('#keywordPairsList .kb-row');
+      const keyword_pairs = [];
+      rows.forEach(r => {
+        const kw = r.querySelector('.kb-kw')?.value?.trim();
+        const ans = r.querySelector('.kb-ans')?.value?.trim();
+        if (kw) {
+          keyword_pairs.push({ keyword: kw, answer: ans || '' });
+        }
+      });
+
+      saveBtn.disabled = true;
+      saveBtn.style.opacity = '0.7';
+
+      try {
+        const res = await fetch('/api/business-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            business_profile: profile,
+            website_url: website,
+            keyword_pairs: keyword_pairs,
+            auto_reply_enabled: autoReply,
+            welcome_msg_enabled: welcomeMsg
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          note.textContent = '✓ Saved Successfully';
+          note.style.color = '#16a34a';
+          note.style.opacity = '1';
+          setTimeout(() => {
+            note.style.opacity = '0';
+          }, 2500);
+        } else {
+          note.textContent = 'Error: ' + (data.error || 'Failed');
+          note.style.color = '#dc2626';
+          note.style.opacity = '1';
+        }
+      } catch (err) {
+        note.textContent = 'Network error: ' + err.message;
+        note.style.color = '#dc2626';
+        note.style.opacity = '1';
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = '1';
+      }
+    });
+
+    // Auto-save toggle switches
+    const autoReplySwitch = document.getElementById('toggleAutoReply');
+    if (autoReplySwitch) {
+      autoReplySwitch.addEventListener('change', () => {
+        document.getElementById('btnSaveBusinessSettings').click();
+      });
+    }
+    const welcomeMsgSwitch = document.getElementById('toggleWelcomeMsg');
+    if (welcomeMsgSwitch) {
+      welcomeMsgSwitch.addEventListener('change', () => {
+        document.getElementById('btnSaveBusinessSettings').click();
+      });
     }
 
     // Test Dispatcher submission

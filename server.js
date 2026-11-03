@@ -4,25 +4,23 @@ const qrcode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 const pino = require('pino');
+const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
-let makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion;
 
-if (!process.env.VERCEL) {
-  try {
-    const baileys = require('@whiskeysockets/baileys');
-    makeWASocket = baileys.default || baileys.makeWASocket;
-    useMultiFileAuthState = baileys.useMultiFileAuthState;
-    DisconnectReason = baileys.DisconnectReason;
-    fetchLatestBaileysVersion = baileys.fetchLatestBaileysVersion;
-  } catch (err) {
-    console.warn('⚠️ Could not load Baileys library:', err.message);
-  }
+// Load Baileys conditionally
+let makeWASocket, DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion;
+try {
+  const baileys = require('@whiskeysockets/baileys');
+  makeWASocket = baileys.default || baileys.makeWASocket;
+  DisconnectReason = baileys.DisconnectReason;
+  useMultiFileAuthState = baileys.useMultiFileAuthState;
+  fetchLatestBaileysVersion = baileys.fetchLatestBaileysVersion;
+} catch (e) {
+  console.warn('Baileys module not loaded:', e.message);
 }
 
-require('dotenv').config({ override: true });
-
+// Database Operations
 const {
   initDb,
   findUserByEmail,
@@ -53,10 +51,63 @@ const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3.5-su
 const OPENROUTER_ENDPOINT = process.env.OPENROUTER_ENDPOINT || 'https://openrouter.ai/api/v1/chat/completions';
 const RENDER_GATEWAY_DEFAULT = process.env.GATEWAY_URL || 'https://automation-whatsapp-00cl.onrender.com';
 
+// ---------------- BUSINESS SETTINGS & TARGETING REPOSITORY ---------------- //
+const SETTINGS_FILE = path.join(__dirname, 'business_settings.json');
 
-async function generateAIResponse(userMessage, contactPhone = '') {
+const DEFAULT_SETTINGS = {
+  business_profile: "Flow provides automated WhatsApp communication engineered for enterprise precision. Broadcast personalized campaigns directly from public Google Sheets, automate intelligent AI product responses with custom keyword triggers, and manage companion sessions with zero ban risk.",
+  website_url: "https://zabbro-automate.vercel.app",
+  auto_reply_enabled: true,
+  welcome_msg_enabled: true,
+  keyword_pairs: [
+    {
+      keyword: "price",
+      answer: "Our packages start at ₹999/month for unlimited campaigns with live socket synchronization. Visit our website for full details!"
+    },
+    {
+      keyword: "demo",
+      answer: "You can try our live interactive dashboard directly at our web portal with one-click setup."
+    },
+    {
+      keyword: "support",
+      answer: "Our priority technical support team is available 24/7. Reply to this chat with any questions!"
+    }
+  ]
+};
+
+function getBusinessSettings() {
   try {
-    const systemPrompt = 'You are an automated, courteous, and highly knowledgeable assistant for our WhatsApp enterprise service. Respond clearly and professionally in 1-3 concise sentences. Guide customer inquiries warmly and offer next steps.';
+    if (fs.existsSync(SETTINGS_FILE)) {
+      const raw = fs.readFileSync(SETTINGS_FILE, 'utf-8');
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    }
+  } catch (err) {
+    console.error('Error reading business settings:', err.message);
+  }
+  return DEFAULT_SETTINGS;
+}
+
+function saveBusinessSettings(newSettings) {
+  try {
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(newSettings, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error('Error saving business settings:', err.message);
+    return false;
+  }
+}
+
+async function generateAIResponse(userMessage, contactPhone = '', customSettings = null) {
+  try {
+    const settings = customSettings || getBusinessSettings();
+    const systemPrompt = `You are a courteous, professional customer assistant for the business described below:
+Business Profile: ${settings.business_profile || 'WhatsApp Enterprise Automation Service'}
+Website Link: ${settings.website_url || 'https://zabbro-automate.vercel.app'}
+
+Rules:
+1. Respond clearly, warmly, and helpfully in 1-3 concise sentences based on the business details above.
+2. If relevant or asked, refer them to the website link: ${settings.website_url || ''}.
+3. Keep the tone conversational, professional, and optimized for WhatsApp chat.`;
 
     const response = await fetch(OPENROUTER_ENDPOINT, {
       method: 'POST',
@@ -72,7 +123,7 @@ async function generateAIResponse(userMessage, contactPhone = '') {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage }
         ],
-        max_tokens: 150,
+        max_tokens: 160,
         temperature: 0.5,
         reasoning: {
           max_tokens: 0
@@ -94,14 +145,16 @@ async function generateAIResponse(userMessage, contactPhone = '') {
   }
 }
 
-
 // Global State
 let sock = null;
 let currentQR = null;
 let isManualRefreshRequested = false;
-let connectionStatus = 'INITIALIZING'; // 'INITIALIZING', 'QR_READY', 'CONNECTED', 'DISCONNECTED'
+let connectionStatus = 'INITIALIZING'; // 'INITIALIZING', 'QR_READY', 'CONNECTED', 'RECONNECTING', 'DISCONNECTED'
 let connectedUser = null;
 const logs = [];
+
+// Message Deduplication cache to prevent duplicate bot replies
+const processedMsgIds = new Set();
 
 function addLog(type, message) {
   const logEntry = {
@@ -131,7 +184,25 @@ async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
     const { version, isLatest } = await fetchLatestBaileysVersion();
     
+    // Check if user is already registered in saved creds
+    if (state.creds?.me?.id) {
+      const savedPhone = state.creds.me.id.split(':')[0].split('@')[0];
+      connectedUser = {
+        name: state.creds.me.name || 'WhatsApp User',
+        phone: savedPhone
+      };
+      connectionStatus = 'CONNECTED';
+      addLog('info', `Found existing saved authentication session for +${savedPhone}. Restoring...`);
+    }
+
     addLog('info', `Starting Baileys v${version.join('.')}, isLatest: ${isLatest}`);
+
+    // Clean existing socket listeners before creating a new socket
+    if (sock) {
+      try {
+        sock.ev.removeAllListeners();
+      } catch (e) {}
+    }
 
     sock = makeWASocket({
       version,
@@ -167,37 +238,49 @@ async function connectToWhatsApp() {
 
       if (connection === 'close') {
         const statusCode = lastDisconnect?.error?.output?.statusCode;
-        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+        const isLoggedOut = statusCode === DisconnectReason.loggedOut;
         
-        connectionStatus = 'DISCONNECTED';
-        currentQR = null;
-        connectedUser = null;
+        // Check if device was previously authenticated
+        const hasSavedAuth = Boolean(connectedUser || state.creds?.registered || state.creds?.me);
 
-        addLog('error', `Connection closed (Status code: ${statusCode}). Reconnecting: ${shouldReconnect}`);
-
-        if (statusCode === DisconnectReason.timedOut || statusCode === 408) {
-          addLog('info', 'QR scan window timed out. Resetting unlinked session to generate fresh pair code...');
-          clearSession();
-          setTimeout(connectToWhatsApp, 1500);
-        } else if (shouldReconnect) {
+        // If not logged out explicitly from mobile WhatsApp, DO NOT clear session! Retain session and auto-reconnect!
+        if (!isLoggedOut && hasSavedAuth) {
+          connectionStatus = 'RECONNECTING';
+          addLog('info', `Socket connection blip (Code: ${statusCode}). Preserving linked session for +${connectedUser?.phone || 'device'}. Auto-reconnecting in 3s...`);
           setTimeout(connectToWhatsApp, 3000);
-        } else {
-          addLog('error', 'Device logged out. Clearing session and waiting for new scan.');
-          clearSession();
-          setTimeout(connectToWhatsApp, 2000);
+          return;
         }
+
+        // Only clear session if user EXPLICITLY logged out from mobile WhatsApp (Code 401)
+        if (isLoggedOut) {
+          addLog('error', 'Device explicitly logged out from mobile WhatsApp. Session cleared.');
+          clearSession();
+          connectionStatus = 'DISCONNECTED';
+          currentQR = null;
+          connectedUser = null;
+          setTimeout(connectToWhatsApp, 2000);
+          return;
+        }
+
+        // Unlinked socket closed (e.g. initial timeout before scan)
+        connectionStatus = 'DISCONNECTED';
+        addLog('info', `Pairing socket reset (Code: ${statusCode}). Refreshing pairing state...`);
+        setTimeout(connectToWhatsApp, 3000);
+
       } else if (connection === 'open') {
         connectionStatus = 'CONNECTED';
         currentQR = null;
-        const userJid = sock.user.id || '';
+        const userJid = sock.user?.id || state.creds?.me?.id || '';
         const phone = userJid.split(':')[0] || userJid.split('@')[0];
         connectedUser = {
-          name: sock.user.name || 'WhatsApp User',
+          name: sock.user?.name || state.creds?.me?.name || 'WhatsApp User',
           phone: phone
         };
         addLog('success', `WhatsApp connected successfully for +${phone}!`);
+      }
+    });
 
-    // Inbound Messages & AI Auto-Reply Engine via OpenRouter
+    // Inbound Messages Engine (SINGLE HANDLER - TARGETING KEYWORD PAIRS & AI FALLBACK)
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
       try {
         if (type !== 'notify') return;
@@ -207,47 +290,14 @@ async function connectToWhatsApp() {
           const remoteJid = msg.key.remoteJid || '';
           if (remoteJid.endsWith('@g.us') || remoteJid === 'status@broadcast') continue;
 
-          const text = msg.message.conversation || 
-                       msg.message.extendedTextMessage?.text || 
-                       msg.message.imageMessage?.caption || '';
-          if (!text || text.trim().length === 0) continue;
-
-          const cleanText = text.trim();
-          const senderPhone = remoteJid.split('@')[0];
-
-          addLog('info', '?? Incoming from +' + senderPhone + ': "' + cleanText + '"');
-
-          // Keyword Triggers for AI Auto Reply
-          const triggers = ['price', 'pricing', 'cost', 'demo', 'catalog', 'catalogue', 'brochure', 'details', 'buy', 'order', 'software', 'service', 'enquiry', 'hi', 'hello'];
-          const lower = cleanText.toLowerCase();
-          const isTrigger = triggers.some(t => lower.includes(t));
-
-          if (isTrigger) {
-            addLog('info', '? AI Trigger matched. Formulating reply via OpenRouter (' + OPENROUTER_MODEL + ')...');
-            const aiReply = await generateAIResponse(cleanText, senderPhone);
-            if (aiReply) {
-              await sock.sendMessage(remoteJid, { text: aiReply });
-              addLog('success', '?? AI Auto-Replied to +' + senderPhone + ': "' + aiReply.substring(0, 70) + '..."');
-            }
+          // Strict Message ID Deduplication (Prevents duplicate replies)
+          const msgId = msg.key?.id;
+          if (!msgId || processedMsgIds.has(msgId)) continue;
+          processedMsgIds.add(msgId);
+          if (processedMsgIds.size > 2000) {
+            const [first] = processedMsgIds;
+            processedMsgIds.delete(first);
           }
-        }
-      } catch (err) {
-        addLog('error', 'Error processing incoming message: ' + err.message);
-      }
-    });
-
-      }
-    });
-
-    // Inbound Messages & AI Auto-Reply Engine via OpenRouter
-    sock.ev.on('messages.upsert', async ({ messages, type }) => {
-      try {
-        if (type !== 'notify') return;
-        for (const msg of messages) {
-          if (!msg.message || msg.key.fromMe) continue;
-          
-          const remoteJid = msg.key.remoteJid || '';
-          if (remoteJid.endsWith('@g.us') || remoteJid === 'status@broadcast') continue;
 
           const text = msg.message.conversation || 
                        msg.message.extendedTextMessage?.text || 
@@ -259,17 +309,38 @@ async function connectToWhatsApp() {
 
           addLog('info', `📩 Incoming from +${senderPhone}: "${cleanText}"`);
 
-          // Keyword Triggers for AI Auto Reply
-          const triggers = ['price', 'pricing', 'cost', 'demo', 'catalog', 'catalogue', 'brochure', 'details', 'buy', 'order', 'software', 'service', 'enquiry', 'hi', 'hello'];
-          const lower = cleanText.toLowerCase();
-          const isTrigger = triggers.some(t => lower.includes(t));
+          const settings = getBusinessSettings();
 
-          if (isTrigger) {
-            addLog('info', `⚡ AI Trigger matched. Formulating reply via OpenRouter (${OPENROUTER_MODEL})...`);
-            const aiReply = await generateAIResponse(cleanText, senderPhone);
-            if (aiReply) {
-              await sock.sendMessage(remoteJid, { text: aiReply });
-              addLog('success', `🤖 AI Auto-Replied to +${senderPhone}: "${aiReply.substring(0, 70)}..."`);
+          // Step 1: Direct Targeting Words & Answers (Key-Value Matching)
+          let matchedPair = null;
+          if (Array.isArray(settings.keyword_pairs)) {
+            const lower = cleanText.toLowerCase();
+            matchedPair = settings.keyword_pairs.find(p => {
+              const kw = (p.keyword || '').trim().toLowerCase();
+              return kw && lower.includes(kw);
+            });
+          }
+
+          if (matchedPair && matchedPair.answer && matchedPair.answer.trim()) {
+            addLog('info', `🎯 Targeting keyword "${matchedPair.keyword}" matched for +${senderPhone}. Sending configured answer...`);
+            await sock.sendMessage(remoteJid, { text: matchedPair.answer.trim() });
+            addLog('success', `🤖 Direct Replied to +${senderPhone}: "${matchedPair.answer.trim().substring(0, 60)}..."`);
+            continue;
+          }
+
+          // Step 2: Intelligent AI Auto-Reply (If enabled, incorporates Business Profile & Website Link)
+          if (settings.auto_reply_enabled !== false) {
+            const defaultTriggers = ['price', 'pricing', 'cost', 'demo', 'catalog', 'catalogue', 'brochure', 'details', 'buy', 'order', 'software', 'service', 'enquiry', 'hi', 'hello', 'hey', 'help', 'info', 'website'];
+            const lower = cleanText.toLowerCase();
+            const shouldAIRespond = defaultTriggers.some(t => lower.includes(t)) || cleanText.length > 2;
+
+            if (shouldAIRespond) {
+              addLog('info', `⚡ AI Trigger matched. Formulating context-aware reply for +${senderPhone}...`);
+              const aiReply = await generateAIResponse(cleanText, senderPhone, settings);
+              if (aiReply) {
+                await sock.sendMessage(remoteJid, { text: aiReply });
+                addLog('success', `🤖 AI Auto-Replied to +${senderPhone}: "${aiReply.substring(0, 70)}..."`);
+              }
             }
           }
         }
@@ -388,25 +459,6 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
   }
 });
 
-// 6. Test OpenRouter AI Auto-Reply Simulation
-app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
-  try {
-    const { message, phone } = req.body;
-    if (!message) {
-      return res.status(400).json({ success: false, error: 'Field "message" is required' });
-    }
-    const reply = await generateAIResponse(message, phone);
-    res.json({
-      success: true,
-      model: OPENROUTER_MODEL,
-      incomingMessage: message,
-      aiReply: reply
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 // 2. Sign In
 app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   try {
@@ -453,25 +505,6 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   }
 });
 
-// 6. Test OpenRouter AI Auto-Reply Simulation
-app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
-  try {
-    const { message, phone } = req.body;
-    if (!message) {
-      return res.status(400).json({ success: false, error: 'Field "message" is required' });
-    }
-    const reply = await generateAIResponse(message, phone);
-    res.json({
-      success: true,
-      model: OPENROUTER_MODEL,
-      incomingMessage: message,
-      aiReply: reply
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 // 3. Current User Profile Session
 app.get(['/api/auth/me', '/auth/me'], authenticateToken, async (req, res) => {
   try {
@@ -480,25 +513,6 @@ app.get(['/api/auth/me', '/auth/me'], authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
     res.json({ success: true, user });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 6. Test OpenRouter AI Auto-Reply Simulation
-app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
-  try {
-    const { message, phone } = req.body;
-    if (!message) {
-      return res.status(400).json({ success: false, error: 'Field "message" is required' });
-    }
-    const reply = await generateAIResponse(message, phone);
-    res.json({
-      success: true,
-      model: OPENROUTER_MODEL,
-      incomingMessage: message,
-      aiReply: reply
-    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -529,25 +543,6 @@ app.get(['/api/admin/users', '/admin/users'], authenticateToken, requireAdmin, a
   }
 });
 
-// 6. Test OpenRouter AI Auto-Reply Simulation
-app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
-  try {
-    const { message, phone } = req.body;
-    if (!message) {
-      return res.status(400).json({ success: false, error: 'Field "message" is required' });
-    }
-    const reply = await generateAIResponse(message, phone);
-    res.json({
-      success: true,
-      model: OPENROUTER_MODEL,
-      incomingMessage: message,
-      aiReply: reply
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
 // Toggle user status (Activate / Suspend)
 app.post(['/api/admin/user-status', '/admin/user-status'], authenticateToken, requireAdmin, async (req, res) => {
   try {
@@ -563,20 +558,38 @@ app.post(['/api/admin/user-status', '/admin/user-status'], authenticateToken, re
   }
 });
 
-// 6. Test OpenRouter AI Auto-Reply Simulation
-app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
+// ---------------- BUSINESS KNOWLEDGE BASE & TARGETING API ---------------- //
+
+// GET Business Knowledge Base & Targeting Keywords
+app.get(['/api/business-settings', '/business-settings'], (req, res) => {
   try {
-    const { message, phone } = req.body;
-    if (!message) {
-      return res.status(400).json({ success: false, error: 'Field "message" is required' });
-    }
-    const reply = await generateAIResponse(message, phone);
-    res.json({
-      success: true,
-      model: OPENROUTER_MODEL,
-      incomingMessage: message,
-      aiReply: reply
-    });
+    const settings = getBusinessSettings();
+    res.json({ success: true, settings });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST Business Knowledge Base & Targeting Keywords
+app.post(['/api/business-settings', '/business-settings'], (req, res) => {
+  try {
+    const { business_profile, website_url, keyword_pairs, auto_reply_enabled, welcome_msg_enabled } = req.body;
+    
+    const current = getBusinessSettings();
+    const updated = {
+      ...current,
+      business_profile: typeof business_profile === 'string' ? business_profile : current.business_profile,
+      website_url: typeof website_url === 'string' ? website_url : current.website_url,
+      auto_reply_enabled: auto_reply_enabled !== undefined ? Boolean(auto_reply_enabled) : current.auto_reply_enabled,
+      welcome_msg_enabled: welcome_msg_enabled !== undefined ? Boolean(welcome_msg_enabled) : current.welcome_msg_enabled,
+      keyword_pairs: Array.isArray(keyword_pairs) 
+        ? keyword_pairs.filter(p => p && typeof p.keyword === 'string' && p.keyword.trim().length > 0)
+        : current.keyword_pairs
+    };
+
+    saveBusinessSettings(updated);
+    addLog('info', 'Business Profile & Targeting Keywords saved successfully.');
+    res.json({ success: true, message: 'Settings saved successfully', settings: updated });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -615,7 +628,7 @@ app.get(['/api/status', '/status'], (req, res) => {
   });
 });
 
-// 3. Send Message endpoint (Called by Google Apps Script)
+// 3. Send Message endpoint (Called by Google Apps Script or Frontend)
 app.post(['/api/send', '/send'], verifyApiKey, async (req, res) => {
   try {
     if (process.env.VERCEL) {
@@ -692,7 +705,7 @@ app.post('/api/logout', verifyApiKey, async (req, res) => {
   }
 });
 
-// 6. Test OpenRouter AI Auto-Reply Simulation
+// 5. Test OpenRouter AI Auto-Reply Simulation
 app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
   try {
     const { message, phone } = req.body;
@@ -711,7 +724,7 @@ app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
   }
 });
 
-// 5. Manual QR Refresh endpoint
+// 6. Manual QR Refresh endpoint
 app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
   try {
     if (process.env.VERCEL) {
@@ -731,45 +744,6 @@ app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
     clearSession();
     setTimeout(connectToWhatsApp, 800);
     res.json({ success: true, message: 'Generating fresh QR code...' });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-
-// 6. Test OpenRouter AI Auto-Reply Simulation
-app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
-  try {
-    const { message, phone } = req.body;
-    if (!message) {
-      return res.status(400).json({ success: false, error: 'Field "message" is required' });
-    }
-    const reply = await generateAIResponse(message, phone);
-    res.json({
-      success: true,
-      model: OPENROUTER_MODEL,
-      incomingMessage: message,
-      aiReply: reply
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 6. Test OpenRouter AI Auto-Reply Simulation
-app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
-  try {
-    const { message, phone } = req.body;
-    if (!message) {
-      return res.status(400).json({ success: false, error: 'Field "message" is required' });
-    }
-    const reply = await generateAIResponse(message, phone);
-    res.json({
-      success: true,
-      model: OPENROUTER_MODEL,
-      incomingMessage: message,
-      aiReply: reply
-    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

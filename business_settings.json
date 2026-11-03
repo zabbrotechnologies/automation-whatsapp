@@ -1,0 +1,20 @@
+{
+  "business_profile": "Flow provides automated WhatsApp communication engineered for enterprise precision. Broadcast personalized campaigns directly from public Google Sheets, automate intelligent AI product responses with custom keyword triggers, and manage companion sessions with zero ban risk.",
+  "website_url": "https://zabbro-automate.vercel.app",
+  "auto_reply_enabled": true,
+  "welcome_msg_enabled": true,
+  "keyword_pairs": [
+    {
+      "keyword": "price",
+      "answer": "Our packages start at ₹999/month for unlimited campaigns with live socket synchronization. Visit our website for full details!"
+    },
+    {
+      "keyword": "demo",
+      "answer": "You can try our live interactive dashboard directly at our web portal with one-click setup."
+    },
+    {
+      "keyword": "support",
+      "answer": "Our priority technical support team is available 24/7. Reply to this chat with any questions!"
+    }
+  ]
+}
