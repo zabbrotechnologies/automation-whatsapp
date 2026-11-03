@@ -436,6 +436,122 @@
       transform: scale(0.975);
     }
 
+    /* Automation Prerequisite Badges & Notices */
+    .setup-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2.5px 8.5px;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+      transition: all 0.25s ease;
+    }
+    .setup-badge.ready {
+      color: #15803d;
+      background: #dcfce7;
+      border: 1px solid #bbf7d0;
+    }
+    .setup-badge.requires-setup {
+      color: #b45309;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+    }
+    .kb-banner {
+      border-radius: 11px;
+      padding: 10px 14px;
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      transition: all 0.25s ease;
+    }
+    .kb-banner.warning {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+    .kb-banner.ready {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+    .kb-banner svg {
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    @keyframes kbPulseHighlight {
+      0% {
+        box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.45);
+        border-color: #ea580c;
+      }
+      50% {
+        box-shadow: 0 0 0 5px rgba(234, 88, 12, 0.25);
+        border-color: #ea580c;
+        background: #fff7ed;
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(234, 88, 12, 0);
+        border-color: var(--border-light);
+      }
+    }
+    .kb-highlight-pulse {
+      animation: kbPulseHighlight 1.4s ease-in-out 2 !important;
+    }
+    .global-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 99999;
+      background: #0b0f19;
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08);
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(16px) scale(0.96);
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      max-width: 420px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .global-toast.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .global-toast.warning {
+      background: #451a03;
+      color: #fef3c7;
+      border-color: #b45309;
+    }
+    .global-toast.error {
+      background: #450a0a;
+      color: #fee2e2;
+      border-color: #b91c1c;
+    }
+    .global-toast.success {
+      background: #022c22;
+      color: #d1fae5;
+      border-color: #059669;
+    }
+    @media (max-width: 480px) {
+      .global-toast {
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        max-width: none;
+      }
+    }
+
     /* Small Screen & Mobile Adaptations */
     @media (max-width: 640px) {
       .top-nav-wrapper {
@@ -691,13 +807,16 @@
               <div class="service-texts">
                 <h3>
                   <span>AI Auto Reply</span>
-                  <span class="status-dot-mini active" title="Operational"></span>
+                  <span id="autoReplyStatusBadge" class="setup-badge ready" title="Ready to auto-reply">
+                    <span class="status-dot-mini active"></span>
+                    <span id="autoReplyStatusText">Ready</span>
+                  </span>
                 </h3>
-                <p>Intelligently responds to inquiries containing buying intent keywords (e.g. price, catalog, demo, buy).</p>
+                <p id="autoReplyStatusSubtext">Intelligently responds to inquiries strictly from your saved Business Knowledge Base.</p>
               </div>
             </div>
-            <label class="switch">
-              <input type="checkbox" id="toggleAutoReply" checked>
+            <label class="switch" id="toggleAutoReplyLabel" title="Turn on AI Auto Reply">
+              <input type="checkbox" id="toggleAutoReply">
               <span class="slider"></span>
             </label>
           </div>
@@ -755,8 +874,8 @@
         </div>
 
         <!-- Business Knowledge Base & Targeting Section -->
-        <div style="margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 20px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+        <div id="businessKnowledgeSection" style="margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
             <h3 style="font-family: 'Butler', Georgia, serif; font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 7px;">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
@@ -764,9 +883,21 @@
               </svg>
               <span>Business Knowledge Base</span>
             </h3>
-            <span style="font-size: 11px; font-weight: 600; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 20px;">
+            <span id="kbSyncBadge" style="font-size: 11px; font-weight: 600; color: #16a34a; background: #dcfce7; padding: 2px 8px; border-radius: 20px;">
               ● Active Sync
             </span>
+          </div>
+
+          <!-- Prerequisite setup banner -->
+          <div id="kbPrerequisiteNotice" class="kb-banner warning" style="display: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div>
+              <strong>Setup Required:</strong> Enter your business details or add targeting keywords below, then click <strong>Save Business Settings</strong> before turning AI Auto Reply ON.
+            </div>
           </div>
 
           <!-- Section: Tell me your business -->
@@ -1004,6 +1135,93 @@
     // ---------------- BUSINESS SETTINGS & TARGETING RULES ---------------- //
     let currentBusinessSettings = null;
 
+    // Toast Notification Utility
+    function showToast(message, type = 'warning') {
+      let toast = document.getElementById('globalToastNotification');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'globalToastNotification';
+        toast.className = 'global-toast';
+        document.body.appendChild(toast);
+      }
+      toast.className = `global-toast visible ${type}`;
+      toast.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex-shrink:0;">
+          ${type === 'success' 
+            ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' 
+            : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'}
+        </svg>
+        <span>${message}</span>
+      `;
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 4500);
+    }
+
+    // Knowledge Base Gating & Prerequisite Validation
+    function isKnowledgeBaseConfigured() {
+      const profile = (document.getElementById('kbBusinessProfile')?.value || '').trim();
+      const rows = document.querySelectorAll('#keywordPairsList .kb-row');
+      let hasValidPair = false;
+      rows.forEach(r => {
+        const kw = r.querySelector('.kb-kw')?.value?.trim();
+        const ans = r.querySelector('.kb-ans')?.value?.trim();
+        if (kw && ans) hasValidPair = true;
+      });
+      return profile.length >= 15 || hasValidPair;
+    }
+
+    function updateAutomationPrerequisiteUI() {
+      const isConfigured = isKnowledgeBaseConfigured();
+      const statusBadge = document.getElementById('autoReplyStatusBadge');
+      const statusText = document.getElementById('autoReplyStatusText');
+      const subtext = document.getElementById('autoReplyStatusSubtext');
+      const banner = document.getElementById('kbPrerequisiteNotice');
+      const autoReplyToggle = document.getElementById('toggleAutoReply');
+
+      if (isConfigured) {
+        if (statusBadge) {
+          statusBadge.className = 'setup-badge ready';
+          statusBadge.title = 'Business knowledge base configured & ready';
+        }
+        if (statusText) statusText.textContent = 'Ready';
+        if (subtext) subtext.textContent = 'Intelligently responds to inquiries strictly from your saved Business Knowledge Base.';
+        if (banner) banner.style.display = 'none';
+      } else {
+        if (statusBadge) {
+          statusBadge.className = 'setup-badge requires-setup';
+          statusBadge.title = 'Setup required: add business details or keywords';
+        }
+        if (statusText) statusText.textContent = 'Requires Setup';
+        if (subtext) subtext.textContent = '⚠️ Setup required: Please enter your business details below before turning AI Auto Reply ON.';
+        if (banner) banner.style.display = 'flex';
+        if (autoReplyToggle && autoReplyToggle.checked) {
+          autoReplyToggle.checked = false;
+        }
+      }
+    }
+
+    function highlightKnowledgeFields() {
+      const profileEl = document.getElementById('kbBusinessProfile');
+      const pairsEl = document.getElementById('keywordPairsList');
+      if (profileEl) {
+        profileEl.classList.remove('kb-highlight-pulse');
+        void profileEl.offsetWidth; // trigger reflow
+        profileEl.classList.add('kb-highlight-pulse');
+        profileEl.focus();
+      }
+      if (pairsEl) {
+        pairsEl.classList.remove('kb-highlight-pulse');
+        void pairsEl.offsetWidth;
+        pairsEl.classList.add('kb-highlight-pulse');
+      }
+      setTimeout(() => {
+        if (profileEl) profileEl.classList.remove('kb-highlight-pulse');
+        if (pairsEl) pairsEl.classList.remove('kb-highlight-pulse');
+      }, 3000);
+    }
+
     async function loadBusinessSettings() {
       try {
         const res = await fetch('/api/business-settings');
@@ -1014,13 +1232,18 @@
           document.getElementById('kbBusinessProfile').value = data.settings.business_profile || '';
           document.getElementById('kbWebsiteUrl').value = data.settings.website_url || '';
           
+          renderKeywordPairs(data.settings.keyword_pairs || []);
+
+          updateAutomationPrerequisiteUI();
+
           const autoReplyToggle = document.getElementById('toggleAutoReply');
-          if (autoReplyToggle) autoReplyToggle.checked = data.settings.auto_reply_enabled !== false;
+          if (autoReplyToggle) {
+            const isConfigured = isKnowledgeBaseConfigured();
+            autoReplyToggle.checked = isConfigured && data.settings.auto_reply_enabled !== false;
+          }
           
           const welcomeMsgToggle = document.getElementById('toggleWelcomeMsg');
           if (welcomeMsgToggle) welcomeMsgToggle.checked = data.settings.welcome_msg_enabled !== false;
-
-          renderKeywordPairs(data.settings.keyword_pairs || []);
         }
       } catch (err) {
         console.warn('Error loading business settings:', err.message);
@@ -1062,6 +1285,7 @@
       const newRow = addKeywordPairRow('', '');
       const firstInput = newRow.querySelector('.kb-kw');
       if (firstInput) firstInput.focus();
+      updateAutomationPrerequisiteUI();
     });
 
     // Remove Pair event delegation
@@ -1078,9 +1302,18 @@
             if (list.children.length === 0) {
               addKeywordPairRow('', '');
             }
+            updateAutomationPrerequisiteUI();
           }, 150);
         }
       }
+    });
+
+    // Live typing listeners to update badge status in real-time
+    document.getElementById('kbBusinessProfile').addEventListener('input', () => {
+      updateAutomationPrerequisiteUI();
+    });
+    document.getElementById('keywordPairsList').addEventListener('input', () => {
+      updateAutomationPrerequisiteUI();
     });
 
     // Save Business Settings button handler
@@ -1090,7 +1323,7 @@
       
       const profile = document.getElementById('kbBusinessProfile').value.trim();
       const website = document.getElementById('kbWebsiteUrl').value.trim();
-      const autoReply = document.getElementById('toggleAutoReply') ? document.getElementById('toggleAutoReply').checked : true;
+      const autoReply = document.getElementById('toggleAutoReply') ? document.getElementById('toggleAutoReply').checked : false;
       const welcomeMsg = document.getElementById('toggleWelcomeMsg') ? document.getElementById('toggleWelcomeMsg').checked : true;
 
       // Extract rows
@@ -1122,6 +1355,8 @@
 
         const data = await res.json();
         if (data.success) {
+          currentBusinessSettings = data.settings;
+          updateAutomationPrerequisiteUI();
           note.textContent = '✓ Saved Successfully';
           note.style.color = '#16a34a';
           note.style.opacity = '1';
@@ -1129,11 +1364,18 @@
             note.style.opacity = '0';
           }, 2500);
         } else {
+          showToast(data.error || 'Failed to save settings', 'error');
           note.textContent = 'Error: ' + (data.error || 'Failed');
           note.style.color = '#dc2626';
           note.style.opacity = '1';
+          if (data.error && data.error.includes('Setup Required')) {
+            const kbSec = document.getElementById('businessKnowledgeSection');
+            if (kbSec) kbSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            highlightKnowledgeFields();
+          }
         }
       } catch (err) {
+        showToast('Network error: ' + err.message, 'error');
         note.textContent = 'Network error: ' + err.message;
         note.style.color = '#dc2626';
         note.style.opacity = '1';
@@ -1143,10 +1385,33 @@
       }
     });
 
-    // Auto-save toggle switches
+    // Auto-save toggle switches with prerequisite guard
     const autoReplySwitch = document.getElementById('toggleAutoReply');
     if (autoReplySwitch) {
+      autoReplySwitch.addEventListener('click', (e) => {
+        if (autoReplySwitch.checked) {
+          const isConfigured = isKnowledgeBaseConfigured();
+          if (!isConfigured) {
+            e.preventDefault();
+            autoReplySwitch.checked = false;
+            showToast('Setup Required: Please complete your business details or targeting keywords below before turning AI Auto Reply ON.', 'warning');
+            
+            const kbSec = document.getElementById('businessKnowledgeSection');
+            if (kbSec) {
+              kbSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            highlightKnowledgeFields();
+            return false;
+          }
+        }
+      });
+
       autoReplySwitch.addEventListener('change', () => {
+        const isConfigured = isKnowledgeBaseConfigured();
+        if (autoReplySwitch.checked && !isConfigured) {
+          autoReplySwitch.checked = false;
+          return;
+        }
         document.getElementById('btnSaveBusinessSettings').click();
       });
     }

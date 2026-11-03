@@ -75,6 +75,15 @@ const DEFAULT_SETTINGS = {
   ]
 };
 
+function isBusinessKnowledgeConfigured(settings) {
+  if (!settings) return false;
+  const hasProfile = typeof settings.business_profile === 'string' && settings.business_profile.trim().length >= 15;
+  const hasPairs = Array.isArray(settings.keyword_pairs) && settings.keyword_pairs.some(
+    p => p && typeof p.keyword === 'string' && p.keyword.trim().length > 0 && typeof p.answer === 'string' && p.answer.trim().length > 0
+  );
+  return Boolean(hasProfile || hasPairs);
+}
+
 function getBusinessSettings() {
   try {
     if (fs.existsSync(SETTINGS_FILE)) {
@@ -100,6 +109,9 @@ function saveBusinessSettings(newSettings) {
 async function generateAIResponse(userMessage, contactPhone = '', customSettings = null) {
   try {
     const settings = customSettings || getBusinessSettings();
+    if (!isBusinessKnowledgeConfigured(settings)) {
+      return null;
+    }
 
     // Format all configured keyword pairs into structured knowledge context
     let pairsContext = '';
@@ -336,6 +348,12 @@ async function connectToWhatsApp() {
           addLog('info', `📩 Incoming from +${senderPhone}: "${cleanText}"`);
 
           const settings = getBusinessSettings();
+
+          // Prerequisite gating: Customers must configure their business details before automated replies occur
+          if (!isBusinessKnowledgeConfigured(settings)) {
+            addLog('info', `Automated reply paused for +${senderPhone}: Business details and targeting keywords have not been configured yet.`);
+            continue;
+          }
 
           // Step 1: Direct Targeting Words & Answers (Key-Value Matching)
           let matchedPair = null;
@@ -608,6 +626,14 @@ app.post(['/api/business-settings', '/business-settings'], (req, res) => {
         ? keyword_pairs.filter(p => p && typeof p.keyword === 'string' && p.keyword.trim().length > 0)
         : current.keyword_pairs
     };
+
+    const isConfigured = isBusinessKnowledgeConfigured(updated);
+    if (updated.auto_reply_enabled && !isConfigured) {
+      return res.status(400).json({
+        success: false,
+        error: 'Setup Required: Please complete your business details or targeting keywords below before turning AI Auto Reply ON.'
+      });
+    }
 
     saveBusinessSettings(updated);
     addLog('info', 'Business Profile & Targeting Keywords saved successfully.');
