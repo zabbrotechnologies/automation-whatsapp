@@ -56,12 +56,20 @@ const OPENROUTER_ENDPOINT = process.env.OPENROUTER_ENDPOINT || 'https://openrout
 const RENDER_GATEWAY_DEFAULT = process.env.GATEWAY_URL || 'https://zabbroautomate.onrender.com';
 
 // ---------------- BUSINESS SETTINGS & TARGETING REPOSITORY ---------------- //
+const DATA_DIR = path.join(__dirname, 'data');
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
 const SETTINGS_FILE = path.join(__dirname, 'business_settings.json');
-const LEADS_FILE = path.join(__dirname, 'data', 'leads.json');
-const OPTOUTS_FILE = path.join(__dirname, 'data', 'optouts.json');
-const ESCALATIONS_FILE = path.join(__dirname, 'data', 'escalations.json');
-const WELCOMED_CONTACTS_FILE = path.join(__dirname, 'data', 'welcomed_contacts.json');
-const SESSION_INFO_FILE = path.join(__dirname, 'data', 'session_info.json');
+const LEADS_FILE = path.join(DATA_DIR, 'leads.json');
+const OPTOUTS_FILE = path.join(DATA_DIR, 'optouts.json');
+const ESCALATIONS_FILE = path.join(DATA_DIR, 'escalations.json');
+const WELCOMED_CONTACTS_FILE = path.join(DATA_DIR, 'welcomed_contacts.json');
+const SESSION_INFO_FILE = path.join(DATA_DIR, 'session_info.json');
+
+// In-memory fallback sets to guarantee 100% reliability even on stateless ephemeral environments
+const inMemoryWelcomed = new Set();
 
 // Configure Multer for Media Uploads (Images, Videos, Catalogs)
 const mediaStorage = multer.diskStorage({
@@ -305,6 +313,9 @@ function getWelcomedContacts() {
 
 function saveWelcomedContacts(contacts) {
   try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
     fs.writeFileSync(WELCOMED_CONTACTS_FILE, JSON.stringify(contacts, null, 2), 'utf-8');
   } catch (e) {
     console.error('Error saving welcomed contacts:', e.message);
@@ -314,13 +325,25 @@ function saveWelcomedContacts(contacts) {
 function hasReceivedWelcome(phone) {
   if (!phone) return false;
   const clean = String(phone).replace(/\D/g, '');
+  if (inMemoryWelcomed.has(clean)) return true;
   const contacts = getWelcomedContacts();
-  return Boolean(contacts[clean]);
+  if (contacts[clean]) {
+    inMemoryWelcomed.add(clean);
+    return true;
+  }
+  // Also check leads: if they already have interaction history, they have already been welcomed!
+  const allLeads = getLeads();
+  if (allLeads.some(l => l.phone === clean)) {
+    inMemoryWelcomed.add(clean);
+    return true;
+  }
+  return false;
 }
 
 function markReceivedWelcome(phone) {
   if (!phone) return;
   const clean = String(phone).replace(/\D/g, '');
+  inMemoryWelcomed.add(clean);
   const contacts = getWelcomedContacts();
   contacts[clean] = {
     welcomedAt: new Date().toISOString()
