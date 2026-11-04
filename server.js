@@ -331,12 +331,6 @@ function hasReceivedWelcome(phone) {
     inMemoryWelcomed.add(clean);
     return true;
   }
-  // Also check leads: if they already have interaction history, they have already been welcomed!
-  const allLeads = getLeads();
-  if (allLeads.some(l => l.phone === clean)) {
-    inMemoryWelcomed.add(clean);
-    return true;
-  }
   return false;
 }
 
