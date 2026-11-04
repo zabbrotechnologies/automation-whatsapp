@@ -436,6 +436,92 @@
       transform: scale(0.975);
     }
 
+    /* Media Upload & Interactive Welcome Options */
+    .kb-media-upload-box {
+      border: 1.5px dashed var(--border-light);
+      border-radius: 10px;
+      padding: 14px 16px;
+      background: #fafafa;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .kb-media-upload-box:hover {
+      border-color: #0b0f19;
+      background: #f4f4f5;
+    }
+    .kb-media-preview-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 12px;
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .kb-media-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 7px;
+      object-fit: cover;
+      background: #f4f4f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+    }
+    .kb-opt-row {
+      display: grid;
+      grid-template-columns: 55px 145px 1fr 34px;
+      gap: 8px;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+    @media (max-width: 640px) {
+      .kb-opt-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+    }
+    .sim-media-preview {
+      margin-bottom: 8px;
+      border-radius: 8px;
+      overflow: hidden;
+      max-width: 100%;
+      border: 1px solid rgba(0,0,0,0.08);
+      background: #f8fafc;
+    }
+    .sim-media-preview img, .sim-media-preview video {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      display: block;
+    }
+    .sim-opt-pill {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sim-opt-pill:hover {
+      background: #0f172a;
+      color: #ffffff;
+      border-color: #0f172a;
+      transform: translateY(-1px);
+    }
+
     /* Automation Prerequisite Badges & Notices */
     .setup-badge {
       display: inline-flex;
@@ -1203,6 +1289,109 @@
             </div>
           </div>
 
+          <!-- Section: Welcome Message, Media Attachment & Interactive Options -->
+          <div style="margin-bottom: 20px; background: #ffffff; border: 1px solid var(--border-light); border-radius: 12px; padding: 14px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <label style="font-size: 13px; font-weight: 700; color: var(--text-dark); margin: 0; display: flex; align-items: center; gap: 6px;">
+                <span>👋 Welcome Greeting &amp; Media Attachment</span>
+              </label>
+              <span style="font-size: 11px; font-weight: 600; color: #16a34a; background: #dcfce7; padding: 2px 7px; border-radius: 12px;">
+                Auto-Triggered on "Hi" or First Contact
+              </span>
+            </div>
+            
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px 0; line-height: 1.45;">
+              When leads reach out, immediately greet them, deliver your attached photos, videos or PDF brochure, and present interactive menu questions.
+            </p>
+
+            <!-- Welcome Text -->
+            <div style="margin-bottom: 12px;">
+              <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 5px;">
+                Welcome Greeting Text
+              </label>
+              <textarea id="kbWelcomeMessage" class="kb-textarea" rows="2" placeholder="Welcome to our business! 🌟 How can we help you today?"></textarea>
+            </div>
+
+            <!-- Media Upload Area -->
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 12px; font-weight: 600; color: var(--text-dark); margin-bottom: 5px;">
+                Attach Image, Video or PDF Catalog / Brochure
+              </label>
+              <input type="file" id="mediaFileInput" accept="image/*,video/*,application/pdf" style="display: none;">
+              <input type="hidden" id="kbWelcomeMediaUrl" value="">
+              <input type="hidden" id="kbWelcomeMediaType" value="image">
+
+              <!-- Upload Button / Dropzone -->
+              <div id="mediaUploadBox" class="kb-media-upload-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" style="margin-bottom: 4px;">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <div style="font-size: 12.5px; font-weight: 600; color: var(--text-dark);">
+                  📁 Click to Upload Image, Video (MP4) or PDF Brochure
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                  Supports PNG, JPG, WEBP, MP4, MOV, and PDF (Max 30MB)
+                </div>
+              </div>
+
+              <!-- Media Preview Card (Shown when file is uploaded or URL provided) -->
+              <div id="mediaPreviewCard" class="kb-media-preview-card" style="display: none; margin-top: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                  <div class="kb-media-thumb" id="mediaThumbBox">
+                    <img id="mediaPreviewImg" src="" alt="Media" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                    <span id="mediaIconPlaceholder" style="font-size: 20px;">📄</span>
+                  </div>
+                  <div style="overflow: hidden;">
+                    <div id="mediaFilenameText" style="font-size: 12.5px; font-weight: 600; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
+                      brochure.pdf
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                      <span id="mediaTypeBadge" style="font-size: 10px; font-weight: 700; text-transform: uppercase; background: #e0f2fe; color: #0369a1; padding: 1.5px 6px; border-radius: 4px;">
+                        IMAGE
+                      </span>
+                      <a id="mediaViewLink" href="#" target="_blank" style="font-size: 11px; color: #3b82f6; text-decoration: underline;">
+                        Open Preview ↗
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" id="btnRemoveMedia" class="btn-kb-remove" title="Remove attached media">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Interactive Welcome Menu Options / Questions -->
+            <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <div>
+                  <label style="font-size: 12px; font-weight: 600; color: var(--text-dark); margin: 0;">
+                    Interactive Menu Questions &amp; Options
+                  </label>
+                  <div style="font-size: 11px; color: var(--text-muted); margin-top: 1px;">
+                    When user replies with "1", "2", etc., the bot instantly delivers the configured answer.
+                  </div>
+                </div>
+                <button type="button" id="btnAddWelcomeOption" class="btn-kb-add">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  <span>Add Option</span>
+                </button>
+              </div>
+
+              <div id="welcomeOptionsList" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Dynamic rows injected via JS -->
+              </div>
+            </div>
+          </div>
+
           <!-- Section: Targeting words and their answers (Key-Value pairs) -->
           <div style="margin-bottom: 16px;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
@@ -1297,6 +1486,8 @@
               Quick Preset Tests:
             </span>
             <div class="sim-chips-row">
+              <button type="button" class="sim-chip" data-test="Hi">👋 Hi (Welcome &amp; Media Menu)</button>
+              <button type="button" class="sim-chip" data-test="1">1️⃣ Option 1 (Pricing)</button>
               <button type="button" class="sim-chip" data-test="What are your prices?">💰 Pricing Query</button>
               <button type="button" class="sim-chip" data-test="Can I see a demo?">🖥️ Demo Inquiry</button>
               <button type="button" class="sim-chip" data-test="Can you give me 50% discount?">⚠️ Off-Topic / Discount</button>
@@ -1319,7 +1510,9 @@
           </div>
           <div class="sim-bubble-bot" id="simBotBubble">
             <span class="sim-meta-pill keyword" id="simActionPill">🎯 KEYWORD MATCH</span>
+            <div id="simMediaPreview" class="sim-media-preview" style="display: none;"></div>
             <div id="simBotText">Our packages start at ₹999/month for unlimited campaigns with live socket synchronization. Visit our website for full details!</div>
+            <div id="simOptionsContainer" style="display: none; margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
           </div>
           <div style="font-size: 11px; color: #475569; background: rgba(255,255,255,0.85); padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1;" id="simExplanationText">
             ℹ️ Matched targeting keyword "price". Direct configured answer delivered without consuming AI tokens.
@@ -1678,6 +1871,16 @@
           document.getElementById('kbBusinessProfile').value = data.settings.business_profile || '';
           document.getElementById('kbWebsiteUrl').value = data.settings.website_url || '';
           
+          if (data.settings.welcome_message !== undefined) {
+            document.getElementById('kbWelcomeMessage').value = data.settings.welcome_message;
+          }
+          if (data.settings.welcome_media_url) {
+            updateMediaPreviewCard(data.settings.welcome_media_url, data.settings.welcome_media_type || 'image');
+          } else {
+            clearMediaPreview();
+          }
+
+          renderWelcomeOptions(data.settings.welcome_options || []);
           renderKeywordPairs(data.settings.keyword_pairs || []);
 
           updateAutomationPrerequisiteUI();
@@ -1704,6 +1907,158 @@
         console.warn('Error loading business settings:', err.message);
       }
     }
+
+    // Media Upload & Preview Management
+    function updateMediaPreviewCard(url, type = 'image', filename = '') {
+      const card = document.getElementById('mediaPreviewCard');
+      const box = document.getElementById('mediaUploadBox');
+      const img = document.getElementById('mediaPreviewImg');
+      const icon = document.getElementById('mediaIconPlaceholder');
+      const nameEl = document.getElementById('mediaFilenameText');
+      const badge = document.getElementById('mediaTypeBadge');
+      const link = document.getElementById('mediaViewLink');
+      const hiddenUrl = document.getElementById('kbWelcomeMediaUrl');
+      const hiddenType = document.getElementById('kbWelcomeMediaType');
+
+      if (!url) {
+        clearMediaPreview();
+        return;
+      }
+
+      hiddenUrl.value = url;
+      hiddenType.value = type;
+
+      const displayName = filename || url.split('/').pop() || 'media_attachment';
+      nameEl.textContent = displayName;
+      nameEl.title = displayName;
+      badge.textContent = type.toUpperCase();
+      link.href = url;
+
+      if (type === 'image') {
+        img.src = url;
+        img.style.display = 'block';
+        icon.style.display = 'none';
+        badge.style.background = '#e0f2fe';
+        badge.style.color = '#0369a1';
+      } else if (type === 'video') {
+        img.style.display = 'none';
+        icon.textContent = '🎥';
+        icon.style.display = 'block';
+        badge.style.background = '#fef3c7';
+        badge.style.color = '#b45309';
+      } else {
+        img.style.display = 'none';
+        icon.textContent = '📄';
+        icon.style.display = 'block';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#15803d';
+      }
+
+      card.style.display = 'flex';
+      box.style.display = 'none';
+    }
+
+    function clearMediaPreview() {
+      document.getElementById('kbWelcomeMediaUrl').value = '';
+      document.getElementById('kbWelcomeMediaType').value = 'image';
+      document.getElementById('mediaPreviewCard').style.display = 'none';
+      document.getElementById('mediaUploadBox').style.display = 'block';
+      document.getElementById('mediaFileInput').value = '';
+    }
+
+    document.getElementById('mediaUploadBox').addEventListener('click', () => {
+      document.getElementById('mediaFileInput').click();
+    });
+
+    document.getElementById('mediaFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('mediaFile', file);
+
+      showToast(`Uploading ${file.name}...`, 'info');
+
+      try {
+        const res = await fetch('/api/upload-media', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          updateMediaPreviewCard(data.url, data.mediaType, data.filename);
+          showToast(`Media uploaded successfully! Click Save to apply.`, 'success');
+        } else {
+          showToast(`Upload failed: ${data.error}`, 'error');
+        }
+      } catch (err) {
+        showToast(`Upload error: ${err.message}`, 'error');
+      }
+    });
+
+    document.getElementById('btnRemoveMedia').addEventListener('click', () => {
+      clearMediaPreview();
+      showToast('Media removed. Click Save to apply changes.', 'info');
+    });
+
+    // Welcome Options Management
+    function renderWelcomeOptions(options) {
+      const list = document.getElementById('welcomeOptionsList');
+      list.innerHTML = '';
+      if (!options || options.length === 0) {
+        addWelcomeOptionRow('1', '', '');
+        return;
+      }
+      options.forEach(opt => {
+        addWelcomeOptionRow(opt.option_num || '1', opt.title || '', opt.answer || '');
+      });
+    }
+
+    function addWelcomeOptionRow(num = '', title = '', answer = '') {
+      const list = document.getElementById('welcomeOptionsList');
+      const row = document.createElement('div');
+      row.className = 'kb-opt-row';
+      row.innerHTML = `
+        <input type="text" class="kb-input opt-num" placeholder="#" value="${escapeHtml(num)}" style="text-align: center; font-weight: 700;">
+        <input type="text" class="kb-input opt-title" placeholder="Option title (e.g. Pricing)" value="${escapeHtml(title)}">
+        <input type="text" class="kb-input opt-ans" placeholder="Configured answer..." value="${escapeHtml(answer)}">
+        <button type="button" class="btn-kb-remove btn-opt-remove" title="Remove Option">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      `;
+      list.appendChild(row);
+      return row;
+    }
+
+    document.getElementById('btnAddWelcomeOption').addEventListener('click', () => {
+      const list = document.getElementById('welcomeOptionsList');
+      const currentCount = list.querySelectorAll('.kb-opt-row').length;
+      const nextNum = String(currentCount + 1);
+      const newRow = addWelcomeOptionRow(nextNum, '', '');
+      const firstInput = newRow.querySelector('.opt-title');
+      if (firstInput) firstInput.focus();
+    });
+
+    document.getElementById('welcomeOptionsList').addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-opt-remove');
+      if (btn) {
+        const row = btn.closest('.kb-opt-row');
+        if (row) {
+          row.style.opacity = '0';
+          row.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            row.remove();
+            const list = document.getElementById('welcomeOptionsList');
+            if (list.children.length === 0) {
+              addWelcomeOptionRow('1', '', '');
+            }
+          }, 150);
+        }
+      }
+    });
 
     function renderKeywordPairs(pairs) {
       const list = document.getElementById('keywordPairsList');
@@ -1783,6 +2138,22 @@
       const outsideAction = document.getElementById('kbOutsideAction') ? document.getElementById('kbOutsideAction').value : 'FALLBACK_MSG';
       const fallbackMsg = document.getElementById('kbFallbackMessage') ? document.getElementById('kbFallbackMessage').value.trim() : '';
 
+      const welcomeMessage = document.getElementById('kbWelcomeMessage') ? document.getElementById('kbWelcomeMessage').value.trim() : '';
+      const welcomeMediaUrl = document.getElementById('kbWelcomeMediaUrl') ? document.getElementById('kbWelcomeMediaUrl').value.trim() : '';
+      const welcomeMediaType = document.getElementById('kbWelcomeMediaType') ? document.getElementById('kbWelcomeMediaType').value.trim() : 'image';
+
+      // Extract Welcome Options
+      const optRows = document.querySelectorAll('#welcomeOptionsList .kb-opt-row');
+      const welcome_options = [];
+      optRows.forEach(r => {
+        const num = r.querySelector('.opt-num')?.value?.trim();
+        const title = r.querySelector('.opt-title')?.value?.trim();
+        const ans = r.querySelector('.opt-ans')?.value?.trim();
+        if (title) {
+          welcome_options.push({ option_num: num || String(welcome_options.length + 1), title, answer: ans || '' });
+        }
+      });
+
       // Extract rows
       const rows = document.querySelectorAll('#keywordPairsList .kb-row');
       const keyword_pairs = [];
@@ -1807,6 +2178,10 @@
             keyword_pairs: keyword_pairs,
             auto_reply_enabled: autoReply,
             welcome_msg_enabled: welcomeMsg,
+            welcome_message: welcomeMessage,
+            welcome_media_url: welcomeMediaUrl,
+            welcome_media_type: welcomeMediaType,
+            welcome_options: welcome_options,
             outside_kb_action: outsideAction,
             fallback_message: fallbackMsg
           })
@@ -2109,7 +2484,13 @@
           const d = await res.json();
           if (d.success && d.result) {
             const r = d.result;
-            if (r.type === 'KEYWORD_MATCH') {
+            if (r.type === 'WELCOME_MENU') {
+              actionPill.className = 'sim-meta-pill ai';
+              actionPill.textContent = '👋 WELCOME GREETING & MENU';
+            } else if (r.type === 'OPTION_SELECTION') {
+              actionPill.className = 'sim-meta-pill keyword';
+              actionPill.textContent = '🎯 OPTION SELECTED';
+            } else if (r.type === 'KEYWORD_MATCH') {
               actionPill.className = 'sim-meta-pill keyword';
               actionPill.textContent = '🎯 KEYWORD MATCH';
             } else if (r.type === 'AI_KNOWLEDGE_BASE') {
@@ -2130,6 +2511,43 @@
             } else {
               actionPill.className = 'sim-meta-pill silent';
               actionPill.textContent = '🔇 ZERO HALLUCINATION (SILENT)';
+            }
+
+            // Render Media Preview in Simulator if attached
+            const mediaPrev = document.getElementById('simMediaPreview');
+            if (r.media_url) {
+              if (r.media_type === 'video') {
+                mediaPrev.innerHTML = `<video src="${r.media_url}" controls autoplay muted style="width:100%; border-radius:6px; max-height:180px;"></video>`;
+              } else if (r.media_type === 'document') {
+                mediaPrev.innerHTML = `<div style="padding:8px 12px; background:#e0f2fe; border-radius:6px; font-size:11.5px; font-weight:600; color:#0369a1; display:flex; align-items:center; gap:6px;"><span>📄 PDF Brochure Attached</span><a href="${r.media_url}" target="_blank" style="margin-left:auto; text-decoration:underline;">View Document ↗</a></div>`;
+              } else {
+                mediaPrev.innerHTML = `<img src="${r.media_url}" alt="Attachment" style="width:100%; border-radius:6px; max-height:180px; object-fit:cover;">`;
+              }
+              mediaPrev.style.display = 'block';
+            } else {
+              mediaPrev.style.display = 'none';
+              mediaPrev.innerHTML = '';
+            }
+
+            // Render Interactive Option Pills in Simulator if available
+            const optContainer = document.getElementById('simOptionsContainer');
+            if (Array.isArray(r.options) && r.options.length > 0) {
+              optContainer.innerHTML = r.options.map(opt => `
+                <button type="button" class="sim-opt-pill" data-opt="${escapeHtml(opt.option_num)}">
+                  <span>${escapeHtml(opt.option_num)}️⃣</span>
+                  <span>${escapeHtml(opt.title)}</span>
+                </button>
+              `).join('');
+              optContainer.style.display = 'flex';
+              optContainer.querySelectorAll('.sim-opt-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                  document.getElementById('simQueryInput').value = btn.dataset.opt;
+                  btnSim.click();
+                });
+              });
+            } else {
+              optContainer.style.display = 'none';
+              optContainer.innerHTML = '';
             }
 
             botText.textContent = r.reply || '(Bot remained completely silent. Zero hallucinations.)';

@@ -8,6 +8,7 @@ const pino = require('pino');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
 
 // Load Baileys conditionally
 let makeWASocket, DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion;
@@ -61,11 +62,66 @@ const OPTOUTS_FILE = path.join(__dirname, 'data', 'optouts.json');
 const ESCALATIONS_FILE = path.join(__dirname, 'data', 'escalations.json');
 const SESSION_INFO_FILE = path.join(__dirname, 'data', 'session_info.json');
 
+// Configure Multer for Media Uploads (Images, Videos, Catalogs)
+const mediaStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, 'public', 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const cleanBase = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+    cb(null, `media_${Date.now()}_${cleanBase}${ext}`);
+  }
+});
+
+const uploadMedia = multer({
+  storage: mediaStorage,
+  limits: { fileSize: 30 * 1024 * 1024 }, // 30MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedExts = /jpeg|jpg|png|webp|gif|mp4|mov|avi|pdf/;
+    const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+    const mime = file.mimetype.toLowerCase();
+    if (allowedExts.test(ext) || mime.startsWith('image/') || mime.startsWith('video/') || mime === 'application/pdf') {
+      return cb(null, true);
+    }
+    cb(new Error('Only images, videos (MP4/MOV), and PDFs are supported.'));
+  }
+});
+
 const DEFAULT_SETTINGS = {
   business_profile: "Flow provides automated WhatsApp communication engineered for enterprise precision. Broadcast personalized campaigns directly from public Google Sheets, automate intelligent AI product responses with custom keyword triggers, and manage companion sessions with zero ban risk.",
   website_url: "https://zabbro-automate.vercel.app",
   auto_reply_enabled: true,
   welcome_msg_enabled: true,
+  welcome_message: "Welcome to Flow Enterprise Automation! 🌟 We engineer seamless WhatsApp communication for businesses.",
+  welcome_media_url: "/uploads/flow_overview.jpg",
+  welcome_media_type: "image",
+  welcome_options: [
+    {
+      option_num: "1",
+      title: "View Pricing & Packages",
+      answer: "Our packages start at ₹999/month for unlimited campaigns with live socket synchronization. Visit our website for full details!"
+    },
+    {
+      option_num: "2",
+      title: "Request Live Interactive Demo",
+      answer: "You can try our live interactive dashboard directly at our web portal with one-click setup."
+    },
+    {
+      option_num: "3",
+      title: "Product & Service Catalog",
+      answer: "You can view our complete service catalog and integrations on our official website: https://zabbro-automate.vercel.app"
+    },
+    {
+      option_num: "4",
+      title: "Talk to Support Executive",
+      answer: "Understood! Automated replies are now paused for this chat. Our executive has been notified and will assist you directly."
+    }
+  ],
   outside_kb_action: "FALLBACK_MSG",
   fallback_message: "I don't have that specific detail in our catalog right now, but I've alerted our team. An executive will follow up with you shortly!",
   escalation_notice: "Understood! Automated replies are now paused for this chat. Our executive has been notified and will assist you directly.",
@@ -323,6 +379,95 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
       matched: matchedEsc,
       reply: escReply,
       explanation: `Human escalation trigger "${matchedEsc}" matched. Bot paused for this chat and support team alerted.`
+    };
+  }
+
+  // 4b. Check Welcome Menu Option Selection (e.g. user typed "1", "2", "3", "4", "1️⃣", "option 1")
+  const cleanOptionInput = lower.replace(/[#️⃣.()\s]/g, '');
+  const matchedOption = (settings.welcome_options || []).find(opt => {
+    const num = String(opt.option_num || '').trim().toLowerCase();
+    const title = String(opt.title || '').trim().toLowerCase();
+    return (num && cleanOptionInput === num) || 
+           (num && lower === `option ${num}`) ||
+           (title && lower.includes(title));
+  });
+
+  if (matchedOption && matchedOption.answer && matchedOption.answer.trim()) {
+    // If the selected option is a request for a human/agent/support
+    if (/support|agent|executive|human|complaint/i.test(matchedOption.title || '')) {
+      addEscalation(senderPhone, senderName, cleanText, `Triggered from Option #${matchedOption.option_num} (${matchedOption.title})`);
+      const escReply = settings.escalation_notice || matchedOption.answer.trim();
+      recordLeadInteraction({
+        phone: senderPhone,
+        name: senderName,
+        inquiry: cleanText,
+        reply: escReply,
+        intent: `Option ${matchedOption.option_num}: ${matchedOption.title}`,
+        status: 'ESCALATED'
+      });
+      return {
+        type: 'ESCALATION',
+        matched: `Option ${matchedOption.option_num}`,
+        reply: escReply,
+        explanation: `Customer selected Option #${matchedOption.option_num} (${matchedOption.title}). Human takeover initiated.`
+      };
+    }
+
+    const optAns = matchedOption.answer.trim();
+    recordLeadInteraction({
+      phone: senderPhone,
+      name: senderName,
+      inquiry: cleanText,
+      reply: optAns,
+      intent: `Option ${matchedOption.option_num}: ${matchedOption.title}`,
+      status: 'AI_HANDLED'
+    });
+    return {
+      type: 'OPTION_SELECTION',
+      matched: `Option ${matchedOption.option_num}`,
+      reply: optAns,
+      explanation: `Customer selected Option #${matchedOption.option_num} (${matchedOption.title}). Direct answer sent.`
+    };
+  }
+
+  // 4c. Check Welcome Message & Interactive Options Trigger (Greetings / First Interaction)
+  const GREETING_TRIGGERS = [
+    'hi', 'hello', 'hey', 'start', 'menu', 'options', 'help', 
+    'vanakkam', 'namaste', 'morning', 'evening', 'good morning', 
+    'good afternoon', 'good evening', 'info', 'welcome'
+  ];
+  const isGreetingWord = GREETING_TRIGGERS.some(g => lower === g || lower.startsWith(g + ' ') || lower.endsWith(' ' + g) || lower === `${g}!`);
+  
+  // Check if this is the first message ever received from this contact
+  const allLeads = getLeads();
+  const isFirstInteraction = senderPhone && !allLeads.some(l => l.phone === String(senderPhone).replace(/\D/g, ''));
+
+  if (settings.welcome_msg_enabled && (isGreetingWord || isFirstInteraction)) {
+    let welcomeText = (settings.welcome_message || 'Welcome to our business! 🌟 How can we help you today?').trim();
+    if (Array.isArray(settings.welcome_options) && settings.welcome_options.length > 0) {
+      const optionsFormatted = settings.welcome_options
+        .map(o => `${o.option_num}️⃣ ${o.title}`)
+        .join('\n');
+      welcomeText += `\n\n📌 *Please reply with an option number:*\n${optionsFormatted}\n\n_(Or simply type your question!)_`;
+    }
+
+    recordLeadInteraction({
+      phone: senderPhone,
+      name: senderName,
+      inquiry: cleanText,
+      reply: welcomeText,
+      intent: 'Welcome Greeting & Menu',
+      status: 'AI_HANDLED'
+    });
+
+    return {
+      type: 'WELCOME_MENU',
+      matched: isGreetingWord ? 'Greeting Word' : 'First Interaction',
+      reply: welcomeText,
+      media_url: settings.welcome_media_url || null,
+      media_type: settings.welcome_media_type || 'image',
+      options: settings.welcome_options || [],
+      explanation: 'Customer greeted or initiated contact. Sent welcome greeting, media attachment, and interactive option list.'
     };
   }
 
@@ -703,7 +848,50 @@ async function connectToWhatsApp() {
 
           const result = await processInboundText(cleanText, senderPhone, msg.pushName || '');
           if (result && result.reply) {
-            await sock.sendMessage(remoteJid, { text: result.reply });
+            // Check if media attachment is attached to this reply
+            if (result.media_url) {
+              try {
+                let sentMedia = false;
+                const relativePath = result.media_url.replace(/^\//, '');
+                const localPath = path.join(__dirname, 'public', relativePath);
+                
+                if (fs.existsSync(localPath)) {
+                  const mediaBuf = fs.readFileSync(localPath);
+                  if (result.media_type === 'video') {
+                    await sock.sendMessage(remoteJid, { video: mediaBuf, caption: result.reply });
+                    sentMedia = true;
+                  } else if (result.media_type === 'document') {
+                    await sock.sendMessage(remoteJid, { 
+                      document: mediaBuf, 
+                      mimetype: 'application/pdf', 
+                      fileName: path.basename(localPath), 
+                      caption: result.reply 
+                    });
+                    sentMedia = true;
+                  } else {
+                    await sock.sendMessage(remoteJid, { image: mediaBuf, caption: result.reply });
+                    sentMedia = true;
+                  }
+                } else if (result.media_url.startsWith('http')) {
+                  if (result.media_type === 'video') {
+                    await sock.sendMessage(remoteJid, { video: { url: result.media_url }, caption: result.reply });
+                    sentMedia = true;
+                  } else {
+                    await sock.sendMessage(remoteJid, { image: { url: result.media_url }, caption: result.reply });
+                    sentMedia = true;
+                  }
+                }
+
+                if (!sentMedia) {
+                  await sock.sendMessage(remoteJid, { text: result.reply });
+                }
+              } catch (mediaErr) {
+                addLog('warning', `Failed sending media attachment (${mediaErr.message}), falling back to text`);
+                await sock.sendMessage(remoteJid, { text: result.reply });
+              }
+            } else {
+              await sock.sendMessage(remoteJid, { text: result.reply });
+            }
             addLog('success', `🤖 Replied to +${senderPhone} [${result.type}]: "${result.reply.substring(0, 60)}..."`);
           } else if (result && result.type === 'OUTSIDE_KB_SILENT') {
             addLog('info', `Query from +${senderPhone} is outside Business Knowledge Base. Bot remained silent (zero hallucinations).`);
@@ -1040,7 +1228,19 @@ app.get(['/api/business-settings', '/business-settings'], (req, res) => {
 // POST Business Knowledge Base & Targeting Keywords
 app.post(['/api/business-settings', '/business-settings'], (req, res) => {
   try {
-    const { business_profile, website_url, keyword_pairs, auto_reply_enabled, welcome_msg_enabled, outside_kb_action, fallback_message } = req.body;
+    const { 
+      business_profile, 
+      website_url, 
+      keyword_pairs, 
+      auto_reply_enabled, 
+      welcome_msg_enabled, 
+      welcome_message,
+      welcome_media_url,
+      welcome_media_type,
+      welcome_options,
+      outside_kb_action, 
+      fallback_message 
+    } = req.body;
     
     const current = getBusinessSettings();
     const updated = {
@@ -1049,6 +1249,12 @@ app.post(['/api/business-settings', '/business-settings'], (req, res) => {
       website_url: typeof website_url === 'string' ? website_url : current.website_url,
       auto_reply_enabled: auto_reply_enabled !== undefined ? Boolean(auto_reply_enabled) : current.auto_reply_enabled,
       welcome_msg_enabled: welcome_msg_enabled !== undefined ? Boolean(welcome_msg_enabled) : current.welcome_msg_enabled,
+      welcome_message: typeof welcome_message === 'string' ? welcome_message : (current.welcome_message || DEFAULT_SETTINGS.welcome_message),
+      welcome_media_url: typeof welcome_media_url === 'string' ? welcome_media_url : (current.welcome_media_url || ''),
+      welcome_media_type: typeof welcome_media_type === 'string' ? welcome_media_type : (current.welcome_media_type || 'image'),
+      welcome_options: Array.isArray(welcome_options) 
+        ? welcome_options.filter(o => o && typeof o.title === 'string' && o.title.trim().length > 0)
+        : (current.welcome_options || DEFAULT_SETTINGS.welcome_options),
       outside_kb_action: typeof outside_kb_action === 'string' ? outside_kb_action : current.outside_kb_action,
       fallback_message: typeof fallback_message === 'string' ? fallback_message : current.fallback_message,
       keyword_pairs: Array.isArray(keyword_pairs) 
@@ -1065,8 +1271,32 @@ app.post(['/api/business-settings', '/business-settings'], (req, res) => {
     }
 
     saveBusinessSettings(updated);
-    addLog('info', 'Business Profile & Targeting Keywords saved successfully.');
+    addLog('info', 'Business Profile, Media Attachments & Targeting Keywords saved successfully.');
     res.json({ success: true, message: 'Settings saved successfully', settings: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Media Upload Endpoint (Images, Videos, Catalogs / PDFs)
+app.post('/api/upload-media', uploadMedia.single('mediaFile'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No media file provided.' });
+    }
+    const relativeUrl = `/uploads/${req.file.filename}`;
+    let mediaType = 'document';
+    if (req.file.mimetype.startsWith('image/')) mediaType = 'image';
+    else if (req.file.mimetype.startsWith('video/')) mediaType = 'video';
+
+    addLog('info', `Uploaded media attachment: ${req.file.originalname} (${(req.file.size / 1024).toFixed(1)} KB) -> ${relativeUrl}`);
+    res.json({
+      success: true,
+      url: relativeUrl,
+      mediaType,
+      filename: req.file.originalname,
+      size: req.file.size
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1235,7 +1465,8 @@ app.post(['/api/simulate-reply', '/simulate-reply'], async (req, res) => {
     if (!query || !query.trim()) {
       return res.status(400).json({ success: false, error: 'Query text is required.' });
     }
-    const result = await processInboundText(query.trim(), phone || '919999900000', name || 'Test Lead');
+    const simPhone = phone || ('9199' + Math.floor(10000000 + Math.random() * 90000000));
+    const result = await processInboundText(query.trim(), simPhone, name || 'Test Lead');
     res.json({ success: true, result });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

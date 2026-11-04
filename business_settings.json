@@ -3,6 +3,31 @@
   "website_url": "https://zabbro-automate.vercel.app",
   "auto_reply_enabled": true,
   "welcome_msg_enabled": true,
+  "welcome_message": "Welcome to Flow Enterprise Automation! 🌟 We engineer seamless WhatsApp communication for businesses.",
+  "welcome_media_url": "/uploads/flow_overview.jpg",
+  "welcome_media_type": "image",
+  "welcome_options": [
+    {
+      "option_num": "1",
+      "title": "View Pricing & Packages",
+      "answer": "Our packages start at ₹999/month for unlimited campaigns with live socket synchronization. Visit our website for full details!"
+    },
+    {
+      "option_num": "2",
+      "title": "Request Live Interactive Demo",
+      "answer": "You can try our live interactive dashboard directly at our web portal with one-click setup."
+    },
+    {
+      "option_num": "3",
+      "title": "Product & Service Catalog",
+      "answer": "You can view our complete service catalog and integrations on our official website: https://zabbro-automate.vercel.app"
+    },
+    {
+      "option_num": "4",
+      "title": "Talk to Support Executive",
+      "answer": "Understood! Automated replies are now paused for this chat. Our executive has been notified and will assist you directly."
+    }
+  ],
   "outside_kb_action": "FALLBACK_MSG",
   "fallback_message": "I don't have that specific detail in our catalog right now, but I've alerted our team. An executive will follow up with you shortly!",
   "escalation_notice": "Understood! Automated replies are now paused for this chat. Our executive has been notified and will assist you directly.",
