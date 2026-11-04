@@ -777,28 +777,20 @@ async function connectToWhatsApp() {
         // Check if device was previously authenticated
         const hasSavedAuth = Boolean(connectedUser || state.creds?.registered || state.creds?.me);
 
-        // If not logged out explicitly from mobile WhatsApp, DO NOT clear session! Retain session and auto-reconnect!
-        if (!isLoggedOut && hasSavedAuth) {
-          connectionStatus = 'RECONNECTING';
-          addLog('info', `Socket connection blip (Code: ${statusCode}). Preserving linked session for +${connectedUser?.phone || 'device'}. Auto-reconnecting in 3s...`);
-          setTimeout(connectToWhatsApp, 3000);
-          return;
-        }
+        addLog('info', `WhatsApp socket closed (Code: ${statusCode || 'unknown'}). Has saved auth: ${hasSavedAuth}`);
 
-        // Only clear session if user EXPLICITLY logged out from mobile WhatsApp (Code 401)
-        if (isLoggedOut) {
-          addLog('error', 'Device explicitly logged out from mobile WhatsApp. Session cleared.');
-          clearSession();
-          connectionStatus = 'DISCONNECTED';
-          currentQR = null;
-          connectedUser = null;
-          setTimeout(connectToWhatsApp, 2000);
+        // NEVER delete session files automatically on disconnect, code change, or server restart!
+        if (hasSavedAuth) {
+          connectionStatus = 'RECONNECTING';
+          const delay = isLoggedOut ? 5000 : 3000;
+          addLog('info', `Preserving paired WhatsApp session for +${connectedUser?.phone || 'device'}. Auto-reconnecting in ${delay/1000}s...`);
+          setTimeout(connectToWhatsApp, delay);
           return;
         }
 
         // Unlinked socket closed (e.g. initial timeout before scan)
         connectionStatus = 'DISCONNECTED';
-        addLog('info', `Pairing socket reset (Code: ${statusCode}). Refreshing pairing state...`);
+        addLog('info', `Pairing socket reset (Code: ${statusCode || 'unlinked'}). Refreshing pairing state...`);
         setTimeout(connectToWhatsApp, 3000);
 
       } else if (connection === 'open') {
@@ -913,7 +905,7 @@ async function connectToWhatsApp() {
   }
 }
 
-function clearSession() {
+function clearSession(forceDeleteFiles = false) {
   try {
     if (sock) {
       try {
@@ -922,17 +914,22 @@ function clearSession() {
       } catch (e) {}
       sock = null;
     }
-    if (fs.existsSync(AUTH_DIR)) {
-      fs.rmSync(AUTH_DIR, { recursive: true, force: true });
-      addLog('info', 'Session folder cleared.');
-    }
-    try {
-      if (fs.existsSync(SESSION_INFO_FILE)) {
-        fs.unlinkSync(SESSION_INFO_FILE);
+    // Only delete physical session files if user explicitly requested disconnect
+    if (forceDeleteFiles) {
+      if (fs.existsSync(AUTH_DIR)) {
+        fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+        addLog('info', 'Session folder cleared on explicit user disconnect.');
       }
-    } catch (e) {}
+      try {
+        if (fs.existsSync(SESSION_INFO_FILE)) {
+          fs.unlinkSync(SESSION_INFO_FILE);
+        }
+      } catch (e) {}
+    } else {
+      addLog('info', 'Socket closed cleanly. Saved credentials preserved on disk.');
+    }
   } catch (e) {
-    addLog('error', `Error clearing session: ${e.message}`);
+    addLog('error', `Error handling session: ${e.message}`);
   }
 }
 
@@ -1401,7 +1398,7 @@ app.post('/api/logout', verifyApiKey, async (req, res) => {
     if (sock) {
       await sock.logout();
     }
-    clearSession();
+    clearSession(true);
     connectionStatus = 'DISCONNECTED';
     currentQR = null;
     connectedUser = null;
@@ -1450,7 +1447,7 @@ app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
     connectionStatus = 'INITIALIZING';
     currentQR = null;
     isManualRefreshRequested = true;
-    clearSession();
+    clearSession(false);
     setTimeout(connectToWhatsApp, 800);
     res.json({ success: true, message: 'Generating fresh QR code...' });
   } catch (err) {
@@ -1632,6 +1629,20 @@ app.post(['/api/broadcast', '/broadcast'], async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// Graceful Process Termination: Keep WhatsApp paired without socket corruption
+function gracefulShutdown(signal) {
+  addLog('info', `Received ${signal}. Gracefully closing WhatsApp socket without unpairing device...`);
+  if (sock) {
+    try {
+      sock.ev.removeAllListeners();
+      sock.end(undefined);
+    } catch (e) {}
+  }
+  process.exit(0);
+}
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 // Start Server, DB & WhatsApp Socket when executed directly
 if (require.main === module) {

@@ -288,6 +288,24 @@
       setTab(true);
     });
 
+    // Check if user already has an active session
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user) {
+            localStorage.setItem('flow_user', JSON.stringify(data.user));
+            if (data.user.role === 'ADMIN') {
+              window.location.href = '/admin.html';
+            } else {
+              window.location.href = '/dashboard.html';
+            }
+          }
+        }
+      } catch (e) {}
+    })();
+
     // Check URL parameters to open Login or Sign Up directly
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('tab') === 'register' || urlParams.get('mode') === 'signup' || window.location.hash === '#register' || window.location.hash === '#signup') {
@@ -322,6 +340,7 @@
         }
 
         if (data.success) {
+          localStorage.setItem('flow_user', JSON.stringify(data.user));
           if (data.user.role === 'ADMIN') {
             window.location.href = '/admin.html';
           } else {
@@ -367,6 +386,7 @@
         }
 
         if (data.success) {
+          localStorage.setItem('flow_user', JSON.stringify(data.user));
           if (data.user.role === 'ADMIN') {
             window.location.href = '/admin.html';
           } else {

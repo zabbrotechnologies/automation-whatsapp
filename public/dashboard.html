@@ -1614,40 +1614,71 @@
     let currentUser = null;
     let pollInterval = null;
 
-    // Check Authentication on Page Load
+    // Check Authentication on Page Load (Resilient Retry across server reloads/updates)
     async function initDashboard() {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (!res.ok) {
-          window.location.href = '/login.html';
-          return;
+      let attempts = 0;
+      const maxAttempts = 4;
+
+      while (attempts < maxAttempts) {
+        try {
+          const res = await fetch('/api/auth/me');
+          if (res.status === 401 || res.status === 403) {
+            // Explicitly unauthorized: user credentials invalid
+            localStorage.removeItem('flow_user');
+            window.location.href = '/login.html';
+            return;
+          }
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.user) {
+              currentUser = data.user;
+              localStorage.setItem('flow_user', JSON.stringify(currentUser));
+              document.getElementById('userNameDisplay').textContent = currentUser.name;
+              document.getElementById('userRoleBadge').textContent = currentUser.role;
+
+              if (currentUser.role === 'ADMIN') {
+                document.getElementById('adminLink').style.display = 'inline-flex';
+              }
+
+              // Load Business Profile & Targeting Settings
+              loadBusinessSettings();
+
+              // Poll gateway status & leads analytics
+              checkGatewayStatus();
+              loadLeadsAnalytics();
+              pollInterval = setInterval(checkGatewayStatus, 4000);
+              setInterval(loadLeadsAnalytics, 8000);
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn(`Auth verify attempt ${attempts + 1} transient error: ${err.message}. Retrying...`);
         }
-        const data = await res.json();
-        if (!data.success || !data.user) {
-          window.location.href = '/login.html';
-          return;
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 1200));
         }
-        currentUser = data.user;
-        document.getElementById('userNameDisplay').textContent = currentUser.name;
-        document.getElementById('userRoleBadge').textContent = currentUser.role;
-
-        if (currentUser.role === 'ADMIN') {
-          document.getElementById('adminLink').style.display = 'inline-flex';
-        }
-
-        // Check gateway connection for live socket status
-
-        // Load Business Profile & Targeting Settings
-        loadBusinessSettings();
-
-        // Poll gateway status & leads analytics
-        checkGatewayStatus();
-        loadLeadsAnalytics();
-        pollInterval = setInterval(checkGatewayStatus, 4000);
-        setInterval(loadLeadsAnalytics, 8000);
-      } catch (err) {
-        window.location.href = '/login.html';
       }
+
+      // If backend was temporarily rebooting, keep page alive using cached user session
+      const cached = localStorage.getItem('flow_user');
+      if (cached) {
+        try {
+          currentUser = JSON.parse(cached);
+          console.warn('Backend transiently unavailable; preserved active session from local cache for:', currentUser.name);
+          document.getElementById('userNameDisplay').textContent = currentUser.name;
+          document.getElementById('userRoleBadge').textContent = currentUser.role;
+          if (currentUser.role === 'ADMIN') {
+            document.getElementById('adminLink').style.display = 'inline-flex';
+          }
+          loadBusinessSettings();
+          pollInterval = setInterval(checkGatewayStatus, 5000);
+          return;
+        } catch (e) {}
+      }
+
+      // Only redirect if genuinely unauthenticated after all retries
+      window.location.href = '/login.html';
     }
 
     // Gateway URL state (Local or Remote)

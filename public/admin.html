@@ -362,24 +362,40 @@
     let currentAdminUser = null;
 
     async function checkAuthAndLoad() {
-      try {
-        const meRes = await fetch('/api/auth/me');
-        if (!meRes.ok) {
-          window.location.href = '/login.html';
-          return;
+      let attempts = 0;
+      const maxAttempts = 4;
+
+      while (attempts < maxAttempts) {
+        try {
+          const meRes = await fetch('/api/auth/me');
+          if (meRes.status === 401 || meRes.status === 403) {
+            localStorage.removeItem('flow_user');
+            window.location.href = '/login.html';
+            return;
+          }
+          if (meRes.ok) {
+            const meData = await meRes.json();
+            if (meData.user.role !== 'ADMIN') {
+              alert('Access denied: Administrator privileges required.');
+              window.location.href = '/dashboard.html';
+              return;
+            }
+            currentAdminUser = meData.user;
+            localStorage.setItem('flow_user', JSON.stringify(currentAdminUser));
+            document.getElementById('adminGreeting').textContent = `${meData.user.name} (Admin)`;
+            loadAdminUsers();
+            return;
+          }
+        } catch (err) {
+          console.warn(`Admin auth verify attempt ${attempts + 1} note: ${err.message}`);
         }
-        const meData = await meRes.json();
-        if (meData.user.role !== 'ADMIN') {
-          alert('Access denied: Administrator privileges required.');
-          window.location.href = '/';
-          return;
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 1200));
         }
-        currentAdminUser = meData.user;
-        document.getElementById('adminGreeting').textContent = `${meData.user.name} (Admin)`;
-        loadAdminUsers();
-      } catch (err) {
-        window.location.href = '/login.html';
       }
+
+      window.location.href = '/login.html';
     }
 
     async function loadAdminUsers() {
