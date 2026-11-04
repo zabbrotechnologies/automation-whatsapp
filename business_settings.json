@@ -29,7 +29,7 @@
     }
   ],
   "outside_kb_action": "FALLBACK_MSG",
-  "fallback_message": "I don't have that specific detail in our catalog right now, but I've alerted our team. An executive will follow up with you shortly!",
+  "fallback_message": "Our priority support team has noted your query. An executive will contact you within an hour to assist you directly!",
   "escalation_notice": "Understood! Automated replies are now paused for this chat. Our executive has been notified and will assist you directly.",
   "optout_message": "You have been unsubscribed from automated updates. Reply START anytime to re-enable.",
   "keyword_pairs": [

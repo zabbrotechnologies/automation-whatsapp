@@ -60,6 +60,7 @@ const SETTINGS_FILE = path.join(__dirname, 'business_settings.json');
 const LEADS_FILE = path.join(__dirname, 'data', 'leads.json');
 const OPTOUTS_FILE = path.join(__dirname, 'data', 'optouts.json');
 const ESCALATIONS_FILE = path.join(__dirname, 'data', 'escalations.json');
+const WELCOMED_CONTACTS_FILE = path.join(__dirname, 'data', 'welcomed_contacts.json');
 const SESSION_INFO_FILE = path.join(__dirname, 'data', 'session_info.json');
 
 // Configure Multer for Media Uploads (Images, Videos, Catalogs)
@@ -123,7 +124,7 @@ const DEFAULT_SETTINGS = {
     }
   ],
   outside_kb_action: "FALLBACK_MSG",
-  fallback_message: "I don't have that specific detail in our catalog right now, but I've alerted our team. An executive will follow up with you shortly!",
+  fallback_message: "Our priority support team has noted your query. An executive will contact you within an hour to assist you directly!",
   escalation_notice: "Understood! Automated replies are now paused for this chat. Our executive has been notified and will assist you directly.",
   optout_message: "You have been unsubscribed from automated updates. Reply START anytime to re-enable.",
   keyword_pairs: [
@@ -290,6 +291,43 @@ function resolveEscalation(phone) {
   }
 }
 
+// Welcomed contacts tracker: Ensures first-contact welcome message is sent only once per number
+function getWelcomedContacts() {
+  try {
+    if (fs.existsSync(WELCOMED_CONTACTS_FILE)) {
+      return JSON.parse(fs.readFileSync(WELCOMED_CONTACTS_FILE, 'utf-8'));
+    }
+  } catch (e) {
+    console.error('Error reading welcomed contacts:', e.message);
+  }
+  return {};
+}
+
+function saveWelcomedContacts(contacts) {
+  try {
+    fs.writeFileSync(WELCOMED_CONTACTS_FILE, JSON.stringify(contacts, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('Error saving welcomed contacts:', e.message);
+  }
+}
+
+function hasReceivedWelcome(phone) {
+  if (!phone) return false;
+  const clean = String(phone).replace(/\D/g, '');
+  const contacts = getWelcomedContacts();
+  return Boolean(contacts[clean]);
+}
+
+function markReceivedWelcome(phone) {
+  if (!phone) return;
+  const clean = String(phone).replace(/\D/g, '');
+  const contacts = getWelcomedContacts();
+  contacts[clean] = {
+    welcomedAt: new Date().toISOString()
+  };
+  saveWelcomedContacts(contacts);
+}
+
 const ESCALATION_TRIGGERS = [
   'agent', 'human', 'executive', 'representative', 'complaint',
   'talk to agent', 'talk to an agent', 'speak to an agent', 'speak to agent',
@@ -430,7 +468,11 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
     };
   }
 
-  // 4c. Check Welcome Message & Interactive Options Trigger (Greetings / First Interaction)
+  // 4c. Check Welcome Message & Interactive Options Trigger
+  // Rule:
+  // - First-ever contact: any initial message triggers the Welcome Message & Menu ONCE.
+  // - Subsequent messages: ONLY greeting words (e.g. "hi", "hello", "start", "menu") trigger the Welcome Message.
+  // - Any other subsequent message MUST be treated as an inquiry and answered strictly from Business Knowledge Base!
   const GREETING_TRIGGERS = [
     'hi', 'hello', 'hey', 'start', 'menu', 'options', 'help', 
     'vanakkam', 'namaste', 'morning', 'evening', 'good morning', 
@@ -438,11 +480,16 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
   ];
   const isGreetingWord = GREETING_TRIGGERS.some(g => lower === g || lower.startsWith(g + ' ') || lower.endsWith(' ' + g) || lower === `${g}!`);
   
-  // Check if this is the first message ever received from this contact
-  const allLeads = getLeads();
-  const isFirstInteraction = senderPhone && !allLeads.some(l => l.phone === String(senderPhone).replace(/\D/g, ''));
+  const alreadyWelcomed = hasReceivedWelcome(senderPhone);
+  const shouldTriggerWelcome = settings.welcome_msg_enabled && (
+    (!alreadyWelcomed) || // Brand new user: 1 time on first message
+    (alreadyWelcomed && isGreetingWord) // Already welcomed: only when they explicitly type "hi" / greeting
+  );
 
-  if (settings.welcome_msg_enabled && (isGreetingWord || isFirstInteraction)) {
+  if (shouldTriggerWelcome) {
+    // Record that this contact has received the welcome message
+    markReceivedWelcome(senderPhone);
+
     let welcomeText = (settings.welcome_message || 'Welcome to our business! 🌟 How can we help you today?').trim();
     if (Array.isArray(settings.welcome_options) && settings.welcome_options.length > 0) {
       const optionsFormatted = settings.welcome_options
@@ -462,12 +509,14 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
 
     return {
       type: 'WELCOME_MENU',
-      matched: isGreetingWord ? 'Greeting Word' : 'First Interaction',
+      matched: !alreadyWelcomed ? 'First-Time Welcome' : 'Explicit Greeting ("hi")',
       reply: welcomeText,
       media_url: settings.welcome_media_url || null,
       media_type: settings.welcome_media_type || 'image',
       options: settings.welcome_options || [],
-      explanation: 'Customer greeted or initiated contact. Sent welcome greeting, media attachment, and interactive option list.'
+      explanation: !alreadyWelcomed
+        ? 'First interaction from this contact. Sent one-time welcome greeting with media and options.'
+        : 'Returning customer typed greeting word ("hi"). Sent welcome menu and options.'
     };
   }
 
@@ -527,7 +576,7 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
     } else {
       // Outside Knowledge Base
       if (settings.outside_kb_action === 'FALLBACK_MSG') {
-        const fallback = settings.fallback_message || "I don't have that specific detail in our catalog right now, but I've alerted our team. An executive will follow up with you shortly!";
+        const fallback = settings.fallback_message || "Our priority support team has noted your query. An executive will contact you within an hour to assist you directly!";
         recordLeadInteraction({
           phone: senderPhone,
           name: senderName,
@@ -1667,3 +1716,7 @@ if (require.main === module) {
 }
 
 module.exports = app;
+module.exports.processInboundText = processInboundText;
+module.exports.getBusinessSettings = getBusinessSettings;
+module.exports.hasReceivedWelcome = hasReceivedWelcome;
+module.exports.markReceivedWelcome = markReceivedWelcome;
