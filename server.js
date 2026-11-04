@@ -40,9 +40,21 @@ const os = require('os');
 const PORT = process.env.PORT || 3000;
 const API_SECRET = process.env.API_SECRET || 'secret123';
 const JWT_SECRET = process.env.JWT_SECRET || 'jwt_flow_secret_key_99182371';
-const AUTH_DIR = process.env.VERCEL 
+const BASE_AUTH_DIR = process.env.VERCEL 
   ? path.join(os.tmpdir(), 'session_auth') 
   : path.join(__dirname, 'session_auth');
+if (!fs.existsSync(BASE_AUTH_DIR)) {
+  fs.mkdirSync(BASE_AUTH_DIR, { recursive: true });
+}
+
+function getUserAuthDir(userId) {
+  const uid = String(userId || 'default').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const dir = path.join(BASE_AUTH_DIR, `user_${uid}`);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+}
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
@@ -68,8 +80,30 @@ const ESCALATIONS_FILE = path.join(DATA_DIR, 'escalations.json');
 const WELCOMED_CONTACTS_FILE = path.join(DATA_DIR, 'welcomed_contacts.json');
 const SESSION_INFO_FILE = path.join(DATA_DIR, 'session_info.json');
 
+const USER_SETTINGS_DIR = path.join(DATA_DIR, 'user_settings');
+const USER_LEADS_DIR = path.join(DATA_DIR, 'user_leads');
+const USER_OPTOUTS_DIR = path.join(DATA_DIR, 'user_optouts');
+const USER_ESCALATIONS_DIR = path.join(DATA_DIR, 'user_escalations');
+const USER_WELCOMED_DIR = path.join(DATA_DIR, 'user_welcomed');
+const USER_SESSIONS_DIR = path.join(DATA_DIR, 'user_sessions');
+
+[USER_SETTINGS_DIR, USER_LEADS_DIR, USER_OPTOUTS_DIR, USER_ESCALATIONS_DIR, USER_WELCOMED_DIR, USER_SESSIONS_DIR].forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
+
 // In-memory fallback sets to guarantee 100% reliability even on stateless ephemeral environments
 const inMemoryWelcomed = new Set();
+const userInMemoryWelcomed = new Map();
+
+function resolveTenantId(req, explicitId = null) {
+  if (explicitId) return String(explicitId);
+  if (req?.user?.id) return String(req.user.id);
+  const headerId = req?.headers ? (req.headers['x-user-id'] || req.headers['x-tenant-id']) : null;
+  if (headerId) return String(headerId);
+  if (req?.query?.userId) return String(req.query.userId);
+  if (req?.body?.userId) return String(req.body.userId);
+  return 'default';
+}
 
 // Configure Multer for Media Uploads (Images, Videos, Catalogs)
 const mediaStorage = multer.diskStorage({
@@ -155,30 +189,45 @@ const DEFAULT_SETTINGS = {
   ]
 };
 
-// --- DATA ACCESS HELPERS (LEADS, OPTOUTS, ESCALATIONS) --- //
-function getLeads() {
+// --- MULTI-TENANT DATA ACCESS HELPERS (LEADS, OPTOUTS, ESCALATIONS, SETTINGS) --- //
+
+function getTenantLeadsFile(userId) {
+  const uid = String(userId || 'default').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return path.join(USER_LEADS_DIR, `leads_${uid}.json`);
+}
+
+function getLeads(userId = 'default') {
   try {
-    if (fs.existsSync(LEADS_FILE)) {
+    const f = getTenantLeadsFile(userId);
+    if (fs.existsSync(f)) {
+      return JSON.parse(fs.readFileSync(f, 'utf-8'));
+    }
+    // Fallback to legacy shared leads if default or empty
+    if ((userId === 'default' || userId === '1') && fs.existsSync(LEADS_FILE)) {
       return JSON.parse(fs.readFileSync(LEADS_FILE, 'utf-8'));
     }
   } catch (e) {
-    console.error('Error reading leads:', e.message);
+    console.error('Error reading leads for user ' + userId + ':', e.message);
   }
   return [];
 }
 
-function saveLeads(leads) {
+function saveLeads(leads, userId = 'default') {
   try {
-    fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2), 'utf-8');
+    const f = getTenantLeadsFile(userId);
+    fs.writeFileSync(f, JSON.stringify(leads, null, 2), 'utf-8');
+    if (userId === 'default' || userId === '1') {
+      try { fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2), 'utf-8'); } catch (e) {}
+    }
   } catch (e) {
-    console.error('Error saving leads:', e.message);
+    console.error('Error saving leads for user ' + userId + ':', e.message);
   }
 }
 
-function recordLeadInteraction({ phone, name = '', inquiry, reply = '', intent = 'General', status = 'AI_HANDLED' }) {
+function recordLeadInteraction({ phone, name = '', inquiry, reply = '', intent = 'General', status = 'AI_HANDLED', userId = 'default' }) {
   try {
     const clean = String(phone).replace(/\D/g, '');
-    const leads = getLeads();
+    const leads = getLeads(userId);
     const existingIndex = leads.findIndex(l => l.phone === clean);
     const now = new Date().toISOString();
     if (existingIndex >= 0) {
@@ -205,80 +254,106 @@ function recordLeadInteraction({ phone, name = '', inquiry, reply = '', intent =
       });
     }
     const MAX_LEADS_RETAINED = parseInt(process.env.MAX_LEADS_RETAINED, 10) || 2000;
-    saveLeads(leads.slice(0, MAX_LEADS_RETAINED));
+    saveLeads(leads.slice(0, MAX_LEADS_RETAINED), userId);
   } catch (e) {
     console.error('Error recording lead:', e.message);
   }
 }
 
-function getOptOuts() {
+function getTenantOptOutsFile(userId) {
+  const uid = String(userId || 'default').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return path.join(USER_OPTOUTS_DIR, `optouts_${uid}.json`);
+}
+
+function getOptOuts(userId = 'default') {
   try {
-    if (fs.existsSync(OPTOUTS_FILE)) {
+    const f = getTenantOptOutsFile(userId);
+    if (fs.existsSync(f)) {
+      return JSON.parse(fs.readFileSync(f, 'utf-8'));
+    }
+    if ((userId === 'default' || userId === '1') && fs.existsSync(OPTOUTS_FILE)) {
       return JSON.parse(fs.readFileSync(OPTOUTS_FILE, 'utf-8'));
     }
   } catch (e) {
-    console.error('Error reading optouts:', e.message);
+    console.error('Error reading optouts for user ' + userId + ':', e.message);
   }
   return [];
 }
 
-function saveOptOuts(optouts) {
+function saveOptOuts(optouts, userId = 'default') {
   try {
-    fs.writeFileSync(OPTOUTS_FILE, JSON.stringify(optouts, null, 2), 'utf-8');
+    const f = getTenantOptOutsFile(userId);
+    fs.writeFileSync(f, JSON.stringify(optouts, null, 2), 'utf-8');
+    if (userId === 'default' || userId === '1') {
+      try { fs.writeFileSync(OPTOUTS_FILE, JSON.stringify(optouts, null, 2), 'utf-8'); } catch (e) {}
+    }
   } catch (e) {
-    console.error('Error saving optouts:', e.message);
+    console.error('Error saving optouts for user ' + userId + ':', e.message);
   }
 }
 
-function isOptedOut(phone) {
+function isOptedOut(phone, userId = 'default') {
   const clean = String(phone).replace(/\D/g, '');
-  const optouts = getOptOuts();
+  const optouts = getOptOuts(userId);
   return optouts.some(o => o.phone === clean);
 }
 
-function addOptOut(phone, reason = 'User requested stop') {
+function addOptOut(phone, reason = 'User requested stop', userId = 'default') {
   const clean = String(phone).replace(/\D/g, '');
-  const optouts = getOptOuts();
+  const optouts = getOptOuts(userId);
   if (!optouts.some(o => o.phone === clean)) {
     optouts.unshift({ phone: clean, optedOutAt: new Date().toISOString(), reason });
-    saveOptOuts(optouts);
+    saveOptOuts(optouts, userId);
   }
 }
 
-function removeOptOut(phone) {
+function removeOptOut(phone, userId = 'default') {
   const clean = String(phone).replace(/\D/g, '');
-  const optouts = getOptOuts().filter(o => o.phone !== clean);
-  saveOptOuts(optouts);
+  const optouts = getOptOuts(userId).filter(o => o.phone !== clean);
+  saveOptOuts(optouts, userId);
 }
 
-function getEscalations() {
+function getTenantEscalationsFile(userId) {
+  const uid = String(userId || 'default').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return path.join(USER_ESCALATIONS_DIR, `escalations_${uid}.json`);
+}
+
+function getEscalations(userId = 'default') {
   try {
-    if (fs.existsSync(ESCALATIONS_FILE)) {
+    const f = getTenantEscalationsFile(userId);
+    if (fs.existsSync(f)) {
+      return JSON.parse(fs.readFileSync(f, 'utf-8'));
+    }
+    if ((userId === 'default' || userId === '1') && fs.existsSync(ESCALATIONS_FILE)) {
       return JSON.parse(fs.readFileSync(ESCALATIONS_FILE, 'utf-8'));
     }
   } catch (e) {
-    console.error('Error reading escalations:', e.message);
+    console.error('Error reading escalations for user ' + userId + ':', e.message);
   }
   return {};
 }
 
-function saveEscalations(esc) {
+function saveEscalations(esc, userId = 'default') {
   try {
-    fs.writeFileSync(ESCALATIONS_FILE, JSON.stringify(esc, null, 2), 'utf-8');
+    const f = getTenantEscalationsFile(userId);
+    fs.writeFileSync(f, JSON.stringify(esc, null, 2), 'utf-8');
+    if (userId === 'default' || userId === '1') {
+      try { fs.writeFileSync(ESCALATIONS_FILE, JSON.stringify(esc, null, 2), 'utf-8'); } catch (e) {}
+    }
   } catch (e) {
-    console.error('Error saving escalations:', e.message);
+    console.error('Error saving escalations for user ' + userId + ':', e.message);
   }
 }
 
-function isEscalated(phone) {
+function isEscalated(phone, userId = 'default') {
   const clean = String(phone).replace(/\D/g, '');
-  const esc = getEscalations();
+  const esc = getEscalations(userId);
   return Boolean(esc[clean] && esc[clean].status === 'PENDING');
 }
 
-function addEscalation(phone, name, query, reason = 'Customer requested live human executive') {
+function addEscalation(phone, name, query, reason = 'Customer requested live human executive', userId = 'default') {
   const clean = String(phone).replace(/\D/g, '');
-  const esc = getEscalations();
+  const esc = getEscalations(userId);
   esc[clean] = {
     phone: clean,
     name: name || `Contact +${clean.slice(-4)}`,
@@ -287,62 +362,87 @@ function addEscalation(phone, name, query, reason = 'Customer requested live hum
     escalatedAt: new Date().toISOString(),
     status: 'PENDING'
   };
-  saveEscalations(esc);
+  saveEscalations(esc, userId);
 }
 
-function resolveEscalation(phone) {
+function resolveEscalation(phone, userId = 'default') {
   const clean = String(phone).replace(/\D/g, '');
-  const esc = getEscalations();
+  const esc = getEscalations(userId);
   if (esc[clean]) {
     delete esc[clean];
-    saveEscalations(esc);
+    saveEscalations(esc, userId);
   }
 }
 
 // Welcomed contacts tracker: Ensures first-contact welcome message is sent only once per number
-function getWelcomedContacts() {
+function getTenantWelcomedFile(userId) {
+  const uid = String(userId || 'default').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return path.join(USER_WELCOMED_DIR, `welcomed_${uid}.json`);
+}
+
+function getWelcomedContacts(userId = 'default') {
   try {
-    if (fs.existsSync(WELCOMED_CONTACTS_FILE)) {
+    const f = getTenantWelcomedFile(userId);
+    if (fs.existsSync(f)) {
+      return JSON.parse(fs.readFileSync(f, 'utf-8'));
+    }
+    if ((userId === 'default' || userId === '1') && fs.existsSync(WELCOMED_CONTACTS_FILE)) {
       return JSON.parse(fs.readFileSync(WELCOMED_CONTACTS_FILE, 'utf-8'));
     }
   } catch (e) {
-    console.error('Error reading welcomed contacts:', e.message);
+    console.error('Error reading welcomed contacts for user ' + userId + ':', e.message);
   }
   return {};
 }
 
-function saveWelcomedContacts(contacts) {
+function saveWelcomedContacts(contacts, userId = 'default') {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    const f = getTenantWelcomedFile(userId);
+    fs.writeFileSync(f, JSON.stringify(contacts, null, 2), 'utf-8');
+    if (userId === 'default' || userId === '1') {
+      try { fs.writeFileSync(WELCOMED_CONTACTS_FILE, JSON.stringify(contacts, null, 2), 'utf-8'); } catch (e) {}
     }
-    fs.writeFileSync(WELCOMED_CONTACTS_FILE, JSON.stringify(contacts, null, 2), 'utf-8');
   } catch (e) {
-    console.error('Error saving welcomed contacts:', e.message);
+    console.error('Error saving welcomed contacts for user ' + userId + ':', e.message);
   }
 }
 
-function hasReceivedWelcome(phone) {
+function hasReceivedWelcome(phone, userId = 'default') {
   if (!phone) return false;
   const clean = String(phone).replace(/\D/g, '');
-  if (inMemoryWelcomed.has(clean)) return true;
-  const contacts = getWelcomedContacts();
+  const uid = String(userId || 'default');
+  
+  if (!userInMemoryWelcomed.has(uid)) {
+    userInMemoryWelcomed.set(uid, new Set());
+  }
+  const userSet = userInMemoryWelcomed.get(uid);
+  if (userSet.has(clean)) return true;
+  if (uid === 'default' && inMemoryWelcomed.has(clean)) return true;
+
+  const contacts = getWelcomedContacts(userId);
   if (contacts[clean]) {
-    inMemoryWelcomed.add(clean);
+    userSet.add(clean);
     return true;
   }
   return false;
 }
 
-function markReceivedWelcome(phone) {
+function markReceivedWelcome(phone, userId = 'default') {
   if (!phone) return;
   const clean = String(phone).replace(/\D/g, '');
-  inMemoryWelcomed.add(clean);
-  const contacts = getWelcomedContacts();
+  const uid = String(userId || 'default');
+  
+  if (!userInMemoryWelcomed.has(uid)) {
+    userInMemoryWelcomed.set(uid, new Set());
+  }
+  userInMemoryWelcomed.get(uid).add(clean);
+  if (uid === 'default') inMemoryWelcomed.add(clean);
+
+  const contacts = getWelcomedContacts(userId);
   contacts[clean] = {
     welcomedAt: new Date().toISOString()
   };
-  saveWelcomedContacts(contacts);
+  saveWelcomedContacts(contacts, userId);
 }
 
 const ESCALATION_TRIGGERS = [
@@ -355,13 +455,13 @@ const OPTOUT_TRIGGERS = ['stop', 'unsubscribe', 'cancel', 'quit', 'end', 'optout
 const OPTIN_TRIGGERS = ['start', 'resubscribe', 'subscribe', 'restart'];
 
 // --- MASTER INBOUND PROCESSING ENGINE (SHARED BY WHATSAPP SOCKET & SIMULATOR) --- //
-async function processInboundText(cleanText, senderPhone = '', senderName = '') {
+async function processInboundText(cleanText, senderPhone = '', senderName = '', userId = 'default') {
   const lower = cleanText.toLowerCase().trim();
-  const settings = getBusinessSettings();
+  const settings = getBusinessSettings(userId);
 
   // 1. Check Opt-Out Triggers (STOP / UNSUBSCRIBE)
   if (OPTOUT_TRIGGERS.includes(lower)) {
-    addOptOut(senderPhone, 'User sent ' + cleanText);
+    addOptOut(senderPhone, 'User sent ' + cleanText, userId);
     const reply = settings.optout_message || 'You have been unsubscribed from automated updates. Reply START anytime to re-enable.';
     recordLeadInteraction({
       phone: senderPhone,
@@ -369,19 +469,20 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
       inquiry: cleanText,
       reply: reply,
       intent: 'Opt-Out',
-      status: 'OPTED_OUT'
+      status: 'OPTED_OUT',
+      userId
     });
     return {
       type: 'OPTOUT',
       matched: cleanText,
       reply: reply,
-      explanation: 'Contact opted out. Phone added to blacklist; automated broadcasts will safely bypass this number.'
+      explanation: 'Contact unsubscribed. Future automated broadcasts will skip this number.'
     };
   }
 
   // 2. Check Opt-In Triggers (START / RESUBSCRIBE)
   if (OPTIN_TRIGGERS.includes(lower)) {
-    removeOptOut(senderPhone);
+    removeOptOut(senderPhone, userId);
     const welcomeBack = 'Welcome back! You have been successfully resubscribed to updates.';
     recordLeadInteraction({
       phone: senderPhone,
@@ -389,7 +490,8 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
       inquiry: cleanText,
       reply: welcomeBack,
       intent: 'Opt-In',
-      status: 'AI_HANDLED'
+      status: 'AI_HANDLED',
+      userId
     });
     return {
       type: 'OPTIN',
@@ -400,14 +502,15 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
   }
 
   // 3. Check if contact is currently under Human Takeover
-  if (isEscalated(senderPhone)) {
+  if (isEscalated(senderPhone, userId)) {
     recordLeadInteraction({
       phone: senderPhone,
       name: senderName,
       inquiry: cleanText,
       reply: '(Suppressed - Human Takeover Active)',
       intent: 'Escalation Follow-up',
-      status: 'ESCALATED'
+      status: 'ESCALATED',
+      userId
     });
     return {
       type: 'HUMAN_TAKEOVER_ACTIVE',
@@ -419,7 +522,7 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
   // 4. Check Escalation Triggers (talk to agent, complaint, etc.)
   const matchedEsc = ESCALATION_TRIGGERS.find(t => lower.includes(t));
   if (matchedEsc) {
-    addEscalation(senderPhone, senderName, cleanText, `Triggered by "${matchedEsc}"`);
+    addEscalation(senderPhone, senderName, cleanText, `Triggered by "${matchedEsc}"`, userId);
     const escReply = settings.escalation_notice || 'Understood! Automated replies are now paused for this chat. Our executive has been notified and will assist you directly.';
     recordLeadInteraction({
       phone: senderPhone,
@@ -427,7 +530,8 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
       inquiry: cleanText,
       reply: escReply,
       intent: 'Escalation',
-      status: 'ESCALATED'
+      status: 'ESCALATED',
+      userId
     });
     return {
       type: 'ESCALATION',
@@ -448,48 +552,25 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
   });
 
   if (matchedOption && matchedOption.answer && matchedOption.answer.trim()) {
-    // If the selected option is a request for a human/agent/support
-    if (/support|agent|executive|human|complaint/i.test(matchedOption.title || '')) {
-      addEscalation(senderPhone, senderName, cleanText, `Triggered from Option #${matchedOption.option_num} (${matchedOption.title})`);
-      const escReply = settings.escalation_notice || matchedOption.answer.trim();
-      recordLeadInteraction({
-        phone: senderPhone,
-        name: senderName,
-        inquiry: cleanText,
-        reply: escReply,
-        intent: `Option ${matchedOption.option_num}: ${matchedOption.title}`,
-        status: 'ESCALATED'
-      });
-      return {
-        type: 'ESCALATION',
-        matched: `Option ${matchedOption.option_num}`,
-        reply: escReply,
-        explanation: `Customer selected Option #${matchedOption.option_num} (${matchedOption.title}). Human takeover initiated.`
-      };
-    }
-
-    const optAns = matchedOption.answer.trim();
+    const optionAnswer = matchedOption.answer.trim();
     recordLeadInteraction({
       phone: senderPhone,
       name: senderName,
       inquiry: cleanText,
-      reply: optAns,
+      reply: optionAnswer,
       intent: `Option ${matchedOption.option_num}: ${matchedOption.title}`,
-      status: 'AI_HANDLED'
+      status: 'AI_HANDLED',
+      userId
     });
     return {
       type: 'OPTION_SELECTION',
       matched: `Option ${matchedOption.option_num}`,
-      reply: optAns,
-      explanation: `Customer selected Option #${matchedOption.option_num} (${matchedOption.title}). Direct answer sent.`
+      reply: optionAnswer,
+      explanation: `User selected option ${matchedOption.option_num} ("${matchedOption.title}"). Delivered pre-configured answer.`
     };
   }
 
-  // 4c. Check Welcome Message & Interactive Options Trigger
-  // Rule:
-  // - First-ever contact: any initial message triggers the Welcome Message & Menu ONCE.
-  // - Subsequent messages: ONLY greeting words (e.g. "hi", "hello", "start", "menu") trigger the Welcome Message.
-  // - Any other subsequent message MUST be treated as an inquiry and answered strictly from Business Knowledge Base!
+  // 4c. First-Time Welcome Greeting & Interactive Menu Gating
   const GREETING_TRIGGERS = [
     'hi', 'hello', 'hey', 'start', 'menu', 'options', 'help', 
     'vanakkam', 'namaste', 'morning', 'evening', 'good morning', 
@@ -497,7 +578,7 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
   ];
   const isGreetingWord = GREETING_TRIGGERS.some(g => lower === g || lower.startsWith(g + ' ') || lower.endsWith(' ' + g) || lower === `${g}!`);
   
-  const alreadyWelcomed = hasReceivedWelcome(senderPhone);
+  const alreadyWelcomed = hasReceivedWelcome(senderPhone, userId);
   const shouldTriggerWelcome = settings.welcome_msg_enabled && (
     (!alreadyWelcomed) || // Brand new user: 1 time on first message
     (alreadyWelcomed && isGreetingWord) // Already welcomed: only when they explicitly type "hi" / greeting
@@ -505,7 +586,7 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
 
   if (shouldTriggerWelcome) {
     // Record that this contact has received the welcome message
-    markReceivedWelcome(senderPhone);
+    markReceivedWelcome(senderPhone, userId);
 
     let welcomeText = (settings.welcome_message || 'Welcome to our business! 🌟 How can we help you today?').trim();
     if (Array.isArray(settings.welcome_options) && settings.welcome_options.length > 0) {
@@ -521,7 +602,8 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
       inquiry: cleanText,
       reply: welcomeText,
       intent: 'Welcome Greeting & Menu',
-      status: 'AI_HANDLED'
+      status: 'AI_HANDLED',
+      userId
     });
 
     return {
@@ -563,7 +645,8 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
       inquiry: cleanText,
       reply: ans,
       intent: matchedPair.keyword,
-      status: 'AI_HANDLED'
+      status: 'AI_HANDLED',
+      userId
     });
     return {
       type: 'KEYWORD_MATCH',
@@ -581,54 +664,53 @@ async function processInboundText(cleanText, senderPhone = '', senderName = '') 
         phone: senderPhone,
         name: senderName,
         inquiry: cleanText,
-        reply: aiReply.trim(),
-        intent: 'Knowledge Base',
-        status: 'AI_HANDLED'
+        reply: aiReply,
+        intent: 'Knowledge Base Query',
+        status: 'AI_HANDLED',
+        userId
       });
       return {
         type: 'AI_KNOWLEDGE_BASE',
-        reply: aiReply.trim(),
-        explanation: 'Inquiry addressed using verified facts strictly grounded in your Business Knowledge Base.'
+        matched: 'AI Semantic Match',
+        reply: aiReply,
+        explanation: 'Generated grounded response strictly from Business Knowledge Base.'
       };
-    } else {
-      // Outside Knowledge Base
-      if (settings.outside_kb_action === 'FALLBACK_MSG') {
-        const fallback = settings.fallback_message || "Our priority support team has noted your query. An executive will contact you within an hour to assist you directly!";
-        recordLeadInteraction({
-          phone: senderPhone,
-          name: senderName,
-          inquiry: cleanText,
-          reply: fallback,
-          intent: 'Fallback',
-          status: 'AI_HANDLED'
-        });
-        return {
-          type: 'OUTSIDE_KB_FALLBACK',
-          reply: fallback,
-          explanation: 'Question is outside Knowledge Base. Sent courteous fallback message without inventing facts.'
-        };
-      } else {
-        recordLeadInteraction({
-          phone: senderPhone,
-          name: senderName,
-          inquiry: cleanText,
-          reply: '(Silent - Zero Hallucinations)',
-          intent: 'Outside Knowledge',
-          status: 'AI_HANDLED'
-        });
-        return {
-          type: 'OUTSIDE_KB_SILENT',
-          reply: null,
-          explanation: 'Question is outside Knowledge Base. Bot remained completely silent (zero hallucinations).'
-        };
-      }
     }
   }
 
+  // 8. Outside Knowledge Base Fallback Handler
+  if (settings.outside_kb_action === 'FALLBACK_MSG') {
+    const fallback = (settings.fallback_message || 'Thank you for reaching out! Our team has noted your query and will contact you directly within business hours.').trim();
+    recordLeadInteraction({
+      phone: senderPhone,
+      name: senderName,
+      inquiry: cleanText,
+      reply: fallback,
+      intent: 'Outside Knowledge Base',
+      status: 'AI_HANDLED',
+      userId
+    });
+    return {
+      type: 'OUTSIDE_KB_FALLBACK',
+      reply: fallback,
+      explanation: 'Query was outside Knowledge Base. Sent configured courteous fallback message.'
+    };
+  }
+
+  // Silent mode - Zero hallucinations
+  recordLeadInteraction({
+    phone: senderPhone,
+    name: senderName,
+    inquiry: cleanText,
+    reply: '',
+    intent: 'Outside Knowledge Base (Silent)',
+    status: 'AI_HANDLED',
+    userId
+  });
   return {
-    type: 'AUTO_REPLY_DISABLED',
+    type: 'OUTSIDE_KB_SILENT',
     reply: null,
-    explanation: 'AI Auto-Reply toggle switch is currently OFF.'
+    explanation: 'Query was outside Knowledge Base and Silent Mode is enabled. Bot remained silent.'
   };
 }
 
@@ -641,24 +723,40 @@ function isBusinessKnowledgeConfigured(settings) {
   return Boolean(hasProfile || hasPairs);
 }
 
-function getBusinessSettings() {
+function getTenantSettingsFile(userId) {
+  const uid = String(userId || 'default').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return path.join(USER_SETTINGS_DIR, `settings_${uid}.json`);
+}
+
+function getBusinessSettings(userId = 'default') {
   try {
+    const f = getTenantSettingsFile(userId);
+    if (fs.existsSync(f)) {
+      const raw = fs.readFileSync(f, 'utf-8');
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    }
+    // Fallback to legacy global business_settings.json if present
     if (fs.existsSync(SETTINGS_FILE)) {
       const raw = fs.readFileSync(SETTINGS_FILE, 'utf-8');
       return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
     }
   } catch (err) {
-    console.error('Error reading business settings:', err.message);
+    console.error('Error reading business settings for user ' + userId + ':', err.message);
   }
   return DEFAULT_SETTINGS;
 }
 
-function saveBusinessSettings(newSettings) {
+function saveBusinessSettings(newSettings, userId = 'default') {
   try {
-    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(newSettings, null, 2), 'utf-8');
+    const f = getTenantSettingsFile(userId);
+    fs.writeFileSync(f, JSON.stringify(newSettings, null, 2), 'utf-8');
+    // Also keep legacy file in sync if default / admin
+    if (userId === 'default' || userId === '1') {
+      try { fs.writeFileSync(SETTINGS_FILE, JSON.stringify(newSettings, null, 2), 'utf-8'); } catch (e) {}
+    }
     return true;
   } catch (err) {
-    console.error('Error saving business settings:', err.message);
+    console.error('Error saving business settings for user ' + userId + ':', err.message);
     return false;
   }
 }
@@ -740,158 +838,211 @@ CRITICAL RULES:
   }
 }
 
-// Global State
-let sock = null;
-let currentQR = null;
-let isManualRefreshRequested = false;
-let connectionStatus = 'INITIALIZING'; // 'INITIALIZING', 'QR_READY', 'CONNECTED', 'RECONNECTING', 'DISCONNECTED'
-let connectedUser = null;
-try {
-  if (fs.existsSync(SESSION_INFO_FILE)) {
-    connectedUser = JSON.parse(fs.readFileSync(SESSION_INFO_FILE, 'utf-8'));
+// ---------------- MULTI-TENANT SOCKET SESSION MANAGER ---------------- //
+
+// Map of userId -> { sock, currentQR, connectionStatus, connectedUser, isManualRefreshRequested, logs, processedMsgIds, reconnectTimer }
+const userSessions = new Map();
+
+function getTenantSessionFile(userId) {
+  const uid = String(userId || 'default').replace(/[^a-zA-Z0-9_-]/g, '_');
+  return path.join(USER_SESSIONS_DIR, `session_${uid}.json`);
+}
+
+function loadSavedTenantSession(userId) {
+  try {
+    const f = getTenantSessionFile(userId);
+    if (fs.existsSync(f)) {
+      return JSON.parse(fs.readFileSync(f, 'utf-8'));
+    }
+    if ((userId === 'default' || userId === '1') && fs.existsSync(SESSION_INFO_FILE)) {
+      return JSON.parse(fs.readFileSync(SESSION_INFO_FILE, 'utf-8'));
+    }
+  } catch (e) {}
+  return null;
+}
+
+function saveTenantSessionInfo(userId, sessionInfo) {
+  try {
+    const f = getTenantSessionFile(userId);
+    fs.writeFileSync(f, JSON.stringify(sessionInfo, null, 2), 'utf-8');
+    if (userId === 'default' || userId === '1') {
+      try { fs.writeFileSync(SESSION_INFO_FILE, JSON.stringify(sessionInfo, null, 2), 'utf-8'); } catch (e) {}
+    }
+  } catch (e) {}
+}
+
+function clearTenantSessionInfo(userId) {
+  try {
+    const f = getTenantSessionFile(userId);
+    if (fs.existsSync(f)) fs.unlinkSync(f);
+    if (userId === 'default' || userId === '1') {
+      if (fs.existsSync(SESSION_INFO_FILE)) fs.unlinkSync(SESSION_INFO_FILE);
+    }
+  } catch (e) {}
+}
+
+function getOrCreateUserSession(userId = 'default') {
+  const uid = String(userId || 'default');
+  if (!userSessions.has(uid)) {
+    const savedUser = loadSavedTenantSession(uid);
+    userSessions.set(uid, {
+      userId: uid,
+      sock: null,
+      currentQR: null,
+      isManualRefreshRequested: false,
+      connectionStatus: savedUser?.phone ? 'CONNECTED' : 'INITIALIZING',
+      connectedUser: savedUser || null,
+      logs: [],
+      processedMsgIds: new Set(),
+      reconnectTimer: null
+    });
   }
-} catch (e) {}
-const logs = [];
+  return userSessions.get(uid);
+}
 
-// Message Deduplication cache to prevent duplicate bot replies
-const processedMsgIds = new Set();
-
-function addLog(type, message) {
+function addLog(type, message, userId = 'default') {
   const logEntry = {
     time: new Date().toLocaleTimeString(),
     type, // 'info', 'success', 'error'
     message
   };
-  logs.unshift(logEntry);
-  if (logs.length > 50) logs.pop();
-  console.log(`[${logEntry.time}] [${type.toUpperCase()}] ${message}`);
+  const session = getOrCreateUserSession(userId);
+  session.logs.unshift(logEntry);
+  if (session.logs.length > 50) session.logs.pop();
+  console.log(`[${logEntry.time}] [USER ${userId}] [${type.toUpperCase()}] ${message}`);
 }
 
-async function connectToWhatsApp() {
+async function connectToWhatsApp(userId = 'default') {
+  const uid = String(userId || 'default');
+  const session = getOrCreateUserSession(uid);
+
   if (process.env.VERCEL) {
-    connectionStatus = 'SERVERLESS_ACTIVE';
-    addLog('info', 'Running in Vercel Serverless environment. WhatsApp socket gateway requires persistent server (e.g. Render/VPS).');
+    session.connectionStatus = 'SERVERLESS_ACTIVE';
+    addLog('info', 'Running in Vercel Serverless environment. WhatsApp socket gateway requires persistent server (e.g. Render/VPS).', uid);
     return;
   }
 
   if (!makeWASocket || !useMultiFileAuthState) {
-    connectionStatus = 'DISCONNECTED';
-    addLog('warn', 'Baileys not loaded. WhatsApp socket gateway unavailable.');
+    session.connectionStatus = 'DISCONNECTED';
+    addLog('warn', 'Baileys not loaded. WhatsApp socket gateway unavailable.', uid);
     return;
   }
 
+  const authDir = getUserAuthDir(uid);
+
   try {
-    const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
+    const { state, saveCreds } = await useMultiFileAuthState(authDir);
     const { version, isLatest } = await fetchLatestBaileysVersion();
-    
-    // Check if user is already registered in saved creds
+
     if (state.creds?.me?.id) {
       const savedPhone = state.creds.me.id.split(':')[0].split('@')[0];
-      connectedUser = {
+      session.connectedUser = {
         name: state.creds.me.name || 'WhatsApp User',
         phone: savedPhone
       };
-      connectionStatus = 'CONNECTED';
-      addLog('info', `Found existing saved authentication session for +${savedPhone}. Restoring...`);
+      session.connectionStatus = 'CONNECTED';
+      saveTenantSessionInfo(uid, session.connectedUser);
+      addLog('info', `Found existing saved authentication session for +${savedPhone}. Restoring...`, uid);
     }
 
-    addLog('info', `Starting Baileys v${version.join('.')}, isLatest: ${isLatest}`);
+    addLog('info', `Starting Baileys v${version.join('.')}, isLatest: ${isLatest}`, uid);
 
-    // Clean existing socket listeners before creating a new socket
-    if (sock) {
+    if (session.sock) {
       try {
-        sock.ev.removeAllListeners();
+        session.sock.ev.removeAllListeners();
       } catch (e) {}
     }
 
-    sock = makeWASocket({
+    session.sock = makeWASocket({
       version,
       logger: pino({ level: 'silent' }),
       auth: state,
-      printQRInTerminal: true,
+      printQRInTerminal: false,
       defaultQueryTimeoutMs: undefined,
       syncFullHistory: false,
       qrTimeout: 180000
     });
 
-    sock.ev.on('creds.update', saveCreds);
+    session.sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', async (update) => {
+    session.sock.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
         try {
-          if (!currentQR || isManualRefreshRequested) {
-            currentQR = await qrcode.toDataURL(qr, {
+          if (!session.currentQR || session.isManualRefreshRequested) {
+            session.currentQR = await qrcode.toDataURL(qr, {
               margin: 2,
               scale: 6,
               color: { dark: '#0b0f19', light: '#ffffff' }
             });
-            connectionStatus = 'QR_READY';
-            isManualRefreshRequested = false;
-            addLog('info', 'Fixed pairing QR code generated and locked. Waiting for scan.');
+            session.connectionStatus = 'QR_READY';
+            session.isManualRefreshRequested = false;
+            addLog('info', 'Fixed pairing QR code generated and locked. Waiting for scan.', uid);
           }
         } catch (err) {
-          addLog('error', `Failed to generate QR Data URL: ${err.message}`);
+          addLog('error', `Failed to generate QR Data URL: ${err.message}`, uid);
         }
       }
 
       if (connection === 'close') {
         const statusCode = lastDisconnect?.error?.output?.statusCode;
         const isLoggedOut = statusCode === DisconnectReason.loggedOut;
-        
-        // Check if device was previously authenticated
-        const hasSavedAuth = Boolean(connectedUser || state.creds?.registered || state.creds?.me);
+        const hasSavedAuth = Boolean(session.connectedUser || state.creds?.registered || state.creds?.me);
 
-        addLog('info', `WhatsApp socket closed (Code: ${statusCode || 'unknown'}). Has saved auth: ${hasSavedAuth}`);
+        addLog('info', `WhatsApp socket closed (Code: ${statusCode || 'unknown'}). Has saved auth: ${hasSavedAuth}`, uid);
 
-        // NEVER delete session files automatically on disconnect, code change, or server restart!
         if (hasSavedAuth) {
-          connectionStatus = 'RECONNECTING';
+          session.connectionStatus = 'RECONNECTING';
           const delay = isLoggedOut ? 5000 : 3000;
-          addLog('info', `Preserving paired WhatsApp session for +${connectedUser?.phone || 'device'}. Auto-reconnecting in ${delay/1000}s...`);
-          setTimeout(connectToWhatsApp, delay);
+          addLog('info', `Preserving paired WhatsApp session for +${session.connectedUser?.phone || 'device'}. Auto-reconnecting in ${delay/1000}s...`, uid);
+          clearTimeout(session.reconnectTimer);
+          session.reconnectTimer = setTimeout(() => connectToWhatsApp(uid), delay);
           return;
         }
 
-        // Unlinked socket closed (e.g. initial timeout before scan)
-        connectionStatus = 'DISCONNECTED';
-        addLog('info', `Pairing socket reset (Code: ${statusCode || 'unlinked'}). Refreshing pairing state...`);
-        setTimeout(connectToWhatsApp, 3000);
+        session.connectionStatus = 'DISCONNECTED';
+        addLog('info', `Pairing socket reset (Code: ${statusCode || 'unlinked'}). Refreshing pairing state...`, uid);
+        clearTimeout(session.reconnectTimer);
+        session.reconnectTimer = setTimeout(() => connectToWhatsApp(uid), 3000);
 
       } else if (connection === 'open') {
-        connectionStatus = 'CONNECTED';
-        currentQR = null;
-        const userJid = sock.user?.id || state.creds?.me?.id || '';
+        session.connectionStatus = 'CONNECTED';
+        session.currentQR = null;
+        const userJid = session.sock.user?.id || state.creds?.me?.id || '';
         const phone = userJid.split(':')[0] || userJid.split('@')[0];
-        connectedUser = {
-          name: sock.user?.name || state.creds?.me?.name || 'WhatsApp User',
+        session.connectedUser = {
+          name: session.sock.user?.name || state.creds?.me?.name || 'WhatsApp User',
           phone: phone
         };
-        try {
-          fs.writeFileSync(SESSION_INFO_FILE, JSON.stringify(connectedUser, null, 2), 'utf-8');
-        } catch (e) {}
-        addLog('success', `WhatsApp connected successfully for +${phone}!`);
+        saveTenantSessionInfo(uid, session.connectedUser);
+        
+        // Sync linked phone to Supabase users table if numeric user id
+        if (/^\d+$/.test(uid)) {
+          updateUserLinkedPhone(parseInt(uid, 10), phone).catch(e => {
+            console.warn(`Failed updating linked_phone for user ${uid}:`, e.message);
+          });
+        }
+
+        addLog('success', `WhatsApp connected successfully for +${phone}!`, uid);
       }
     });
 
-    // Inbound Messages Engine (SINGLE HANDLER - TARGETING KEYWORD PAIRS & AI FALLBACK)
-    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    session.sock.ev.on('messages.upsert', async ({ messages, type }) => {
       try {
         if (type !== 'notify') return;
         for (const msg of messages) {
           if (!msg.message || msg.key.fromMe) continue;
-          
+
           const remoteJid = msg.key.remoteJid || '';
           if (remoteJid.endsWith('@g.us') || remoteJid === 'status@broadcast') continue;
 
-          // Strict Message ID Deduplication (Prevents duplicate replies)
           const msgId = msg.key?.id;
-          if (!msgId || processedMsgIds.has(msgId)) continue;
-          processedMsgIds.add(msgId);
-          if (processedMsgIds.size > 2000) {
-            const [first] = processedMsgIds;
-            processedMsgIds.delete(first);
+          if (!msgId || session.processedMsgIds.has(msgId)) continue;
+          session.processedMsgIds.add(msgId);
+          if (session.processedMsgIds.size > 2000) {
+            const [first] = session.processedMsgIds;
+            session.processedMsgIds.delete(first);
           }
 
           const text = msg.message.conversation || 
@@ -902,24 +1053,23 @@ async function connectToWhatsApp() {
           const cleanText = text.trim();
           const senderPhone = remoteJid.split('@')[0];
 
-          addLog('info', `📩 Incoming from +${senderPhone}: "${cleanText}"`);
+          addLog('info', `📩 Incoming from +${senderPhone}: "${cleanText}"`, uid);
 
-          const result = await processInboundText(cleanText, senderPhone, msg.pushName || '');
+          const result = await processInboundText(cleanText, senderPhone, msg.pushName || '', uid);
           if (result && result.reply) {
-            // Check if media attachment is attached to this reply
             if (result.media_url) {
               try {
                 let sentMedia = false;
                 const relativePath = result.media_url.replace(/^\//, '');
                 const localPath = path.join(__dirname, 'public', relativePath);
-                
+
                 if (fs.existsSync(localPath)) {
                   const mediaBuf = fs.readFileSync(localPath);
                   if (result.media_type === 'video') {
-                    await sock.sendMessage(remoteJid, { video: mediaBuf, caption: result.reply });
+                    await session.sock.sendMessage(remoteJid, { video: mediaBuf, caption: result.reply });
                     sentMedia = true;
                   } else if (result.media_type === 'document') {
-                    await sock.sendMessage(remoteJid, { 
+                    await session.sock.sendMessage(remoteJid, { 
                       document: mediaBuf, 
                       mimetype: 'application/pdf', 
                       fileName: path.basename(localPath), 
@@ -927,75 +1077,86 @@ async function connectToWhatsApp() {
                     });
                     sentMedia = true;
                   } else {
-                    await sock.sendMessage(remoteJid, { image: mediaBuf, caption: result.reply });
+                    await session.sock.sendMessage(remoteJid, { image: mediaBuf, caption: result.reply });
                     sentMedia = true;
                   }
                 } else if (result.media_url.startsWith('http')) {
                   if (result.media_type === 'video') {
-                    await sock.sendMessage(remoteJid, { video: { url: result.media_url }, caption: result.reply });
+                    await session.sock.sendMessage(remoteJid, { video: { url: result.media_url }, caption: result.reply });
                     sentMedia = true;
                   } else {
-                    await sock.sendMessage(remoteJid, { image: { url: result.media_url }, caption: result.reply });
+                    await session.sock.sendMessage(remoteJid, { image: { url: result.media_url }, caption: result.reply });
                     sentMedia = true;
                   }
                 }
 
                 if (!sentMedia) {
-                  await sock.sendMessage(remoteJid, { text: result.reply });
+                  await session.sock.sendMessage(remoteJid, { text: result.reply });
                 }
               } catch (mediaErr) {
-                addLog('warning', `Failed sending media attachment (${mediaErr.message}), falling back to text`);
-                await sock.sendMessage(remoteJid, { text: result.reply });
+                addLog('warning', `Failed sending media attachment (${mediaErr.message}), falling back to text`, uid);
+                await session.sock.sendMessage(remoteJid, { text: result.reply });
               }
             } else {
-              await sock.sendMessage(remoteJid, { text: result.reply });
+              await session.sock.sendMessage(remoteJid, { text: result.reply });
             }
-            addLog('success', `🤖 Replied to +${senderPhone} [${result.type}]: "${result.reply.substring(0, 60)}..."`);
+            addLog('success', `🤖 Replied to +${senderPhone} [${result.type}]: "${result.reply.substring(0, 60)}..."`, uid);
           } else if (result && result.type === 'OUTSIDE_KB_SILENT') {
-            addLog('info', `Query from +${senderPhone} is outside Business Knowledge Base. Bot remained silent (zero hallucinations).`);
+            addLog('info', `Query from +${senderPhone} is outside Business Knowledge Base. Bot remained silent (zero hallucinations).`, uid);
           } else if (result && result.type === 'HUMAN_TAKEOVER_ACTIVE') {
-            addLog('info', `Human takeover active for +${senderPhone}. Automated reply suppressed.`);
+            addLog('info', `Human takeover active for +${senderPhone}. Automated reply suppressed.`, uid);
           } else if (result && result.type === 'SETUP_REQUIRED') {
-            addLog('info', `Automated reply paused for +${senderPhone}: Business details have not been configured yet.`);
+            addLog('info', `Automated reply paused for +${senderPhone}: Business details have not been configured yet.`, uid);
           }
         }
       } catch (err) {
-        addLog('error', `Error processing incoming message: ${err.message}`);
+        addLog('error', `Error processing incoming message: ${err.message}`, uid);
       }
     });
 
   } catch (error) {
-    connectionStatus = 'DISCONNECTED';
-    addLog('error', `Connection error: ${error.message}`);
-    setTimeout(connectToWhatsApp, 5000);
+    session.connectionStatus = 'DISCONNECTED';
+    addLog('error', `Connection error: ${error.message}`, uid);
+    clearTimeout(session.reconnectTimer);
+    session.reconnectTimer = setTimeout(() => connectToWhatsApp(uid), 5000);
   }
 }
 
-function clearSession(forceDeleteFiles = false) {
+function clearSession(userId = 'default', forceDeleteFiles = false) {
+  const uid = String(userId || 'default');
+  const session = getOrCreateUserSession(uid);
   try {
-    if (sock) {
+    clearTimeout(session.reconnectTimer);
+    if (session.sock) {
       try {
-        sock.ev.removeAllListeners();
-        sock.end(undefined);
+        session.sock.ev.removeAllListeners();
+        session.sock.end(undefined);
       } catch (e) {}
-      sock = null;
+      session.sock = null;
     }
-    // Only delete physical session files if user explicitly requested disconnect
+
     if (forceDeleteFiles) {
-      if (fs.existsSync(AUTH_DIR)) {
-        fs.rmSync(AUTH_DIR, { recursive: true, force: true });
-        addLog('info', 'Session folder cleared on explicit user disconnect.');
+      const authDir = getUserAuthDir(uid);
+      if (fs.existsSync(authDir)) {
+        fs.rmSync(authDir, { recursive: true, force: true });
+        addLog('info', 'Session folder cleared on explicit user disconnect.', uid);
       }
-      try {
-        if (fs.existsSync(SESSION_INFO_FILE)) {
-          fs.unlinkSync(SESSION_INFO_FILE);
-        }
-      } catch (e) {}
+      clearTenantSessionInfo(uid);
+      session.connectedUser = null;
+      session.currentQR = null;
+      session.connectionStatus = 'DISCONNECTED';
+
+      // Clear linked_phone in Supabase
+      if (/^\d+$/.test(uid)) {
+        updateUserLinkedPhone(parseInt(uid, 10), null).catch(e => {
+          console.warn(`Failed clearing linked_phone for user ${uid}:`, e.message);
+        });
+      }
     } else {
-      addLog('info', 'Socket closed cleanly. Saved credentials preserved on disk.');
+      addLog('info', 'Socket closed cleanly. Saved credentials preserved on disk.', uid);
     }
   } catch (e) {
-    addLog('error', `Error handling session: ${e.message}`);
+    addLog('error', `Error handling session: ${e.message}`, uid);
   }
 }
 
@@ -1077,7 +1238,7 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
       sameSite: 'lax'
     });
 
-    addLog('success', `New user registered: ${user.name} (${user.email}) [Role: ${user.role}]`);
+    addLog('success', `New user registered: ${user.name} (${user.email}) [Role: ${user.role}]`, user.id);
 
     res.json({
       success: true,
@@ -1123,7 +1284,7 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
       sameSite: 'lax'
     });
 
-    addLog('info', `User logged in: ${user.name} [Role: ${user.role}]`);
+    addLog('info', `User logged in: ${user.name} [Role: ${user.role}]`, user.id);
 
     res.json({
       success: true,
@@ -1159,12 +1320,13 @@ app.post(['/api/auth/logout', '/auth/logout'], (req, res) => {
 app.get(['/api/admin/users', '/admin/users'], authenticateToken, requireAdmin, async (req, res) => {
   try {
     const users = await getAllUsers();
+    const defaultSession = getOrCreateUserSession('default');
     res.json({
       success: true,
       totalUsers: users.length,
       activeUsers: users.filter(u => u.status === 'ACTIVE').length,
-      gatewayStatus: connectionStatus,
-      connectedNumber: connectedUser?.phone || null,
+      gatewayStatus: defaultSession.connectionStatus,
+      connectedNumber: defaultSession.connectedUser?.phone || null,
       users
     });
   } catch (err) {
@@ -1281,8 +1443,9 @@ app.delete(['/api/admin/users', '/admin/users'], authenticateToken, requireAdmin
 // GET Business Knowledge Base & Targeting Keywords
 app.get(['/api/business-settings', '/business-settings'], (req, res) => {
   try {
-    const settings = getBusinessSettings();
-    res.json({ success: true, settings });
+    const tenantId = resolveTenantId(req);
+    const settings = getBusinessSettings(tenantId);
+    res.json({ success: true, settings, userId: tenantId });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1291,6 +1454,7 @@ app.get(['/api/business-settings', '/business-settings'], (req, res) => {
 // POST Business Knowledge Base & Targeting Keywords
 app.post(['/api/business-settings', '/business-settings'], (req, res) => {
   try {
+    const tenantId = resolveTenantId(req);
     const { 
       business_profile, 
       website_url, 
@@ -1305,7 +1469,7 @@ app.post(['/api/business-settings', '/business-settings'], (req, res) => {
       fallback_message 
     } = req.body;
     
-    const current = getBusinessSettings();
+    const current = getBusinessSettings(tenantId);
     const updated = {
       ...current,
       business_profile: typeof business_profile === 'string' ? business_profile : current.business_profile,
@@ -1333,9 +1497,9 @@ app.post(['/api/business-settings', '/business-settings'], (req, res) => {
       });
     }
 
-    saveBusinessSettings(updated);
-    addLog('info', 'Business Profile, Media Attachments & Targeting Keywords saved successfully.');
-    res.json({ success: true, message: 'Settings saved successfully', settings: updated });
+    saveBusinessSettings(updated, tenantId);
+    addLog('info', 'Business Profile, Media Attachments & Targeting Keywords saved successfully.', tenantId);
+    res.json({ success: true, message: 'Settings saved successfully', settings: updated, userId: tenantId });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1347,12 +1511,13 @@ app.post('/api/upload-media', uploadMedia.single('mediaFile'), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'No media file provided.' });
     }
+    const tenantId = resolveTenantId(req);
     const relativeUrl = `/uploads/${req.file.filename}`;
     let mediaType = 'document';
     if (req.file.mimetype.startsWith('image/')) mediaType = 'image';
     else if (req.file.mimetype.startsWith('video/')) mediaType = 'video';
 
-    addLog('info', `Uploaded media attachment: ${req.file.originalname} (${(req.file.size / 1024).toFixed(1)} KB) -> ${relativeUrl}`);
+    addLog('info', `Uploaded media attachment: ${req.file.originalname} (${(req.file.size / 1024).toFixed(1)} KB) -> ${relativeUrl}`, tenantId);
     res.json({
       success: true,
       url: relativeUrl,
@@ -1379,26 +1544,38 @@ app.get('/api', (req, res) => {
 
 // 1. Health check & keep-alive
 app.get(['/health', '/api/health'], (req, res) => {
+  const tenantId = resolveTenantId(req);
+  const session = getOrCreateUserSession(tenantId);
   res.json({
     status: 'OK',
     serverless: !!process.env.VERCEL,
-    connection: process.env.VERCEL ? 'SERVERLESS_ACTIVE' : connectionStatus,
+    connection: process.env.VERCEL ? 'SERVERLESS_ACTIVE' : session.connectionStatus,
+    userId: tenantId,
     timestamp: new Date().toISOString()
   });
 });
 
-// 2. Status & QR endpoint for Web UI
+// 2. Status & QR endpoint for Web UI (Per-User Isolated)
 app.get(['/api/status', '/status'], (req, res) => {
+  const tenantId = resolveTenantId(req);
+  const session = getOrCreateUserSession(tenantId);
+
+  // Auto initialize Baileys connection on-demand for this user if idle / not started
+  if (!process.env.VERCEL && !session.sock && session.connectionStatus === 'INITIALIZING') {
+    connectToWhatsApp(tenantId);
+  }
+
   res.json({
-    status: process.env.VERCEL ? 'SERVERLESS_ACTIVE' : connectionStatus,
-    qr: currentQR,
-    user: connectedUser,
-    logs: logs.slice(0, 20),
-    serverless: !!process.env.VERCEL
+    status: process.env.VERCEL ? 'SERVERLESS_ACTIVE' : session.connectionStatus,
+    qr: session.currentQR,
+    user: session.connectedUser,
+    logs: session.logs.slice(0, 20),
+    serverless: !!process.env.VERCEL,
+    userId: tenantId
   });
 });
 
-// 3. Send Message endpoint (Called by Google Apps Script or Frontend)
+// 3. Send Message endpoint (Per-User Isolated)
 app.post(['/api/send', '/send'], verifyApiKey, async (req, res) => {
   try {
     if (process.env.VERCEL) {
@@ -1408,10 +1585,13 @@ app.post(['/api/send', '/send'], verifyApiKey, async (req, res) => {
       });
     }
 
-    if (connectionStatus !== 'CONNECTED' || !sock) {
+    const tenantId = resolveTenantId(req);
+    const session = getOrCreateUserSession(tenantId);
+
+    if (session.connectionStatus !== 'CONNECTED' || !session.sock) {
       return res.status(503).json({
         success: false,
-        error: 'WhatsApp is not connected. Please scan the QR code first.'
+        error: `WhatsApp is not connected for user account ${tenantId}. Please scan your QR code first.`
       });
     }
 
@@ -1436,20 +1616,21 @@ app.post(['/api/send', '/send'], verifyApiKey, async (req, res) => {
     }
 
     const jid = `${cleanNumber}@s.whatsapp.net`;
-
-    const result = await sock.sendMessage(jid, { text: String(message) });
+    const result = await session.sock.sendMessage(jid, { text: String(message) });
     const messageId = result?.key?.id || 'SENT';
 
-    addLog('success', `Message sent to +${cleanNumber} (ID: ${messageId})`);
+    addLog('success', `Message sent to +${cleanNumber} (ID: ${messageId})`, tenantId);
 
     res.json({
       success: true,
       messageId: messageId,
       phone: cleanNumber,
-      sentAt: new Date().toISOString()
+      sentAt: new Date().toISOString(),
+      userId: tenantId
     });
   } catch (error) {
-    addLog('error', `Failed to send to ${req.body?.phone}: ${error.message}`);
+    const tenantId = resolveTenantId(req);
+    addLog('error', `Failed to send to ${req.body?.phone}: ${error.message}`, tenantId);
     res.status(500).json({
       success: false,
       error: error.message
@@ -1457,19 +1638,21 @@ app.post(['/api/send', '/send'], verifyApiKey, async (req, res) => {
   }
 });
 
-// 4. Logout / Disconnect device
+// 4. Logout / Disconnect device (Per-User Isolated)
 app.post('/api/logout', verifyApiKey, async (req, res) => {
   try {
-    addLog('info', 'Manual logout requested.');
-    if (sock) {
-      await sock.logout();
+    const tenantId = resolveTenantId(req);
+    const session = getOrCreateUserSession(tenantId);
+    addLog('info', 'Manual logout requested.', tenantId);
+
+    if (session.sock) {
+      try {
+        await session.sock.logout();
+      } catch (e) {}
     }
-    clearSession(true);
-    connectionStatus = 'DISCONNECTED';
-    currentQR = null;
-    connectedUser = null;
-    setTimeout(connectToWhatsApp, 2000);
-    res.json({ success: true, message: 'Logged out. Ready for new connection.' });
+    clearSession(tenantId, true);
+    setTimeout(() => connectToWhatsApp(tenantId), 2000);
+    res.json({ success: true, message: `Logged out user ${tenantId}. Ready for new connection.`, userId: tenantId });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1478,25 +1661,28 @@ app.post('/api/logout', verifyApiKey, async (req, res) => {
 // 5. Test OpenRouter AI Auto-Reply Simulation
 app.post(['/api/ai/test', '/ai/test'], async (req, res) => {
   try {
+    const tenantId = resolveTenantId(req);
     const { message, phone } = req.body;
     if (!message) {
       return res.status(400).json({ success: false, error: 'Field "message" is required' });
     }
-    const reply = await generateAIResponse(message, phone);
+    const settings = getBusinessSettings(tenantId);
+    const reply = await generateAIResponse(message, phone, settings);
     res.json({
       success: true,
       model: OPENROUTER_MODEL,
       incomingMessage: message,
       replied: Boolean(reply),
       aiReply: reply || null,
-      note: reply ? 'Answered from Knowledge Base' : 'Outside Knowledge Base - No reply sent'
+      note: reply ? 'Answered from Knowledge Base' : 'Outside Knowledge Base - No reply sent',
+      userId: tenantId
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 6. Manual QR Refresh endpoint
+// 6. Manual QR Refresh endpoint (Per-User Isolated)
 app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
   try {
     if (process.env.VERCEL) {
@@ -1506,42 +1692,47 @@ app.post(['/api/refresh-qr', '/refresh-qr'], async (req, res) => {
       });
     }
 
-    if (connectionStatus === 'CONNECTED') {
+    const tenantId = resolveTenantId(req);
+    const session = getOrCreateUserSession(tenantId);
+
+    if (session.connectionStatus === 'CONNECTED') {
       return res.json({ success: false, error: 'Device is already connected!' });
     }
-    addLog('info', 'Manual QR Refresh requested by user.');
-    connectionStatus = 'INITIALIZING';
-    currentQR = null;
-    isManualRefreshRequested = true;
-    clearSession(false);
-    setTimeout(connectToWhatsApp, 800);
-    res.json({ success: true, message: 'Generating fresh QR code...' });
+    addLog('info', 'Manual QR Refresh requested by user.', tenantId);
+    session.connectionStatus = 'INITIALIZING';
+    session.currentQR = null;
+    session.isManualRefreshRequested = true;
+    clearSession(tenantId, false);
+    setTimeout(() => connectToWhatsApp(tenantId), 800);
+    res.json({ success: true, message: 'Generating fresh QR code...', userId: tenantId });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 7. Interactive Bot Simulator / Preview Sandbox Endpoint
+// 7. Interactive Bot Simulator / Preview Sandbox Endpoint (Per-User Isolated)
 app.post(['/api/simulate-reply', '/simulate-reply'], async (req, res) => {
   try {
+    const tenantId = resolveTenantId(req);
     const { query, phone, name } = req.body;
     if (!query || !query.trim()) {
       return res.status(400).json({ success: false, error: 'Query text is required.' });
     }
     const simPhone = phone || ('9199' + Math.floor(10000000 + Math.random() * 90000000));
-    const result = await processInboundText(query.trim(), simPhone, name || 'Test Lead');
-    res.json({ success: true, result });
+    const result = await processInboundText(query.trim(), simPhone, name || 'Test Lead', tenantId);
+    res.json({ success: true, result, userId: tenantId });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 8. Measurable ROI & Lead Inbox Analytics Endpoint
+// 8. Measurable ROI & Lead Inbox Analytics Endpoint (Per-User Isolated)
 app.get(['/api/leads-analytics', '/leads-analytics'], (req, res) => {
   try {
-    const leads = getLeads();
-    const escalations = getEscalations();
-    const optouts = getOptOuts();
+    const tenantId = resolveTenantId(req);
+    const leads = getLeads(tenantId);
+    const escalations = getEscalations(tenantId);
+    const optouts = getOptOuts(tenantId);
 
     const totalLeads = leads.length;
     const totalInquiries = leads.reduce((acc, l) => acc + (l.totalMessages || 1), 0);
@@ -1549,7 +1740,6 @@ app.get(['/api/leads-analytics', '/leads-analytics'], (req, res) => {
     const aiHandledCount = leads.filter(l => l.status === 'AI_HANDLED').length;
     const optedOutCount = optouts.length;
 
-    // Intent counts
     const intentCounts = {};
     leads.forEach(l => {
       const intent = l.matchedIntent || 'General';
@@ -1560,7 +1750,6 @@ app.get(['/api/leads-analytics', '/leads-analytics'], (req, res) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    // Support time saved calculation (avg 3.5 mins per inquiry)
     const hoursSaved = Math.round(((totalInquiries * 3.5) / 60) * 10) / 10;
 
     res.json({
@@ -1575,58 +1764,64 @@ app.get(['/api/leads-analytics', '/leads-analytics'], (req, res) => {
         topKeywords
       },
       escalations: Object.values(escalations),
-      leads: leads.slice(0, 50)
+      leads: leads.slice(0, 50),
+      userId: tenantId
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 9. Resolve Escalation & Resume Bot for Contact
+// 9. Resolve Escalation & Resume Bot for Contact (Per-User Isolated)
 app.post(['/api/escalations/resolve', '/escalations/resolve'], (req, res) => {
   try {
+    const tenantId = resolveTenantId(req);
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ success: false, error: 'Phone is required.' });
-    resolveEscalation(phone);
-    
-    // Update lead status
-    const leads = getLeads();
+    resolveEscalation(phone, tenantId);
+
+    const leads = getLeads(tenantId);
     const clean = String(phone).replace(/\D/g, '');
     const lead = leads.find(l => l.phone === clean);
     if (lead) {
       lead.status = 'AI_HANDLED';
-      saveLeads(leads);
+      saveLeads(leads, tenantId);
     }
 
-    addLog('info', `Human takeover resolved for +${clean}. Bot automated replies resumed.`);
-    res.json({ success: true, message: `Bot resumed for +${clean}` });
+    addLog('info', `Human takeover resolved for +${clean}. Bot automated replies resumed.`, tenantId);
+    res.json({ success: true, message: `Bot resumed for +${clean}`, userId: tenantId });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 10. Opt-Outs Blacklist Manager
+// 10. Opt-Outs Blacklist Manager (Per-User Isolated)
 app.get(['/api/optouts', '/optouts'], (req, res) => {
-  res.json({ success: true, optouts: getOptOuts() });
+  const tenantId = resolveTenantId(req);
+  res.json({ success: true, optouts: getOptOuts(tenantId), userId: tenantId });
 });
 
 app.post(['/api/optouts/remove', '/optouts/remove'], (req, res) => {
   try {
+    const tenantId = resolveTenantId(req);
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ success: false, error: 'Phone is required.' });
-    removeOptOut(phone);
-    addLog('info', `Phone +${phone} removed from Opt-Out blacklist.`);
-    res.json({ success: true, message: `+${phone} removed from Opt-Out blacklist.` });
+    removeOptOut(phone, tenantId);
+    addLog('info', `Phone +${phone} removed from Opt-Out blacklist.`, tenantId);
+    res.json({ success: true, message: `+${phone} removed from Opt-Out blacklist.`, userId: tenantId });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// 11. Anti-Ban Campaign Broadcast Endpoint (Randomized Socket Jitter & Opt-Out Filter)
+// 11. Anti-Ban Campaign Broadcast Endpoint (Per-User Isolated)
 app.post(['/api/broadcast', '/broadcast'], async (req, res) => {
   try {
-    if (connectionStatus !== 'CONNECTED' || !sock) {
-      return res.status(503).json({ success: false, error: 'WhatsApp device not connected.' });
+    const tenantId = resolveTenantId(req);
+    const session = getOrCreateUserSession(tenantId);
+
+    if (session.connectionStatus !== 'CONNECTED' || !session.sock) {
+      return res.status(503).json({ success: false, error: `WhatsApp device not connected for user ${tenantId}.` });
     }
     const { recipients, templateMessage, minDelayMs = 4000, maxDelayMs = 8000 } = req.body;
     if (!Array.isArray(recipients) || recipients.length === 0) {
@@ -1637,9 +1832,8 @@ app.post(['/api/broadcast', '/broadcast'], async (req, res) => {
     }
 
     const total = recipients.length;
-    addLog('info', `🚀 Starting Broadcast Campaign to ${total} recipients with anti-ban socket pacing (${minDelayMs / 1000}s - ${maxDelayMs / 1000}s)...`);
+    addLog('info', `🚀 Starting Broadcast Campaign to ${total} recipients with anti-ban socket pacing (${minDelayMs / 1000}s - ${maxDelayMs / 1000}s)...`, tenantId);
 
-    // Async batch execution with randomized jitter
     (async () => {
       let sent = 0;
       let skippedOptOut = 0;
@@ -1650,46 +1844,51 @@ app.post(['/api/broadcast', '/broadcast'], async (req, res) => {
         const rawPhone = r.phone || r.Phone || (typeof r === 'string' ? r : '');
         let cleanNumber = String(rawPhone).replace(/\D/g, '');
         if (cleanNumber.length === 10) cleanNumber = '91' + cleanNumber;
-        
+
         if (!cleanNumber || cleanNumber.length < 8) {
           failed++;
           continue;
         }
 
-        if (isOptedOut(cleanNumber)) {
+        if (isOptedOut(cleanNumber, tenantId)) {
           skippedOptOut++;
-          addLog('info', `🛡️ Skipped +${cleanNumber}: In Opt-Out Blacklist (Anti-Spam safeguard).`);
           continue;
         }
 
-        let msgText = templateMessage;
-        const name = r.name || r.Name || 'Valued Customer';
-        msgText = msgText.replace(/\{\{Name\}\}/gi, name);
-        msgText = msgText.replace(/\{\{Phone\}\}/gi, '+' + cleanNumber);
+        const personalized = templateMessage
+          .replace(/{name}/gi, r.name || r.Name || 'Valued Customer')
+          .replace(/{phone}/gi, cleanNumber);
 
         try {
           const jid = `${cleanNumber}@s.whatsapp.net`;
-          await sock.sendMessage(jid, { text: msgText });
+          await session.sock.sendMessage(jid, { text: personalized });
           sent++;
-          addLog('success', `Campaign (${i + 1}/${total}) sent to +${cleanNumber}`);
-        } catch (e) {
+          recordLeadInteraction({
+            phone: cleanNumber,
+            name: r.name || r.Name || '',
+            inquiry: '(Broadcast Campaign)',
+            reply: personalized,
+            intent: 'Campaign Broadcast',
+            status: 'AI_HANDLED',
+            userId: tenantId
+          });
+        } catch (err) {
           failed++;
-          addLog('error', `Campaign send error to +${cleanNumber}: ${e.message}`);
         }
 
-        // Anti-Ban socket jitter between messages
         if (i < recipients.length - 1) {
           const jitter = Math.floor(Math.random() * (maxDelayMs - minDelayMs + 1)) + minDelayMs;
           await new Promise(resolve => setTimeout(resolve, jitter));
         }
       }
-      addLog('success', `🎉 Broadcast Campaign completed: ${sent} Sent, ${skippedOptOut} Opt-Outs Skipped, ${failed} Failed.`);
+      addLog('success', `🎉 Broadcast Campaign completed: ${sent} Sent, ${skippedOptOut} Opt-Outs Skipped, ${failed} Failed.`, tenantId);
     })();
 
     res.json({
       success: true,
       message: `Broadcast campaign started for ${total} contacts with anti-ban jitter (${minDelayMs / 1000}s - ${maxDelayMs / 1000}s). Track progress in Activity Feed.`,
-      recipientCount: total
+      recipientCount: total,
+      userId: tenantId
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -1698,12 +1897,14 @@ app.post(['/api/broadcast', '/broadcast'], async (req, res) => {
 
 // Graceful Process Termination: Keep WhatsApp paired without socket corruption
 function gracefulShutdown(signal) {
-  addLog('info', `Received ${signal}. Gracefully closing WhatsApp socket without unpairing device...`);
-  if (sock) {
-    try {
-      sock.ev.removeAllListeners();
-      sock.end(undefined);
-    } catch (e) {}
+  console.log(`Received ${signal}. Gracefully closing WhatsApp sockets without unpairing devices...`);
+  for (const [uid, sess] of userSessions.entries()) {
+    if (sess.sock) {
+      try {
+        sess.sock.ev.removeAllListeners();
+        sess.sock.end(undefined);
+      } catch (e) {}
+    }
   }
   process.exit(0);
 }
@@ -1737,3 +1938,5 @@ module.exports.processInboundText = processInboundText;
 module.exports.getBusinessSettings = getBusinessSettings;
 module.exports.hasReceivedWelcome = hasReceivedWelcome;
 module.exports.markReceivedWelcome = markReceivedWelcome;
+
+module.exports.saveBusinessSettings = saveBusinessSettings;

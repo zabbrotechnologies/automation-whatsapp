@@ -296,6 +296,7 @@
           const data = await res.json();
           if (data.success && data.user) {
             localStorage.setItem('flow_user', JSON.stringify(data.user));
+          localStorage.setItem('flow_user_id', String(data.user.id));
             if (data.user.role === 'ADMIN') {
               window.location.href = '/admin.html';
             } else {
@@ -341,6 +342,7 @@
 
         if (data.success) {
           localStorage.setItem('flow_user', JSON.stringify(data.user));
+          localStorage.setItem('flow_user_id', String(data.user.id));
           if (data.user.role === 'ADMIN') {
             window.location.href = '/admin.html';
           } else {
@@ -387,6 +389,7 @@
 
         if (data.success) {
           localStorage.setItem('flow_user', JSON.stringify(data.user));
+          localStorage.setItem('flow_user_id', String(data.user.id));
           if (data.user.role === 'ADMIN') {
             window.location.href = '/admin.html';
           } else {

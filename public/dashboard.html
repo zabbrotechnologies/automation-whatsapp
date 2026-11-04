@@ -1625,6 +1625,7 @@
           if (res.status === 401 || res.status === 403) {
             // Explicitly unauthorized: user credentials invalid
             localStorage.removeItem('flow_user');
+      localStorage.removeItem('flow_user_id');
             window.location.href = '/login.html';
             return;
           }
@@ -1632,6 +1633,7 @@
             const data = await res.json();
             if (data.success && data.user) {
               currentUser = data.user;
+              if (currentUser?.id) localStorage.setItem('flow_user_id', String(currentUser.id));
               localStorage.setItem('flow_user', JSON.stringify(currentUser));
               document.getElementById('userNameDisplay').textContent = currentUser.name;
               document.getElementById('userRoleBadge').textContent = currentUser.role;
@@ -1686,11 +1688,26 @@
     const isVercelHost = window.location.hostname.includes('vercel.app');
     let activeGatewayUrl = localStorage.getItem('flow_gateway_url') || (isVercelHost ? 'https://zabbroautomate.onrender.com' : '');
 
+    // Centralized Tenant-Aware Fetch Wrapper: Always attaches active user ID and credentials
+    function apiFetch(endpoint, options = {}, routeToGateway = false) {
+      const base = (routeToGateway && activeGatewayUrl) ? activeGatewayUrl.replace(/\/$/, '') : '';
+      const url = endpoint.startsWith('http') ? endpoint : (base + endpoint);
+      const opt = { ...options };
+      opt.credentials = opt.credentials || 'include';
+      opt.headers = { ...(opt.headers || {}) };
+      
+      const uid = currentUser?.id || localStorage.getItem('flow_user_id') || (currentUser ? JSON.parse(localStorage.getItem('flow_user') || '{}').id : null);
+      if (uid) {
+        opt.headers['x-user-id'] = String(uid);
+        opt.headers['x-tenant-id'] = String(uid);
+      }
+      return fetch(url, opt);
+    }
+
     // Check Gateway Status from API
     async function checkGatewayStatus() {
       try {
-        const targetUrl = activeGatewayUrl ? `${activeGatewayUrl.replace(/\/$/, '')}/api/status` : '/api/status';
-        const res = await fetch(targetUrl);
+        const res = await apiFetch('/api/status', {}, true);
         if (!res.ok) {
           const tag = document.getElementById('linkingStatusTag');
           tag.textContent = 'GATEWAY UNREACHABLE';
@@ -1709,8 +1726,8 @@
         const tag = document.getElementById('linkingStatusTag');
         const sNotice = document.getElementById('serverlessNotice');
 
-        if (status === 'CONNECTED' || (status === 'RECONNECTING' && (user?.phone || currentUser.linked_phone))) {
-          const phone = user?.phone || currentUser.linked_phone || 'Active';
+        if (status === 'CONNECTED' || (status === 'RECONNECTING' && user?.phone)) {
+          const phone = user?.phone || 'Active';
           renderConnectedState(phone);
           if (status === 'RECONNECTING') {
             tag.textContent = 'RECONNECTING...';
@@ -1896,7 +1913,7 @@
 
     async function loadBusinessSettings() {
       try {
-        const res = await fetch('/api/business-settings');
+        const res = await apiFetch('/api/business-settings', {}, false);
         if (!res.ok) return;
         const data = await res.json();
         if (data.success && data.settings) {
@@ -2013,7 +2030,7 @@
       showToast(`Uploading ${file.name}...`, 'info');
 
       try {
-        const res = await fetch('/api/upload-media', {
+        const res = await apiFetch('/api/upload-media', {
           method: 'POST',
           body: formData
         });
@@ -2202,7 +2219,7 @@
       saveBtn.style.opacity = '0.7';
 
       try {
-        const res = await fetch('/api/business-settings', {
+        const res = await apiFetch('/api/business-settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -2305,12 +2322,11 @@
       resSpan.style.color = '#0284c7';
 
       try {
-        const targetSend = activeGatewayUrl ? `${activeGatewayUrl.replace(/\/$/, '')}/api/send` : '/api/send';
-        const res = await fetch(targetSend, {
+        const res = await apiFetch('/api/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': 'secret123' },
           body: JSON.stringify({ phone, message })
-        });
+        }, true);
         const d = await res.json();
         if (d.success) {
           resSpan.textContent = `✓ Sent! ID: ${d.messageId || 'OK'}`;
@@ -2331,8 +2347,7 @@
       document.getElementById('qrImageTag').style.display = 'none';
       document.getElementById('qrLoader').style.display = 'flex';
       try {
-        const targetRefresh = activeGatewayUrl ? `${activeGatewayUrl.replace(/\/$/, '')}/api/refresh-qr` : '/api/refresh-qr';
-        await fetch(targetRefresh, { method: 'POST' });
+        await apiFetch('/api/refresh-qr', { method: 'POST' }, true);
         setTimeout(checkGatewayStatus, 1000);
       } catch (e) {}
     });
@@ -2341,8 +2356,7 @@
     document.getElementById('btnDisconnectSession').addEventListener('click', async () => {
       if (!confirm('Disconnect this WhatsApp companion session?')) return;
       try {
-        const targetLogout = activeGatewayUrl ? `${activeGatewayUrl.replace(/\/$/, '')}/api/logout` : '/api/logout';
-        await fetch(targetLogout, { method: 'POST', headers: { 'x-api-key': 'secret123' } });
+        await apiFetch('/api/logout', { method: 'POST', headers: { 'x-api-key': 'secret123' } }, true);
         location.reload();
       } catch (e) {
         alert(e.message);
@@ -2363,7 +2377,7 @@
 
     async function loadLeadsAnalytics() {
       try {
-        const res = await fetch('/api/leads-analytics');
+        const res = await apiFetch('/api/leads-analytics', {}, false);
         if (!res.ok) return;
         const data = await res.json();
         if (data.success) {
@@ -2447,7 +2461,7 @@
         if (!phone) return;
         resumeBtn.disabled = true;
         try {
-          const res = await fetch('/api/escalations/resolve', {
+          const res = await apiFetch('/api/escalations/resolve', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phone })
@@ -2510,7 +2524,7 @@
         btnSim.disabled = true;
 
         try {
-          const res = await fetch('/api/simulate-reply', {
+          const res = await apiFetch('/api/simulate-reply', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query })
@@ -2628,7 +2642,7 @@
         resSpan.style.color = '#0284c7';
 
         try {
-          const res = await fetch('/api/broadcast', {
+          const res = await apiFetch('/api/broadcast', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key': 'secret123' },
             body: JSON.stringify({
