@@ -53,7 +53,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3.5-super-vl:free';
 const OPENROUTER_ENDPOINT = process.env.OPENROUTER_ENDPOINT || 'https://openrouter.ai/api/v1/chat/completions';
-const RENDER_GATEWAY_DEFAULT = process.env.GATEWAY_URL || 'https://automation-whatsapp-00cl.onrender.com';
+const RENDER_GATEWAY_DEFAULT = process.env.GATEWAY_URL || 'https://zabbroautomate.onrender.com';
 
 // ---------------- BUSINESS SETTINGS & TARGETING REPOSITORY ---------------- //
 const SETTINGS_FILE = path.join(__dirname, 'business_settings.json');

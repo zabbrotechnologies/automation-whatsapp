@@ -1114,7 +1114,7 @@
               <div>• <strong>Or connect external daemon:</strong> Enter your Render/VPS URL or localhost below:</div>
             </div>
             <div style="display: flex; gap: 6px; margin-top: 8px;">
-              <input type="text" id="inputGatewayUrl" placeholder="https://automation-whatsapp-00cl.onrender.com or http://localhost:3000" style="flex: 1; font-size: 11px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
+              <input type="text" id="inputGatewayUrl" placeholder="https://zabbroautomate.onrender.com" style="flex: 1; font-size: 11px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
               <button id="btnSaveGatewayUrl" class="btn-outline" style="padding: 5px 12px; font-size: 11px; background: #ea580c; color: #fff; border-color: #ea580c; cursor: pointer;">Connect</button>
             </div>
           </div>
@@ -1682,7 +1682,9 @@
     }
 
     // Gateway URL state (Local or Remote)
-    let activeGatewayUrl = localStorage.getItem('flow_gateway_url') || '';
+    // Default to Render persistent gateway if on Vercel so WhatsApp socket never unlinks
+    const isVercelHost = window.location.hostname.includes('vercel.app');
+    let activeGatewayUrl = localStorage.getItem('flow_gateway_url') || (isVercelHost ? 'https://zabbroautomate.onrender.com' : '');
 
     // Check Gateway Status from API
     async function checkGatewayStatus() {
@@ -2339,7 +2341,8 @@
     document.getElementById('btnDisconnectSession').addEventListener('click', async () => {
       if (!confirm('Disconnect this WhatsApp companion session?')) return;
       try {
-        await fetch('/api/logout', { method: 'POST', headers: { 'x-api-key': 'secret123' } });
+        const targetLogout = activeGatewayUrl ? `${activeGatewayUrl.replace(/\/$/, '')}/api/logout` : '/api/logout';
+        await fetch(targetLogout, { method: 'POST', headers: { 'x-api-key': 'secret123' } });
         location.reload();
       } catch (e) {
         alert(e.message);
